@@ -1,0 +1,8 @@
+Package: [[name]]
+Version: [[version]]
+Section: misc
+Priority: low
+Architecture: all
+Maintainer: New Relic Infrastructure Team <infrastructure-eng@newrelic.com>
+Description:New Relic JMX tool. [[description]]
+Depends: default-jre-headless
