@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-java -jar /usr/lib/nrjmx/nrjmx.jar $@
+java -jar `dirname $0`/nrjmx.jar $@
