@@ -8,13 +8,15 @@ NR-JMX uses Maven for generating the binaries:
 $ mvn package
 ```
 
-This will create the jar file under the /target/ directory.
+This will create the `nrjmx.jar` file under the `./bin/` directory. Copy
+`bin/nrjmx` & `bin/nrjmx.jar` files to your preferred location. Both files must
+be located under the same folder.
 
 ## Usage
 The applicaton just expects the connection parameters to the JMX interface.
 
 ```bash
-$ java -jar target/nrjmx-0.0.1-SNAPSHOT-jar-with-dependencies.jar -hostname 127.0.0.1 -port 7199 -username user  -password pwd
+$ ./bin/nrjmx -hostname 127.0.0.1 -port 7199 -username user -password pwd
 ```
 
 The tool will read lines from the standard input which should contain object
