@@ -78,6 +78,7 @@
           <group>Application/System</group>
           <sourceEncoding>utf-8</sourceEncoding>
           <targetOS>x86_64-linux</targetOS>
+          <needarch>x86_64</needarch>
           <mappings>
             <mapping>
               <directory>/usr/lib/${project.artifactId}</directory>
