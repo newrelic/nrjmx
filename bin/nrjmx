@@ -1,2 +1,6 @@
-#!/usr/bin/env bash
-java -jar `dirname $0`/nrjmx.jar $@
+#!/usr/bin/env sh
+if [ -f /usr/lib/nrjmx/nrjmx.jar ]; then
+    java -jar /usr/lib/nrjmx/nrjmx.jar $@
+else
+    java -jar `dirname $0`/nrjmx.jar $@
+fi
