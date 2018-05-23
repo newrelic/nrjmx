@@ -49,6 +49,17 @@ public class Application {
             logger.severe(e.getMessage());
             System.exit(1);
             return;
+        } catch (Exception e) {
+            if(cliArgs.debugMode()) {
+                e.printStackTrace();
+                System.exit(1);
+                return;
+            }else{
+                System.out.println( e.getClass().getCanonicalName());
+                logger.severe(e.getClass().getCanonicalName() + ": " + e.getMessage());
+                System.exit(1);
+                return;
+            }
         }
 
         Gson gson = new Gson();
