@@ -14,6 +14,7 @@ public class Arguments {
     private String username;
     private String password;
     private boolean verbose;
+    private boolean debug;
 
 
     Arguments(String[] args) {
@@ -34,6 +35,9 @@ public class Arguments {
         Option verbose = Option.builder("v")
             .longOpt("verbose").desc("Verbose output").hasArg(false).build();
         options.addOption(verbose);
+        Option debug = Option.builder("d")
+                .longOpt("debug").desc("Debug mode").hasArg(false).build();
+        options.addOption(debug);
         Option help = Option.builder("h")
             .longOpt("help").desc("Show help").hasArg(false).build();
         options.addOption(help);
@@ -55,10 +59,11 @@ public class Arguments {
         }
 
         this.hostname = cmd.getOptionValue("hostname", "localhost");
-        this.port = Integer.parseInt(cmd.getOptionValue("port", "7199"));
+        this.port     = Integer.parseInt(cmd.getOptionValue("port", "7199"));
         this.username = cmd.getOptionValue("username", "");
         this.password = cmd.getOptionValue("password", "");
-        this.verbose = cmd.hasOption("verbose");
+        this.verbose  = cmd.hasOption("verbose");
+        this.debug    = cmd.hasOption("debug");
     }
 
     public String getHostname() {
@@ -79,5 +84,9 @@ public class Arguments {
 
     public boolean isVerbose() {
         return verbose;
+    }
+
+    public boolean debugMode() {
+        return debug;
     }
 }
