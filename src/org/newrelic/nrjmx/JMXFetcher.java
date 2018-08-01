@@ -123,7 +123,6 @@ public class JMXFetcher {
         if (value == null) {
             throw new ValueError("Found a null value for bean " + name);
         } else if (value instanceof java.lang.Double) {
-            // XXX: Some Doubles are set to NaN which breaks the output, set them to 0
             Double ddata = parseDouble((Double) value);
             result.put(name, ddata);
         } else if (value instanceof Number || value instanceof String || value instanceof Boolean) {
