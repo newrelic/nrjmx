@@ -124,7 +124,7 @@ public class JMXFetcher {
             throw new ValueError("Found a null value for bean " + name);
         } else if (value instanceof java.lang.Double) {
             // XXX: Some Doubles are set to NaN which breaks the output, set them to 0
-            Double ddata = ((Double) value).isNaN() ? 0 : (Double) value;
+            Double ddata = parseDouble((Double) value);
             result.put(name, ddata);
         } else if (value instanceof Number || value instanceof String || value instanceof Boolean) {
             result.put(name, value);
@@ -147,5 +147,21 @@ public class JMXFetcher {
         } else {
             throw new ValueError("Unsuported data type (" + value.getClass() + ") for bean " + name);
         }
+    }
+
+    /**
+     * XXX: JSON does not support NaN, Infinity, or -Infinity as they come back from JMX.
+     * So we parse them out to 0, Max Double, and Min Double respectively.
+     */
+    private Double parseDouble(Double value) {
+        if (value.isNaN()) {
+            return 0.0;
+        } else if (value == Double.NEGATIVE_INFINITY) {
+            return Double.MIN_VALUE;
+        } else if (value == Double.POSITIVE_INFINITY) {
+            return Double.MAX_VALUE;
+        }
+
+        return value;
     }
 }
