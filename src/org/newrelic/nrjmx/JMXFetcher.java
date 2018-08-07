@@ -18,6 +18,7 @@ import javax.management.MalformedObjectNameException;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 import javax.management.ReflectionException;
+import javax.management.RuntimeMBeanException;
 import javax.management.openmbean.CompositeData;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
@@ -99,7 +100,7 @@ public class JMXFetcher {
             
             try {
                 value = connection.getAttribute(objectName, attrName);
-            } catch (AttributeNotFoundException | InstanceNotFoundException | MBeanException | ReflectionException | IOException e) {
+            } catch (AttributeNotFoundException | InstanceNotFoundException | MBeanException | ReflectionException | IOException | RuntimeMBeanException e) {
                 logger.warning("Can't get attribute " + attrName + " for bean " + objectName.toString());
                 continue;
             }
