@@ -19,6 +19,7 @@ import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 import javax.management.ReflectionException;
 import javax.management.RuntimeMBeanException;
+import javax.management.RuntimeOperationsException;
 import javax.management.openmbean.CompositeData;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
@@ -100,7 +101,7 @@ public class JMXFetcher {
             
             try {
                 value = connection.getAttribute(objectName, attrName);
-            } catch (AttributeNotFoundException | InstanceNotFoundException | MBeanException | ReflectionException | IOException | RuntimeMBeanException e) {
+            } catch (AttributeNotFoundException | InstanceNotFoundException | MBeanException | ReflectionException | IOException | RuntimeMBeanException | RuntimeOperationsException e) {
                 logger.warning("Can't get attribute " + attrName + " for bean " + objectName.toString());
                 continue;
             }
