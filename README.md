@@ -12,6 +12,15 @@ This will create the `nrjmx.jar` file under the `./bin/` directory. Copy
 `bin/nrjmx` & `bin/nrjmx.jar` files to your preferred location. Both files must
 be located under the same folder.
 
+It will also create DEB and RPM packages to automatically install NR-JMX. If you
+want to skip DEB and RPM packages (e.g. because your development machine does not
+provide the required tools), you can disable the `deb` and `rpm` Maven profiles from
+the command line:
+
+```bash
+mvn clean package -P \!deb,\!rpm
+```
+
 ## Usage
 The applicaton just expects the connection parameters to the JMX interface.
 
