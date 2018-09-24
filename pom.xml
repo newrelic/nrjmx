@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>nrjmx</groupId>
   <artifactId>nrjmx</artifactId>
-  <version>1.0.1</version>
+  <version>1.0.3</version>
   <name>nrjmx</name>
   <description>The New Relic JMX tool provides a command line tool to connect to a JMX server and retrieve the MBeans it exposes.</description>
   <organization>
