@@ -21,6 +21,8 @@ the command line:
 mvn clean package -P \!deb,\!rpm
 ```
 
+Note: nrjmx is targetted to work with Java 7 ( [pom.xml](https://github.com/newrelic/nrjmx/blob/master/pom.xml#L217-L219) )
+
 ## Usage
 The applicaton just expects the connection parameters to the JMX interface.
 
