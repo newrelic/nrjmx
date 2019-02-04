@@ -4,7 +4,7 @@
 .mtj.tmp/
 
 #IDEA artifacts
-.idea/
+.idea
 .classpath
 .settings
 .project
