@@ -43,7 +43,9 @@ public class Application {
         try {
             fetcher = new JMXFetcher(
                 cliArgs.getHostname(), cliArgs.getPort(),
-                cliArgs.getUsername(), cliArgs.getPassword()
+                cliArgs.getUsername(), cliArgs.getPassword(),
+                cliArgs.getKeyStore(), cliArgs.getKeyStorePassword(),
+                cliArgs.getTrustStore(), cliArgs.getTrustStorePassword()
             );
         } catch (ConnectionError e) {
             logger.severe(e.getMessage());
