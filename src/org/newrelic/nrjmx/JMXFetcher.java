@@ -1,10 +1,7 @@
 package org.newrelic.nrjmx;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Logger;
 
 import javax.management.AttributeNotFoundException;
@@ -44,11 +41,19 @@ public class JMXFetcher {
         public ValueError(String message) { super(message); }
     };
 
-    public JMXFetcher(String hostname, int port, String username, String password) throws ConnectionError {
+    public JMXFetcher(String hostname, int port, String username, String password , String keyStore, String keyStorePassword, String trustStore, String trustStorePassword) throws ConnectionError {
         String connectionString = String.format("service:jmx:rmi:///jndi/rmi://%s:%s/jmxrmi", hostname, port);
         Map<String, String[]> env = new HashMap<>();
         if (username != "") {
           env.put(JMXConnector.CREDENTIALS, new String[] { username, password });
+        }
+
+        if (keyStore != "" && trustStore != "") {
+            Properties p = System.getProperties();
+            p.put("javax.net.ssl.keyStore",keyStore);
+            p.put("javax.net.ssl.keyStorePassword",keyStorePassword);
+            p.put("javax.net.ssl.trustStore",trustStore);
+            p.put("javax.net.ssl.trustStorePassword",trustStorePassword);
         }
 
         try {

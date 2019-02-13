@@ -13,6 +13,10 @@ public class Arguments {
     private int port;
     private String username;
     private String password;
+    private String keyStore;
+    private String keyStorePassword;
+    private String trustStore;
+    private String trustStorePassword;
     private boolean verbose;
     private boolean debug;
 
@@ -31,6 +35,20 @@ public class Arguments {
         Option password = Option.builder("p")
             .longOpt("password").desc("JMX password").hasArg().build();
         options.addOption(password);
+
+
+        Option keyStore = Option.builder("keyStore")
+                .longOpt("keyStore").desc("SSL keyStore location").hasArg().build();
+        options.addOption(keyStore);
+        Option keyStorePassword = Option.builder("keyStorePassword")
+                .longOpt("keyStorePassword").desc("SSL keyStorePassword").hasArg().build();
+        options.addOption(keyStorePassword);
+        Option trustStore = Option.builder("trustStore")
+                .longOpt("trustStore").desc("SSL trustStore location").hasArg().build();
+        options.addOption(trustStore);
+        Option trustStorePassword = Option.builder("trustStorePassword")
+                .longOpt("trustStorePassword").desc("SSL trustStorePassword").hasArg().build();
+        options.addOption(trustStorePassword);
 
         Option verbose = Option.builder("v")
             .longOpt("verbose").desc("Verbose output").hasArg(false).build();
@@ -58,10 +76,15 @@ public class Arguments {
             System.exit(0);
         }
 
+
         this.hostname = cmd.getOptionValue("hostname", "localhost");
         this.port     = Integer.parseInt(cmd.getOptionValue("port", "7199"));
         this.username = cmd.getOptionValue("username", "");
         this.password = cmd.getOptionValue("password", "");
+        this.keyStore = cmd.getOptionValue("keyStore", "");
+        this.keyStorePassword = cmd.getOptionValue("keyStorePassword", "");
+        this.trustStore = cmd.getOptionValue("trustStore", "");
+        this.trustStorePassword = cmd.getOptionValue("trustStorePassword", "");
         this.verbose  = cmd.hasOption("verbose");
         this.debug    = cmd.hasOption("debug");
     }
@@ -80,6 +103,22 @@ public class Arguments {
 
     public String getPassword() {
         return password;
+    }
+
+    public String getKeyStore() {
+        return keyStore;
+    }
+
+    public String getKeyStorePassword() {
+        return keyStorePassword;
+    }
+
+    public String getTrustStore() {
+        return trustStore;
+    }
+
+    public String getTrustStorePassword() {
+        return trustStorePassword;
     }
 
     public boolean isVerbose() {
