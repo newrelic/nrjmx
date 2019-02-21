@@ -12,6 +12,7 @@ public class Arguments {
     private String hostname;
     private int port;
     private String username;
+    private String url;
     private String password;
     private String keyStore;
     private String keyStorePassword;
@@ -23,6 +24,9 @@ public class Arguments {
 
     Arguments(String[] args) {
         Options options = new Options();
+        Option url = Option.builder("U")
+            .longOpt("url").desc("JMX url (service:jmx:rmi:///jndi/rmi://%s:%s/jmxrmi)").hasArg().build();
+        options.addOption(url);
         Option hostname = Option.builder("H")
             .longOpt("hostname").desc("JMX hostname (localhost)").hasArg().build();
         options.addOption(hostname);
@@ -77,6 +81,7 @@ public class Arguments {
         }
 
 
+        this.url = cmd.getOptionValue("url", "service:jmx:rmi:///jndi/rmi://%s:%s/jmxrmi");
         this.hostname = cmd.getOptionValue("hostname", "localhost");
         this.port     = Integer.parseInt(cmd.getOptionValue("port", "7199"));
         this.username = cmd.getOptionValue("username", "");
@@ -128,4 +133,12 @@ public class Arguments {
     public boolean debugMode() {
         return debug;
     }
+
+	public String getUrl() {
+		return url;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
+	}
 }

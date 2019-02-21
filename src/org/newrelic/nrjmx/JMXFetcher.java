@@ -41,8 +41,8 @@ public class JMXFetcher {
         public ValueError(String message) { super(message); }
     };
 
-    public JMXFetcher(String hostname, int port, String username, String password , String keyStore, String keyStorePassword, String trustStore, String trustStorePassword) throws ConnectionError {
-        String connectionString = String.format("service:jmx:rmi:///jndi/rmi://%s:%s/jmxrmi", hostname, port);
+    public JMXFetcher(String hostname, int port, String url, String username, String password , String keyStore, String keyStorePassword, String trustStore, String trustStorePassword) throws ConnectionError {
+        String connectionString = String.format(url, hostname, port);
         Map<String, String[]> env = new HashMap<>();
         if (username != "") {
           env.put(JMXConnector.CREDENTIALS, new String[] { username, password });

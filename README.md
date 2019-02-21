@@ -42,3 +42,8 @@ could execute:
 $ echo
 "org.apache.cassandra.metrics:type=Table,keyspace=*,scope=*,name=ReadLatency" | java -jar target/nrjmx-0.0.1-SNAPSHOT-jar-with-dependencies.jar -hostname 127.0.0.1 -port 7199 -username user -password pwd
 ```
+
+## Updates
+### 1.0.5
+- Add `--url` command line parameter to allow the end-user to use atypical service urls. Defaults to `service:jmx:rmi:///jndi/rmi://%s:%s/jmxrmi` which is `service:jmx:rmi:///jndi/rmi://<hostname>:<port>/jmxrmi`
+  - Use caution when quoting the string!

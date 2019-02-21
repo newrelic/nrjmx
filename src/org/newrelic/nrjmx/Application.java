@@ -42,7 +42,7 @@ public class Application {
         JMXFetcher fetcher;
         try {
             fetcher = new JMXFetcher(
-                cliArgs.getHostname(), cliArgs.getPort(),
+                cliArgs.getHostname(), cliArgs.getPort(), cliArgs.getUrl(),
                 cliArgs.getUsername(), cliArgs.getPassword(),
                 cliArgs.getKeyStore(), cliArgs.getKeyStorePassword(),
                 cliArgs.getTrustStore(), cliArgs.getTrustStorePassword()
