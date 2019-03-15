@@ -106,7 +106,7 @@ public class Arguments {
         return username;
     }
 
-    public Boolean getIsRemoteJMX() {
+    public boolean getIsRemoteJMX() {
         return isRemoteJMX;
     }
 
