@@ -42,3 +42,13 @@ could execute:
 $ echo
 "org.apache.cassandra.metrics:type=Table,keyspace=*,scope=*,name=ReadLatency" | java -jar target/nrjmx-0.0.1-SNAPSHOT-jar-with-dependencies.jar -hostname 127.0.0.1 -port 7199 -username user -password pwd
 ```
+
+### Remote URL connection
+
+If you want to use a remoting-jmx URL you can use the flag `-remote`. In this case it will use the remoting connection URL: `service:jmx:remoting-jmx://host:port` instead of `service:jmx:rmi:///jndi/rmi://host:port/jmxrmi`
+
+Example of usage with remoting:
+```bash
+$ ./bin/nrjmx -hostname 127.0.0.1 -port 7199 -username user -password pwd -remote
+```
+ 
