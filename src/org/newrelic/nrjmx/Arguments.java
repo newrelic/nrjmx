@@ -19,6 +19,7 @@ public class Arguments {
     private String trustStorePassword;
     private boolean verbose;
     private boolean debug;
+    private boolean isRemoteJMX;
 
 
     Arguments(String[] args) {
@@ -59,6 +60,9 @@ public class Arguments {
         Option help = Option.builder("h")
             .longOpt("help").desc("Show help").hasArg(false).build();
         options.addOption(help);
+        Option remote = Option.builder("r")
+                .longOpt("remote").desc("Remote JMX mode").hasArg(false).build();
+        options.addOption(remote);
 
         HelpFormatter formatter = new HelpFormatter();
         CommandLineParser parser = new DefaultParser();
@@ -87,6 +91,7 @@ public class Arguments {
         this.trustStorePassword = cmd.getOptionValue("trustStorePassword", "");
         this.verbose  = cmd.hasOption("verbose");
         this.debug    = cmd.hasOption("debug");
+        this.isRemoteJMX = cmd.hasOption("remote");
     }
 
     public String getHostname() {
@@ -99,6 +104,10 @@ public class Arguments {
 
     public String getUsername() {
         return username;
+    }
+
+    public boolean getIsRemoteJMX() {
+        return isRemoteJMX;
     }
 
     public String getPassword() {

@@ -45,7 +45,8 @@ public class Application {
                 cliArgs.getHostname(), cliArgs.getPort(),
                 cliArgs.getUsername(), cliArgs.getPassword(),
                 cliArgs.getKeyStore(), cliArgs.getKeyStorePassword(),
-                cliArgs.getTrustStore(), cliArgs.getTrustStorePassword()
+                cliArgs.getTrustStore(), cliArgs.getTrustStorePassword(),
+                cliArgs.getIsRemoteJMX()
             );
         } catch (ConnectionError e) {
             logger.severe(e.getMessage());
