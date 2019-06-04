@@ -29,18 +29,22 @@ public class Application {
         }
     }
 
+    public static void printHelp() {
+        new HelpFormatter().printHelp("nrjmx", Arguments.options());
+    }
+
     public static void main(String[] args) {
         Arguments cliArgs = null;
         try {
             cliArgs = Arguments.from(args);
         } catch (Exception e) {
             System.err.println(e.getMessage());
-            new HelpFormatter().printHelp("nrjmx", Arguments.options());
+            printHelp();
             System.exit(1);
         }
 
         if (cliArgs.isHelp()) {
-            new HelpFormatter().printHelp("nrjmx", Arguments.options());
+            printHelp();
             System.exit(0);
         }
 
@@ -58,6 +62,7 @@ public class Application {
             );
         } catch (ConnectionError e) {
             logger.severe(e.getMessage());
+            logger.log(Level.FINE, e.getMessage(), e);
             System.exit(1);
         } catch (Exception e) {
             if (cliArgs.isDebugMode()) {
@@ -65,6 +70,7 @@ public class Application {
             } else {
                 System.out.println(e.getClass().getCanonicalName());
                 logger.severe(e.getClass().getCanonicalName() + ": " + e.getMessage());
+                logger.log(Level.FINE, e.getMessage(), e);
             }
             System.exit(1);
         }
@@ -80,6 +86,7 @@ public class Application {
                     beanInstances = fetcher.query(beanName);
                 } catch (QueryError e) {
                     logger.warning(e.getMessage());
+                    logger.log(Level.FINE, e.getMessage(), e);
                     continue;
                 }
 
@@ -88,6 +95,7 @@ public class Application {
                         fetcher.queryAttributes(instance);
                     } catch (QueryError e) {
                         logger.warning(e.getMessage());
+                        logger.log(Level.FINE, e.getMessage(), e);
                     }
                 }
 
