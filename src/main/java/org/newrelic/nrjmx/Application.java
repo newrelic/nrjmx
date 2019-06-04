@@ -1,20 +1,14 @@
 package org.newrelic.nrjmx;
 
-import java.util.NoSuchElementException;
-import java.util.Scanner;
-import java.util.Set;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
-
-import javax.management.ObjectInstance;
-
+import com.google.gson.Gson;
+import org.apache.commons.cli.HelpFormatter;
 import org.newrelic.nrjmx.JMXFetcher.ConnectionError;
 import org.newrelic.nrjmx.JMXFetcher.QueryError;
 
-import com.google.gson.Gson;
+import javax.management.ObjectInstance;
+import java.util.Scanner;
+import java.util.Set;
+import java.util.logging.*;
 
 public class Application {
     private static final Logger logger = Logger.getLogger("nrjmx");
@@ -36,10 +30,24 @@ public class Application {
     }
 
     public static void main(String[] args) {
-        Arguments cliArgs = new Arguments(args);
+        Arguments cliArgs = null;
+        try {
+            cliArgs = Arguments.from(args);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            new HelpFormatter().printHelp("nrjmx", Arguments.options());
+            System.exit(1);
+        }
+
+        if (cliArgs.isHelp()) {
+            new HelpFormatter().printHelp("nrjmx", Arguments.options());
+            System.exit(0);
+        }
+
         setupLogging(cliArgs.isVerbose());
 
-        JMXFetcher fetcher;
+        // TODO: move all the code below to a testable class
+        JMXFetcher fetcher = null;
         try {
             fetcher = new JMXFetcher(
                 cliArgs.getHostname(), cliArgs.getPort(),
@@ -51,51 +59,42 @@ public class Application {
         } catch (ConnectionError e) {
             logger.severe(e.getMessage());
             System.exit(1);
-            return;
         } catch (Exception e) {
-            if(cliArgs.debugMode()) {
+            if (cliArgs.isDebugMode()) {
                 e.printStackTrace();
-                System.exit(1);
-                return;
-            }else{
-                System.out.println( e.getClass().getCanonicalName());
+            } else {
+                System.out.println(e.getClass().getCanonicalName());
                 logger.severe(e.getClass().getCanonicalName() + ": " + e.getMessage());
-                System.exit(1);
-                return;
             }
+            System.exit(1);
         }
 
         Gson gson = new Gson();
 
-        Scanner input = new Scanner(System.in);
-        while (true) {
-            String beanName;
+        try (Scanner input = new Scanner(System.in)) {
+            while (input.hasNextLine()) {
+                String beanName = input.nextLine();
 
-            try {
-                beanName = input.nextLine();
-            } catch (NoSuchElementException e) {
-                logger.info("Stopped receiving data, leaving...\n");
-                input.close();
-                break;
-            }
-
-            Set<ObjectInstance> beanInstances;
-            try {
-                beanInstances = fetcher.query(beanName);
-            } catch (QueryError e) {
-                logger.warning(e.getMessage());
-                continue;
-            }
-
-            for (ObjectInstance instance : beanInstances) {
+                Set<ObjectInstance> beanInstances;
                 try {
-                    fetcher.queryAttributes(instance);
+                    beanInstances = fetcher.query(beanName);
                 } catch (QueryError e) {
                     logger.warning(e.getMessage());
+                    continue;
                 }
+
+                for (ObjectInstance instance : beanInstances) {
+                    try {
+                        fetcher.queryAttributes(instance);
+                    } catch (QueryError e) {
+                        logger.warning(e.getMessage());
+                    }
+                }
+
+                System.out.println(gson.toJson(fetcher.popResults()));
             }
-            
-            System.out.println(gson.toJson(fetcher.popResults()));
+            logger.info("Stopped receiving data, leaving...\n");
         }
+
     }
 }
