@@ -1,63 +1,57 @@
 package org.newrelic.nrjmx;
 
-import java.io.IOException;
-import java.util.*;
-import java.util.logging.Logger;
-
-import javax.management.AttributeNotFoundException;
-import javax.management.InstanceNotFoundException;
-import javax.management.IntrospectionException;
-import javax.management.MBeanAttributeInfo;
-import javax.management.MBeanException;
-import javax.management.MBeanInfo;
-import javax.management.MBeanServerConnection;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectInstance;
-import javax.management.ObjectName;
-import javax.management.ReflectionException;
-import javax.management.RuntimeMBeanException;
-import javax.management.RuntimeOperationsException;
+import javax.management.*;
 import javax.management.openmbean.CompositeData;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
+import javax.rmi.ssl.SslRMIClientSocketFactory;
+import java.io.IOException;
+import java.util.*;
+import java.util.logging.Logger;
 
 public class JMXFetcher {
     private static final Logger logger = Logger.getLogger("nrjmx");
 
     private MBeanServerConnection connection;
-    private Map<String, Object> result = new HashMap<>();;
-
+    private Map<String, Object> result = new HashMap<>();
 
     public class ConnectionError extends Exception {
-        public ConnectionError(String message) { super(message); }
-    };
+        public ConnectionError(String message, Exception cause) {
+            super(message, cause);
+        }
+    }
 
     public class QueryError extends Exception {
-        public QueryError(String message) { super(message); }
-    };
+        public QueryError(String message, Exception cause) {
+            super(message, cause);
+        }
+    }
 
     public class ValueError extends Exception {
-        public ValueError(String message) { super(message); }
-    };
+        public ValueError(String message) {
+            super(message);
+        }
+    }
 
-    public JMXFetcher(String hostname, int port, String username, String password , String keyStore, String keyStorePassword, String trustStore, String trustStorePassword, boolean isRemote) throws ConnectionError {
+    public JMXFetcher(String hostname, int port, String username, String password, String keyStore, String keyStorePassword, String trustStore, String trustStorePassword, boolean isRemote) throws ConnectionError {
         String connectionString = String.format("service:jmx:rmi:///jndi/rmi://%s:%s/jmxrmi", hostname, port);
         if (isRemote) {
             connectionString = String.format("service:jmx:remoting-jmx://%s:%s", hostname, port);
         }
 
-        Map<String, String[]> env = new HashMap<>();
-        if (username != "") {
-          env.put(JMXConnector.CREDENTIALS, new String[] { username, password });
+        Map<String, Object> env = new HashMap<>();
+        if (!"".equals(username)) {
+            env.put(JMXConnector.CREDENTIALS, new String[]{username, password});
         }
 
-        if (keyStore != "" && trustStore != "") {
+        if (!"".equals(keyStore) && !"".equals(trustStore)) {
             Properties p = System.getProperties();
-            p.put("javax.net.ssl.keyStore",keyStore);
-            p.put("javax.net.ssl.keyStorePassword",keyStorePassword);
-            p.put("javax.net.ssl.trustStore",trustStore);
-            p.put("javax.net.ssl.trustStorePassword",trustStorePassword);
+            p.put("javax.net.ssl.keyStore", keyStore);
+            p.put("javax.net.ssl.keyStorePassword", keyStorePassword);
+            p.put("javax.net.ssl.trustStore", trustStore);
+            p.put("javax.net.ssl.trustStorePassword", trustStorePassword);
+            env.put("com.sun.jndi.rmi.factory.socket", new SslRMIClientSocketFactory());
         }
 
         try {
@@ -65,7 +59,7 @@ public class JMXFetcher {
             JMXConnector connector = JMXConnectorFactory.connect(address, env);
             connection = connector.getMBeanServerConnection();
         } catch (IOException e) {
-            throw new ConnectionError("Can't connect to JMX server: " + connectionString);
+            throw new ConnectionError("Can't connect to JMX server: " + connectionString, e);
         }
     }
 
@@ -75,16 +69,16 @@ public class JMXFetcher {
         try {
             queryObject = new ObjectName(beanName);
         } catch (MalformedObjectNameException e) {
-            throw new QueryError("Can't parse bean name " + beanName);
+            throw new QueryError("Can't parse bean name " + beanName, e);
         }
 
         Set<ObjectInstance> beanInstances;
         try {
             beanInstances = connection.queryMBeans(queryObject, null);
         } catch (IOException e) {
-            throw new QueryError("Can't get beans for query " + beanName);
+            throw new QueryError("Can't get beans for query " + beanName, e);
         }
-        
+
         return beanInstances;
     }
 
@@ -95,7 +89,7 @@ public class JMXFetcher {
         try {
             info = connection.getMBeanInfo(objectName);
         } catch (InstanceNotFoundException | IntrospectionException | ReflectionException | IOException e) {
-            throw new QueryError("Can't find bean " + objectName.toString());
+            throw new QueryError("Can't find bean " + objectName.toString(), e);
         }
 
         MBeanAttributeInfo[] attrInfo = info.getAttributes();
@@ -107,11 +101,11 @@ public class JMXFetcher {
 
             String attrName = attr.getName();
             Object value;
-            
+
             try {
                 value = connection.getAttribute(objectName, attrName);
             } catch (Exception e) {
-                logger.warning("Can't get attribute " + attrName + " for bean " + objectName.toString() + ": " +  e.getMessage());
+                logger.warning("Can't get attribute " + attrName + " for bean " + objectName.toString() + ": " + e.getMessage());
                 continue;
             }
 
@@ -126,7 +120,7 @@ public class JMXFetcher {
 
     public Map<String, Object> popResults() {
         Map<String, Object> out = result;
-        result = new HashMap<String, Object>();
+        result = new HashMap<>();
         return out;
     }
 
