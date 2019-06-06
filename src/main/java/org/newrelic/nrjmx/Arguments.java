@@ -1,14 +1,8 @@
 package org.newrelic.nrjmx;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.*;
 
-public class Arguments {
+class Arguments {
     private String hostname;
     private int port;
     private String username;
@@ -20,121 +14,123 @@ public class Arguments {
     private boolean verbose;
     private boolean debug;
     private boolean isRemoteJMX;
+    private boolean help;
 
+    private static Options options = null;
 
-    Arguments(String[] args) {
-        Options options = new Options();
-        Option hostname = Option.builder("H")
-            .longOpt("hostname").desc("JMX hostname (localhost)").hasArg().build();
-        options.addOption(hostname);
-        Option port = Option.builder("P")
-            .longOpt("port").desc("JMX port (7199)").hasArg().build();
-        options.addOption(port);
-        Option username = Option.builder("u")
-            .longOpt("username").desc("JMX username").hasArg().build();
-        options.addOption(username);
-        Option password = Option.builder("p")
-            .longOpt("password").desc("JMX password").hasArg().build();
-        options.addOption(password);
-
-
-        Option keyStore = Option.builder("keyStore")
-                .longOpt("keyStore").desc("SSL keyStore location").hasArg().build();
-        options.addOption(keyStore);
-        Option keyStorePassword = Option.builder("keyStorePassword")
-                .longOpt("keyStorePassword").desc("SSL keyStorePassword").hasArg().build();
-        options.addOption(keyStorePassword);
-        Option trustStore = Option.builder("trustStore")
-                .longOpt("trustStore").desc("SSL trustStore location").hasArg().build();
-        options.addOption(trustStore);
-        Option trustStorePassword = Option.builder("trustStorePassword")
-                .longOpt("trustStorePassword").desc("SSL trustStorePassword").hasArg().build();
-        options.addOption(trustStorePassword);
-
-        Option verbose = Option.builder("v")
-            .longOpt("verbose").desc("Verbose output").hasArg(false).build();
-        options.addOption(verbose);
-        Option debug = Option.builder("d")
-                .longOpt("debug").desc("Debug mode").hasArg(false).build();
-        options.addOption(debug);
-        Option help = Option.builder("h")
-            .longOpt("help").desc("Show help").hasArg(false).build();
-        options.addOption(help);
-        Option remote = Option.builder("r")
-                .longOpt("remote").desc("Remote JMX mode").hasArg(false).build();
-        options.addOption(remote);
-
-        HelpFormatter formatter = new HelpFormatter();
-        CommandLineParser parser = new DefaultParser();
-        CommandLine cmd = null;
-
-        try {
-            cmd = parser.parse(options, args);
-        } catch (ParseException e) {
-            System.err.println(e.getMessage());
-            formatter.printHelp("nrjmx", options);
-            System.exit(1);
-        }
-        if (cmd.hasOption("help")) {
-            formatter.printHelp("nrjmx", options);
-            System.exit(0);
-        }
-
-
-        this.hostname = cmd.getOptionValue("hostname", "localhost");
-        this.port     = Integer.parseInt(cmd.getOptionValue("port", "7199"));
-        this.username = cmd.getOptionValue("username", "");
-        this.password = cmd.getOptionValue("password", "");
-        this.keyStore = cmd.getOptionValue("keyStore", "");
-        this.keyStorePassword = cmd.getOptionValue("keyStorePassword", "");
-        this.trustStore = cmd.getOptionValue("trustStore", "");
-        this.trustStorePassword = cmd.getOptionValue("trustStorePassword", "");
-        this.verbose  = cmd.hasOption("verbose");
-        this.debug    = cmd.hasOption("debug");
-        this.isRemoteJMX = cmd.hasOption("remote");
+    private Arguments() {
     }
 
-    public String getHostname() {
+    static Options options() {
+        if (options == null) {
+            options = new Options();
+            Option hostname = Option.builder("H")
+                .longOpt("hostname").desc("JMX hostname (localhost)").hasArg().build();
+            options.addOption(hostname);
+            Option port = Option.builder("P")
+                .longOpt("port").desc("JMX port (7199)").hasArg().build();
+            options.addOption(port);
+            Option username = Option.builder("u")
+                .longOpt("username").desc("JMX username").hasArg().build();
+            options.addOption(username);
+            Option password = Option.builder("p")
+                .longOpt("password").desc("JMX password").hasArg().build();
+            options.addOption(password);
+
+
+            Option keyStore = Option.builder("keyStore")
+                .longOpt("keyStore").desc("SSL keyStore location").hasArg().build();
+            options.addOption(keyStore);
+            Option keyStorePassword = Option.builder("keyStorePassword")
+                .longOpt("keyStorePassword").desc("SSL keyStorePassword").hasArg().build();
+            options.addOption(keyStorePassword);
+            Option trustStore = Option.builder("trustStore")
+                .longOpt("trustStore").desc("SSL trustStore location").hasArg().build();
+            options.addOption(trustStore);
+            Option trustStorePassword = Option.builder("trustStorePassword")
+                .longOpt("trustStorePassword").desc("SSL trustStorePassword").hasArg().build();
+            options.addOption(trustStorePassword);
+
+            Option verbose = Option.builder("v")
+                .longOpt("verbose").desc("Verbose output").hasArg(false).build();
+            options.addOption(verbose);
+            Option debug = Option.builder("d")
+                .longOpt("debug").desc("Debug mode").hasArg(false).build();
+            options.addOption(debug);
+            Option help = Option.builder("h")
+                .longOpt("help").desc("Show help").hasArg(false).build();
+            options.addOption(help);
+            Option remote = Option.builder("r")
+                .longOpt("remote").desc("Remote JMX mode").hasArg(false).build();
+            options.addOption(remote);
+        }
+        return options;
+    }
+
+    static Arguments from(String[] args) throws ParseException {
+        CommandLine cmd = new DefaultParser().parse(options(), args);
+
+        Arguments argsObj = new Arguments();
+        argsObj.hostname = cmd.getOptionValue("hostname", "localhost");
+        argsObj.port = Integer.parseInt(cmd.getOptionValue("port", "7199"));
+        argsObj.username = cmd.getOptionValue("username", "");
+        argsObj.password = cmd.getOptionValue("password", "");
+        argsObj.keyStore = cmd.getOptionValue("keyStore", "");
+        argsObj.keyStorePassword = cmd.getOptionValue("keyStorePassword", "");
+        argsObj.trustStore = cmd.getOptionValue("trustStore", "");
+        argsObj.trustStorePassword = cmd.getOptionValue("trustStorePassword", "");
+        argsObj.verbose = cmd.hasOption("verbose");
+        argsObj.help = cmd.hasOption("help");
+        argsObj.debug = cmd.hasOption("debug");
+        argsObj.isRemoteJMX = cmd.hasOption("remote");
+        return argsObj;
+    }
+
+    String getHostname() {
         return hostname;
     }
 
-    public int getPort() {
+    int getPort() {
         return port;
     }
 
-    public String getUsername() {
+    String getUsername() {
         return username;
     }
 
-    public boolean getIsRemoteJMX() {
+    boolean getIsRemoteJMX() {
         return isRemoteJMX;
     }
 
-    public String getPassword() {
+    String getPassword() {
         return password;
     }
 
-    public String getKeyStore() {
+    String getKeyStore() {
         return keyStore;
     }
 
-    public String getKeyStorePassword() {
+    String getKeyStorePassword() {
         return keyStorePassword;
     }
 
-    public String getTrustStore() {
+    String getTrustStore() {
         return trustStore;
     }
 
-    public String getTrustStorePassword() {
+    String getTrustStorePassword() {
         return trustStorePassword;
     }
 
-    public boolean isVerbose() {
+    boolean isVerbose() {
         return verbose;
     }
 
-    public boolean debugMode() {
+    boolean isDebugMode() {
         return debug;
+    }
+
+    boolean isHelp() {
+        return help;
     }
 }
