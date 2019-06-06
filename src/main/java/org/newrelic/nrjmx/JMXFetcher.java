@@ -1,5 +1,7 @@
 package org.newrelic.nrjmx;
 
+import com.google.gson.Gson;
+
 import javax.management.*;
 import javax.management.openmbean.CompositeData;
 import javax.management.remote.JMXConnector;
@@ -7,7 +9,11 @@ import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 import javax.rmi.ssl.SslRMIClientSocketFactory;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class JMXFetcher {
@@ -15,6 +21,8 @@ public class JMXFetcher {
 
     private MBeanServerConnection connection;
     private Map<String, Object> result = new HashMap<>();
+    private String connectionString;
+    private Map<String, Object> connectionEnv = new HashMap<>();
 
     public class ConnectionError extends Exception {
         public ConnectionError(String message, Exception cause) {
@@ -34,15 +42,16 @@ public class JMXFetcher {
         }
     }
 
-    public JMXFetcher(String hostname, int port, String username, String password, String keyStore, String keyStorePassword, String trustStore, String trustStorePassword, boolean isRemote) throws ConnectionError {
-        String connectionString = String.format("service:jmx:rmi:///jndi/rmi://%s:%s/jmxrmi", hostname, port);
+    public JMXFetcher(String hostname, int port, String username, String password, String keyStore,
+                      String keyStorePassword, String trustStore, String trustStorePassword, boolean isRemote) {
         if (isRemote) {
             connectionString = String.format("service:jmx:remoting-jmx://%s:%s", hostname, port);
+        } else {
+            connectionString = String.format("service:jmx:rmi:///jndi/rmi://%s:%s/jmxrmi", hostname, port);
         }
 
-        Map<String, Object> env = new HashMap<>();
         if (!"".equals(username)) {
-            env.put(JMXConnector.CREDENTIALS, new String[]{username, password});
+            connectionEnv.put(JMXConnector.CREDENTIALS, new String[]{username, password});
         }
 
         if (!"".equals(keyStore) && !"".equals(trustStore)) {
@@ -51,19 +60,51 @@ public class JMXFetcher {
             p.put("javax.net.ssl.keyStorePassword", keyStorePassword);
             p.put("javax.net.ssl.trustStore", trustStore);
             p.put("javax.net.ssl.trustStorePassword", trustStorePassword);
-            env.put("com.sun.jndi.rmi.factory.socket", new SslRMIClientSocketFactory());
+            connectionEnv.put("com.sun.jndi.rmi.factory.socket", new SslRMIClientSocketFactory());
         }
+    }
 
+    public void run(InputStream inputStream, OutputStream outputStream) throws ConnectionError {
         try {
             JMXServiceURL address = new JMXServiceURL(connectionString);
-            JMXConnector connector = JMXConnectorFactory.connect(address, env);
+            JMXConnector connector = JMXConnectorFactory.connect(address, connectionEnv);
             connection = connector.getMBeanServerConnection();
         } catch (IOException e) {
             throw new ConnectionError("Can't connect to JMX server: " + connectionString, e);
         }
+
+        Gson gson = new Gson();
+        try (Scanner input = new Scanner(inputStream);
+             PrintStream output = new PrintStream(outputStream)) {
+
+            while (input.hasNextLine()) {
+                String beanName = input.nextLine();
+
+                Set<ObjectInstance> beanInstances;
+                try {
+                    beanInstances = query(beanName);
+                } catch (JMXFetcher.QueryError e) {
+                    logger.warning(e.getMessage());
+                    logger.log(Level.FINE, e.getMessage(), e);
+                    continue;
+                }
+
+                for (ObjectInstance instance : beanInstances) {
+                    try {
+                        queryAttributes(instance);
+                    } catch (JMXFetcher.QueryError e) {
+                        logger.warning(e.getMessage());
+                        logger.log(Level.FINE, e.getMessage(), e);
+                    }
+                }
+
+                output.println(gson.toJson(popResults()));
+            }
+            logger.info("Stopped receiving data, leaving...\n");
+        }
     }
 
-    public Set<ObjectInstance> query(String beanName) throws QueryError {
+    private Set<ObjectInstance> query(String beanName) throws QueryError {
         ObjectName queryObject;
 
         try {
@@ -82,7 +123,7 @@ public class JMXFetcher {
         return beanInstances;
     }
 
-    public void queryAttributes(ObjectInstance instance) throws QueryError {
+    private void queryAttributes(ObjectInstance instance) throws QueryError {
         ObjectName objectName = instance.getObjectName();
         MBeanInfo info;
 
@@ -118,7 +159,7 @@ public class JMXFetcher {
         }
     }
 
-    public Map<String, Object> popResults() {
+    private Map<String, Object> popResults() {
         Map<String, Object> out = result;
         result = new HashMap<>();
         return out;
