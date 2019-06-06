@@ -1,12 +1,15 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>org.newrelic.jmx</groupId>
+    <groupId>nrjmx</groupId>
     <artifactId>test-server</artifactId>
     <packaging>jar</packaging>
     <version>1.0-SNAPSHOT</version>
     <name>test-server</name>
-    <url>http://maven.apache.org</url>
+    <organization>
+        <name>New Relic, Inc.</name>
+        <url>https://newrelic.com/infrastructure/</url>
+    </organization>
     <properties>
         <main.class>org.newrelic.jmx.AppKt</main.class>
         <kotlin.version>1.3.31</kotlin.version>
@@ -41,13 +44,11 @@
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
                 <version>${kotlin.version}</version>
-
                 <executions>
                     <execution>
                         <id>compile</id>
                         <goals> <goal>compile</goal> </goals>
                     </execution>
-
                     <execution>
                         <id>test-compile</id>
                         <goals> <goal>test-compile</goal> </goals>
@@ -77,6 +78,26 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <!-- also packages the server into a docker container -->
+            <!-- and creates the dockerfile -->
+            <plugin>
+                <groupId>com.spotify</groupId>
+                <artifactId>dockerfile-maven-plugin</artifactId>
+                <version>1.4.3</version>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <repository>testserver</repository>
+                    <tag>latest</tag>
+                </configuration>
             </plugin>
         </plugins>
     </build>

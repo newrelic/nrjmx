@@ -17,13 +17,14 @@ fun main() {
         val cat: Cat = Gson().fromJson(req.body(), Cat::class.java)
         log.info("registering $cat")
         server.registerMBean(cat, null)
-        "ok!"
+        "ok!\n"
     }
 
     put("/clear") { _, _ ->
         server.queryNames(ObjectName("*:type=Cat,*"), null).forEach {
             log.info("unregistering $it")
+            server.unregisterMBean(it)
         }
-        "ok!"
+        "ok!\n"
     }
 }
