@@ -106,7 +106,7 @@
                         <executions>
                             <execution>
                                 <id>Build test server</id>
-                                <phase>test</phase>
+                                <phase>generate-test-resources</phase>
                                 <goals>
                                     <goal>build</goal>
                                 </goals>
