@@ -1,14 +1,28 @@
 package org.newrelic.nrjmx;
 
-import javax.management.*;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.logging.Logger;
+
+import javax.management.Attribute;
+import javax.management.InstanceNotFoundException;
+import javax.management.IntrospectionException;
+import javax.management.MBeanAttributeInfo;
+import javax.management.MBeanInfo;
+import javax.management.MBeanServerConnection;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectInstance;
+import javax.management.ObjectName;
+import javax.management.ReflectionException;
 import javax.management.openmbean.CompositeData;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 import javax.rmi.ssl.SslRMIClientSocketFactory;
-import java.io.IOException;
-import java.util.*;
-import java.util.logging.Logger;
 
 public class JMXFetcher {
     private static final Logger logger = Logger.getLogger("nrjmx");
@@ -34,8 +48,8 @@ public class JMXFetcher {
         }
     }
 
-    public JMXFetcher(String hostname, int port, String username, String password, String keyStore, String keyStorePassword, String trustStore, String trustStorePassword, boolean isRemote) throws ConnectionError {
-        String connectionString = String.format("service:jmx:rmi:///jndi/rmi://%s:%s/jmxrmi", hostname, port);
+    public JMXFetcher(String hostname, int port, String uriPath, String username, String password , String keyStore, String keyStorePassword, String trustStore, String trustStorePassword, boolean isRemote) throws ConnectionError {
+        String connectionString = String.format("service:jmx:rmi:///jndi/rmi://%s:%s/%s", hostname, port, uriPath);
         if (isRemote) {
             connectionString = String.format("service:jmx:remoting-jmx://%s:%s", hostname, port);
         }
@@ -104,6 +118,10 @@ public class JMXFetcher {
 
             try {
                 value = connection.getAttribute(objectName, attrName);
+                if (value instanceof javax.management.Attribute) {
+                	Attribute jmxAttr = (Attribute) value;
+                	value = jmxAttr.getValue();
+                }
             } catch (Exception e) {
                 logger.warning("Can't get attribute " + attrName + " for bean " + objectName.toString() + ": " + e.getMessage());
                 continue;

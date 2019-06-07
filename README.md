@@ -51,4 +51,12 @@ Example of usage with remoting:
 ```bash
 $ ./bin/nrjmx -hostname 127.0.0.1 -port 7199 -username user -password pwd -remote
 ```
- 
+
+### Non-Standard JMX Service URI 
+
+If your JMX provider uses a non-standard JMX service URI, you can use the flag `-uriPath` to specify the path portion. For example, ForgeRock OpenDJ uses a JMX service URI like `service:jmx:rmi:///jndi/rmi://localhost:1689/org.opends.server.protocols.jmx.client-unknown`
+
+To extract data from this application:
+```bash
+$ ./bin/nrjmx -hostname localhost -port 1689 -uriPath "org.opends.server.protocols.jmx.client-unknown" -username user -password pwd
+```
