@@ -2,8 +2,6 @@ package org.newrelic.jmx;
 
 import org.testcontainers.shaded.okhttp3.*;
 
-import java.io.IOException;
-
 public class CatsClient {
 
     private String baseURL;

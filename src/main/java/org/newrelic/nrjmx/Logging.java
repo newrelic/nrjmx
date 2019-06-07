@@ -10,8 +10,6 @@ public class Logging {
 
         consoleHandler.setFormatter(new SimpleFormatter());
 
-
-
         if (verbose) {
             logger.setLevel(Level.FINE);
             consoleHandler.setLevel(Level.FINE);

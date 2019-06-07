@@ -8,10 +8,11 @@ import org.testcontainers.containers.GenericContainer;
 import java.io.*;
 import java.util.Arrays;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class JMXFetcherTest {
 
+    // Runs the JMX-monitored test container without SSL enabled
     private static GenericContainer jmxService() {
         GenericContainer container = new GenericContainer<>("testserver:latest")
             .withExposedPorts(4567, 7199)
@@ -25,6 +26,7 @@ public class JMXFetcherTest {
         return container;
     }
 
+    // Runs the JMX-monitored test container with SSL enabled
     private static GenericContainer jmxSSLService() {
         GenericContainer container = new GenericContainer<>("testserver:latest")
             .withEnv("JAVA_OPTS", "-Dcom.sun.management.jmxremote.port=7199 " +
@@ -97,7 +99,8 @@ public class JMXFetcherTest {
         // AND a JMXFetcher reads them
         jmxFetcher.run(queries, output);
 
-        // THEN the corresponding JMX objects are returned in the same query order
+        // THEN the corresponding JMX objects are returned in the same query order,
+        // ignoring the invalid queries
         assertEquals("{\"test:type\\u003dCat,name\\u003dIsidoro,attr\\u003dName\":\"Isidoro\"," +
                 "\"test:type\\u003dCat,name\\u003dHeathcliff,attr\\u003dName\":\"Heathcliff\"}",
             results.readLine());

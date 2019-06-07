@@ -94,7 +94,7 @@
             </activation>
             <build>
                 <plugins>
-                    <!-- before testing, it builds the test-server project -->
+                    <!-- before testing, it builds the test-server docker image -->
                     <plugin>
                         <groupId>com.spotify</groupId>
                         <artifactId>dockerfile-maven-plugin</artifactId>

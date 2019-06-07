@@ -28,6 +28,7 @@ public class Application {
         Logger logger = Logger.getLogger("nrjmx");
         Logging.setup(logger, cliArgs.isVerbose());
 
+        // Instantiate a JMXFetcher from the configuration arguments
         JMXFetcher fetcher = new JMXFetcher(
             cliArgs.getHostname(), cliArgs.getPort(),
             cliArgs.getUsername(), cliArgs.getPassword(),
@@ -38,6 +39,7 @@ public class Application {
 
 
         try {
+
             fetcher.run(System.in, System.out);
         } catch (JMXFetcher.ConnectionError e) {
             logger.severe(e.getMessage());

@@ -20,6 +20,7 @@ public class Service {
         final Gson gson = new Gson();
         final MBeanServer server = ManagementFactory.getPlatformMBeanServer();
 
+        // Registers a cat as an MBean
         post("/cat", (req, res) -> {
             Cat cat = gson.fromJson(req.body(), Cat.class);
             log.info("registering {}", cat);
@@ -28,6 +29,8 @@ public class Service {
         });
 
         final ObjectName queryObject = new ObjectName("*:type=Cat,*");
+
+        // Removes all registered MBean cats
         put("/clear", (req, res) -> {
             server.queryNames(queryObject, null).forEach(cat -> {
                 log.info("unregistering {}", cat);
