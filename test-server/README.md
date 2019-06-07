@@ -26,6 +26,22 @@ It uses the following ports:
 * `4567`: HTTP REST port
 * `7199`: JMX RMI port
 
+If you want to enable SSL, `JAVA_OPTS` should be:
+
+```
+-Dcom.sun.management.jmxremote.authenticate=false
+-Dcom.sun.management.jmxremote.ssl=true
+-Dcom.sun.management.jmxremote.ssl.need.client.auth=true 
+-Dcom.sun.management.jmxremote.registry.ssl=true 
+-Djavax.net.ssl.keyStore=/serverkeystore 
+-Djavax.net.ssl.keyStorePassword=serverpass 
+-Djavax.net.ssl.trustStore=/servertruststore 
+-Djavax.net.ssl.trustStorePassword=servertrustpass
+```
+
+The client certificates can be found in [../src/test/resources](../src/test/resources) (passwords are `clienttrustpass`
+and `clientpass`)
+
 ## REST API:
 
 In the port `4567`:
