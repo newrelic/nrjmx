@@ -3,7 +3,6 @@ FROM maven:3.6-jdk-8 as builder
 ADD . .
 
 RUN mvn package
-RUN pwd
 
 FROM openjdk:8-jre
 
