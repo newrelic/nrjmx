@@ -39,6 +39,8 @@ import javax.rmi.ssl.SslRMIClientSocketFactory;
  * (usually stdout)
  */
 public class JMXFetcher {
+    public static final String defaultURIPath = "";
+
     private static final Logger logger = Logger.getLogger("nrjmx");
 
     private MBeanServerConnection connection;
@@ -68,6 +70,24 @@ public class JMXFetcher {
      * Builds a new JMXFetcher
      * @param hostname Hostname of the JMX endpoint
      * @param port Port of the JMX endpoint
+     * @param username User name of the JMX endpoint, or an empty string if authentication is disabled
+     * @param password Password of the JMX endpoint,  or an empty string if authentication is disabled
+     * @param keyStore Path of the client keystore file
+     * @param keyStorePassword Password of the keystore file
+     * @param trustStore Path of the client trust store file
+     * @param trustStorePassword Password of the trust store file
+     * @param isRemote true if the connection is remote. False otherwise.
+     */
+    public JMXFetcher(String hostname, int port, String username, String password, String keyStore,
+                      String keyStorePassword, String trustStore, String trustStorePassword, boolean isRemote) {
+        this(hostname, port, defaultURIPath, username, password, keyStore,
+                keyStorePassword, trustStore, trustStorePassword, isRemote);
+    }
+
+    /**
+     * Builds a new JMXFetcher
+     * @param hostname Hostname of the JMX endpoint
+     * @param port Port of the JMX endpoint
      * @param uriPath URI path for the JMX endpoint
      * @param username User name of the JMX endpoint, or an empty string if authentication is disabled
      * @param password Password of the JMX endpoint,  or an empty string if authentication is disabled
@@ -82,9 +102,6 @@ public class JMXFetcher {
         if (isRemote) {
             connectionString = String.format("service:jmx:remoting-jmx://%s:%s", hostname, port);
         } else {
-            if ("".equals(uriPath)) {
-                uriPath = "jmxrmi";
-            }
             connectionString = String.format("service:jmx:rmi:///jndi/rmi://%s:%s/%s", hostname, port, uriPath);
         }
 
