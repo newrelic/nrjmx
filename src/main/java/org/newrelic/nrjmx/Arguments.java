@@ -5,6 +5,7 @@ import org.apache.commons.cli.*;
 class Arguments {
     private String hostname;
     private int port;
+    private String uriPath;
     private String username;
     private String password;
     private String keyStore;
@@ -30,6 +31,9 @@ class Arguments {
             Option port = Option.builder("P")
                 .longOpt("port").desc("JMX port (7199)").hasArg().build();
             options.addOption(port);
+            Option uriPath = Option.builder("U")
+                    .longOpt("uriPath").desc("path for the JMX service URI. Defaults to jmxrmi").hasArg().build();
+                options.addOption(uriPath);
             Option username = Option.builder("u")
                 .longOpt("username").desc("JMX username").hasArg().build();
             options.addOption(username);
@@ -73,6 +77,7 @@ class Arguments {
         Arguments argsObj = new Arguments();
         argsObj.hostname = cmd.getOptionValue("hostname", "localhost");
         argsObj.port = Integer.parseInt(cmd.getOptionValue("port", "7199"));
+        argsObj.uriPath  = cmd.getOptionValue("uriPath", "jmxrmi");
         argsObj.username = cmd.getOptionValue("username", "");
         argsObj.password = cmd.getOptionValue("password", "");
         argsObj.keyStore = cmd.getOptionValue("keyStore", "");
@@ -94,6 +99,10 @@ class Arguments {
         return port;
     }
 
+    String getUriPath() {
+    	return uriPath;
+    }
+    
     String getUsername() {
         return username;
     }

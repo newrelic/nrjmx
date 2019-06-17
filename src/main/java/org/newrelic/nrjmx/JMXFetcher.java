@@ -2,25 +2,45 @@ package org.newrelic.nrjmx;
 
 import com.google.gson.Gson;
 
-import javax.management.*;
-import javax.management.openmbean.CompositeData;
-import javax.management.remote.JMXConnector;
-import javax.management.remote.JMXConnectorFactory;
-import javax.management.remote.JMXServiceURL;
-import javax.rmi.ssl.SslRMIClientSocketFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.util.*;
-import java.util.logging.Level;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 import java.util.logging.Logger;
+import java.util.logging.Level;
+import java.util.Scanner;
+
+import javax.management.Attribute;
+import javax.management.InstanceNotFoundException;
+import javax.management.IntrospectionException;
+import javax.management.MBeanAttributeInfo;
+import javax.management.MBeanInfo;
+import javax.management.MBeanServerConnection;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectInstance;
+import javax.management.ObjectName;
+import javax.management.ReflectionException;
+import javax.management.openmbean.CompositeData;
+import javax.management.remote.JMXConnector;
+import javax.management.remote.JMXConnectorFactory;
+import javax.management.remote.JMXServiceURL;
+
+import javax.rmi.ssl.SslRMIClientSocketFactory;
+
 
 /**
  * JMXFetcher class reads queries from an InputStream (usually stdin) and sends the results to an OutputStream
  * (usually stdout)
  */
 public class JMXFetcher {
+    public static final String defaultURIPath = "jmxrmi";
+
     private static final Logger logger = Logger.getLogger("nrjmx");
 
     private MBeanServerConnection connection;
@@ -48,22 +68,43 @@ public class JMXFetcher {
 
     /**
      * Builds a new JMXFetcher
-     * @param hostname Hostname of the JMX endpoint
-     * @param port Port of the JMX endpoint
-     * @param username User name of the JMX endpoint, or an empty string if authentication is disabled
-     * @param password Password of the JMX enpdoint,  or an empty string if authentication is disabled
-     * @param keyStore Path of the client keystore file
-     * @param keyStorePassword Password of the keystore file
-     * @param trustStore Path of the client trust store file
+     *
+     * @param hostname           Hostname of the JMX endpoint
+     * @param port               Port of the JMX endpoint
+     * @param username           User name of the JMX endpoint, or an empty string if authentication is disabled
+     * @param password           Password of the JMX endpoint,  or an empty string if authentication is disabled
+     * @param keyStore           Path of the client keystore file
+     * @param keyStorePassword   Password of the keystore file
+     * @param trustStore         Path of the client trust store file
      * @param trustStorePassword Password of the trust store file
-     * @param isRemote true if the connection is remote. False otherwise.
+     * @param isRemote           true if the connection is remote. False otherwise.
      */
     public JMXFetcher(String hostname, int port, String username, String password, String keyStore,
+                      String keyStorePassword, String trustStore, String trustStorePassword, boolean isRemote) {
+        this(hostname, port, defaultURIPath, username, password, keyStore,
+                keyStorePassword, trustStore, trustStorePassword, isRemote);
+    }
+
+    /**
+     * Builds a new JMXFetcher
+     *
+     * @param hostname           Hostname of the JMX endpoint
+     * @param port               Port of the JMX endpoint
+     * @param uriPath            URI path for the JMX endpoint
+     * @param username           User name of the JMX endpoint, or an empty string if authentication is disabled
+     * @param password           Password of the JMX endpoint,  or an empty string if authentication is disabled
+     * @param keyStore           Path of the client keystore file
+     * @param keyStorePassword   Password of the keystore file
+     * @param trustStore         Path of the client trust store file
+     * @param trustStorePassword Password of the trust store file
+     * @param isRemote           true if the connection is remote. False otherwise.
+     */
+    public JMXFetcher(String hostname, int port, String uriPath, String username, String password, String keyStore,
                       String keyStorePassword, String trustStore, String trustStorePassword, boolean isRemote) {
         if (isRemote) {
             connectionString = String.format("service:jmx:remoting-jmx://%s:%s", hostname, port);
         } else {
-            connectionString = String.format("service:jmx:rmi:///jndi/rmi://%s:%s/jmxrmi", hostname, port);
+            connectionString = String.format("service:jmx:rmi:///jndi/rmi://%s:%s/%s", hostname, port, uriPath);
         }
 
         if (!"".equals(username)) {
@@ -86,7 +127,7 @@ public class JMXFetcher {
      *
      * If the query is wrong, it just ignores it and does not sends any data to the output stream.
      *
-     * @param inputStream Source of the JMX queries.
+     * @param inputStream  Source of the JMX queries.
      * @param outputStream Destination of the found JMX MBeans.
      * @throws ConnectionError If the connection to the JMX server has failed.
      */
@@ -171,6 +212,10 @@ public class JMXFetcher {
 
             try {
                 value = connection.getAttribute(objectName, attrName);
+                if (value instanceof Attribute) {
+                    Attribute jmxAttr = (Attribute) value;
+                    value = jmxAttr.getValue();
+                }
             } catch (Exception e) {
                 logger.warning("Can't get attribute " + attrName + " for bean " + objectName.toString() + ": " + e.getMessage());
                 continue;
