@@ -39,7 +39,7 @@ import javax.rmi.ssl.SslRMIClientSocketFactory;
  * (usually stdout)
  */
 public class JMXFetcher {
-    public static final String defaultURIPath = "";
+    public static final String defaultURIPath = "jmxrmi";
 
     private static final Logger logger = Logger.getLogger("nrjmx");
 
@@ -68,15 +68,16 @@ public class JMXFetcher {
 
     /**
      * Builds a new JMXFetcher
-     * @param hostname Hostname of the JMX endpoint
-     * @param port Port of the JMX endpoint
-     * @param username User name of the JMX endpoint, or an empty string if authentication is disabled
-     * @param password Password of the JMX endpoint,  or an empty string if authentication is disabled
-     * @param keyStore Path of the client keystore file
-     * @param keyStorePassword Password of the keystore file
-     * @param trustStore Path of the client trust store file
+     *
+     * @param hostname           Hostname of the JMX endpoint
+     * @param port               Port of the JMX endpoint
+     * @param username           User name of the JMX endpoint, or an empty string if authentication is disabled
+     * @param password           Password of the JMX endpoint,  or an empty string if authentication is disabled
+     * @param keyStore           Path of the client keystore file
+     * @param keyStorePassword   Password of the keystore file
+     * @param trustStore         Path of the client trust store file
      * @param trustStorePassword Password of the trust store file
-     * @param isRemote true if the connection is remote. False otherwise.
+     * @param isRemote           true if the connection is remote. False otherwise.
      */
     public JMXFetcher(String hostname, int port, String username, String password, String keyStore,
                       String keyStorePassword, String trustStore, String trustStorePassword, boolean isRemote) {
@@ -86,16 +87,17 @@ public class JMXFetcher {
 
     /**
      * Builds a new JMXFetcher
-     * @param hostname Hostname of the JMX endpoint
-     * @param port Port of the JMX endpoint
-     * @param uriPath URI path for the JMX endpoint
-     * @param username User name of the JMX endpoint, or an empty string if authentication is disabled
-     * @param password Password of the JMX endpoint,  or an empty string if authentication is disabled
-     * @param keyStore Path of the client keystore file
-     * @param keyStorePassword Password of the keystore file
-     * @param trustStore Path of the client trust store file
+     *
+     * @param hostname           Hostname of the JMX endpoint
+     * @param port               Port of the JMX endpoint
+     * @param uriPath            URI path for the JMX endpoint
+     * @param username           User name of the JMX endpoint, or an empty string if authentication is disabled
+     * @param password           Password of the JMX endpoint,  or an empty string if authentication is disabled
+     * @param keyStore           Path of the client keystore file
+     * @param keyStorePassword   Password of the keystore file
+     * @param trustStore         Path of the client trust store file
      * @param trustStorePassword Password of the trust store file
-     * @param isRemote true if the connection is remote. False otherwise.
+     * @param isRemote           true if the connection is remote. False otherwise.
      */
     public JMXFetcher(String hostname, int port, String uriPath, String username, String password, String keyStore,
                       String keyStorePassword, String trustStore, String trustStorePassword, boolean isRemote) {
@@ -122,10 +124,10 @@ public class JMXFetcher {
     /**
      * Sends to JMX the queries from the InputStream and sends the JMX results to an OutputStream. Each query is
      * read from a single line and the respective result is sent as a line to the outputstream.
-     *
+     * <p>
      * If the query is wrong, it just ignores it and does not sends any data to the output stream.
      *
-     * @param inputStream Source of the JMX queries.
+     * @param inputStream  Source of the JMX queries.
      * @param outputStream Destination of the found JMX MBeans.
      * @throws ConnectionError If the connection to the JMX server has failed.
      */
@@ -211,8 +213,8 @@ public class JMXFetcher {
             try {
                 value = connection.getAttribute(objectName, attrName);
                 if (value instanceof Attribute) {
-                	Attribute jmxAttr = (Attribute) value;
-                	value = jmxAttr.getValue();
+                    Attribute jmxAttr = (Attribute) value;
+                    value = jmxAttr.getValue();
                 }
             } catch (Exception e) {
                 logger.warning("Can't get attribute " + attrName + " for bean " + objectName.toString() + ": " + e.getMessage());
