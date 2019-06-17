@@ -8,6 +8,7 @@
 .classpath
 .settings
 .project
+*.iml
 
 # Package Files #
 *.jar
