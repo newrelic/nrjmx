@@ -61,7 +61,7 @@ public class JMXFetcher {
     public JMXFetcher(String hostname, int port, String username, String password, String keyStore,
                       String keyStorePassword, String trustStore, String trustStorePassword, boolean isRemote) {
         if (isRemote) {
-            connectionString = String.format("service:jmx:remoting-jmx://%s:%s", hostname, port);
+            connectionString = String.format("service:jmx:remote+http://%s:%s", hostname, port);
         } else {
             connectionString = String.format("service:jmx:rmi:///jndi/rmi://%s:%s/jmxrmi", hostname, port);
         }
