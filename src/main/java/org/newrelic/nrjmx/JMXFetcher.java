@@ -70,7 +70,7 @@ public class JMXFetcher {
      * @param port Port of the JMX endpoint
      * @param uriPath URI path for the JMX endpoint
      * @param username User name of the JMX endpoint, or an empty string if authentication is disabled
-     * @param password Password of the JMX enpdoint,  or an empty string if authentication is disabled
+     * @param password Password of the JMX endpoint,  or an empty string if authentication is disabled
      * @param keyStore Path of the client keystore file
      * @param keyStorePassword Password of the keystore file
      * @param trustStore Path of the client trust store file
@@ -79,9 +79,13 @@ public class JMXFetcher {
      */
     public JMXFetcher(String hostname, int port, String uriPath, String username, String password, String keyStore,
                       String keyStorePassword, String trustStore, String trustStorePassword, boolean isRemote) {
-        String connectionString = String.format("service:jmx:rmi:///jndi/rmi://%s:%s/%s", hostname, port, uriPath);
         if (isRemote) {
             connectionString = String.format("service:jmx:remoting-jmx://%s:%s", hostname, port);
+        } else {
+            if ("".equals(uriPath)) {
+                uriPath = "jmxrmi";
+            }
+            connectionString = String.format("service:jmx:rmi:///jndi/rmi://%s:%s/%s", hostname, port, uriPath);
         }
 
         if (!"".equals(username)) {
@@ -189,7 +193,7 @@ public class JMXFetcher {
 
             try {
                 value = connection.getAttribute(objectName, attrName);
-                if (value instanceof javax.management.Attribute) {
+                if (value instanceof Attribute) {
                 	Attribute jmxAttr = (Attribute) value;
                 	value = jmxAttr.getValue();
                 }
