@@ -54,7 +54,12 @@ $ ./bin/nrjmx -hostname 127.0.0.1 -port 7199 -username user -password pwd -remot
 
 ### Non-Standard JMX Service URI 
 
-If your JMX provider uses a non-standard JMX service URI, you can use the flag `-uriPath` to specify the path portion. For example, ForgeRock OpenDJ uses a JMX service URI like `service:jmx:rmi:///jndi/rmi://localhost:1689/org.opends.server.protocols.jmx.client-unknown`
+If your JMX provider uses a non-standard JMX service URI path (default path is `jmxrmi`), you can use the flag `-uriPath` to specify the path portion (without `/` prefix).
+
+For example:
+
+- A default URI path could be like: `service:jmx:rmi:///jndi/rmi://localhost:1689/jmxrmi` (path is last path of the URI without the prefix `/`)
+- ForgeRock OpenDJ uses a JMX service URI like: `service:jmx:rmi:///jndi/rmi://localhost:1689/org.opends.server.protocols.jmx.client-unknown`
 
 To extract data from this application:
 ```bash

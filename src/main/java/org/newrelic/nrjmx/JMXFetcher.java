@@ -124,7 +124,7 @@ public class JMXFetcher {
     /**
      * Sends to JMX the queries from the InputStream and sends the JMX results to an OutputStream. Each query is
      * read from a single line and the respective result is sent as a line to the outputstream.
-     * <p>
+     *
      * If the query is wrong, it just ignores it and does not sends any data to the output stream.
      *
      * @param inputStream  Source of the JMX queries.
