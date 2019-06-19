@@ -1,7 +1,21 @@
 # NR-JMX
 New Relic's JMX fetcher, a simple tool for extracting data out of any application exposing a JMX interface.
 
-## Build
+## Installation
+
+Usual package managers could be used for this purpose: yum, apt, zypper.
+
+Ie: `yum install nrjmx`
+
+
+### nri-jmx relation
+
+`nrjmx` is *not* bundled within the `nri-jmx` package. But, it's declared as a dependency. 
+
+So while installing `nri-jmx` if you have `nrjmx` already installed it keeps the installed version, otherwise it'll try to get the latest `nrjmx` release.
+
+
+## Custom Build
 NR-JMX uses Maven for generating the binaries:
 
 ```bash
