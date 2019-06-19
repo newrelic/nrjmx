@@ -15,6 +15,7 @@ class Arguments {
     private boolean verbose;
     private boolean debug;
     private boolean isRemoteJMX;
+    private boolean isRemoteJBossStandalone;
     private boolean help;
 
     private static Options options = null;
@@ -64,9 +65,13 @@ class Arguments {
             Option help = Option.builder("h")
                 .longOpt("help").desc("Show help").hasArg(false).build();
             options.addOption(help);
+
             Option remote = Option.builder("r")
-                .longOpt("remote").desc("Remote JMX mode").hasArg(false).build();
+                    .longOpt("remote").desc("Remote JMX mode").hasArg(false).build();
             options.addOption(remote);
+            Option remoteJBossStandalone = Option.builder("s")
+                .longOpt("remoteJBossStandalone").desc("Remote JBoss Standalone mode").hasArg(false).build();
+            options.addOption(remoteJBossStandalone);
         }
         return options;
     }
@@ -88,6 +93,7 @@ class Arguments {
         argsObj.help = cmd.hasOption("help");
         argsObj.debug = cmd.hasOption("debug");
         argsObj.isRemoteJMX = cmd.hasOption("remote");
+        argsObj.isRemoteJBossStandalone = cmd.hasOption("remoteJBossStandalone");
         return argsObj;
     }
 
@@ -102,13 +108,17 @@ class Arguments {
     String getUriPath() {
     	return uriPath;
     }
-    
+
     String getUsername() {
         return username;
     }
 
     boolean getIsRemoteJMX() {
         return isRemoteJMX;
+    }
+
+    boolean getIsRemoteJBossStandalone() {
+        return isRemoteJBossStandalone;
     }
 
     String getPassword() {

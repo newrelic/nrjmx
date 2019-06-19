@@ -40,6 +40,7 @@ import javax.rmi.ssl.SslRMIClientSocketFactory;
  */
 public class JMXFetcher {
     public static final String defaultURIPath = "jmxrmi";
+    public static final Boolean defaultJBossModeIsStandalone = false;
 
     private static final Logger logger = Logger.getLogger("nrjmx");
 
@@ -82,27 +83,47 @@ public class JMXFetcher {
     public JMXFetcher(String hostname, int port, String username, String password, String keyStore,
                       String keyStorePassword, String trustStore, String trustStorePassword, boolean isRemote) {
         this(hostname, port, defaultURIPath, username, password, keyStore,
-                keyStorePassword, trustStore, trustStorePassword, isRemote);
+                keyStorePassword, trustStore, trustStorePassword, isRemote, defaultJBossModeIsStandalone);
     }
 
     /**
      * Builds a new JMXFetcher
      *
-     * @param hostname           Hostname of the JMX endpoint
-     * @param port               Port of the JMX endpoint
-     * @param uriPath            URI path for the JMX endpoint
-     * @param username           User name of the JMX endpoint, or an empty string if authentication is disabled
-     * @param password           Password of the JMX endpoint,  or an empty string if authentication is disabled
-     * @param keyStore           Path of the client keystore file
-     * @param keyStorePassword   Password of the keystore file
-     * @param trustStore         Path of the client trust store file
-     * @param trustStorePassword Password of the trust store file
-     * @param isRemote           true if the connection is remote. False otherwise.
+     * @param hostname              Hostname of the JMX endpoint
+     * @param port                  Port of the JMX endpoint
+     * @param uriPath               URI path for the JMX endpoint
+     * @param username              User name of the JMX endpoint, or an empty string if authentication is disabled
+     * @param password              Password of the JMX endpoint,  or an empty string if authentication is disabled
+     * @param keyStore              Path of the client keystore file
+     * @param keyStorePassword      Password of the keystore file
+     * @param trustStore            Path of the client trust store file
+     * @param trustStorePassword    Password of the trust store file
+     * @param isRemote              true if the connection is remote. False otherwise.
+     * @param isJBossStandaloneMode false if JBoss is running on Domain-mode, true for JBoss Standalone mode.
      */
     public JMXFetcher(String hostname, int port, String uriPath, String username, String password, String keyStore,
-                      String keyStorePassword, String trustStore, String trustStorePassword, boolean isRemote) {
+                      String keyStorePassword, String trustStore, String trustStorePassword, boolean isRemote,
+                      boolean isJBossStandaloneMode) {
         if (isRemote) {
-            connectionString = String.format("service:jmx:remoting-jmx://%s:%s", hostname, port);
+            if (defaultURIPath.equals(uriPath)) {
+                uriPath = "";
+            } else {
+                uriPath = uriPath.concat("/");
+            }
+
+            String remoteProtocol = "remote";
+            if (isJBossStandaloneMode) {
+                remoteProtocol = "remote+http";
+            }
+
+            // Official doc for remoting v3 is not available, see:
+            // - https://developer.jboss.org/thread/196619
+            // - http://jbossremoting.jboss.org/documentation/v3.html
+            // Some doc on URIS at:
+            // - https://github.com/jboss-remoting/jboss-remoting/blob/master/src/main/java/org/jboss/remoting3/EndpointImpl.java#L292-L304
+            // - https://stackoverflow.com/questions/42970921/what-is-http-remoting-protocol
+            // - http://www.mastertheboss.com/jboss-server/jboss-monitoring/using-jconsole-to-monitor-a-remote-wildfly-server
+            connectionString = String.format("service:jmx:%s://%s:%s%s", remoteProtocol, hostname, port, uriPath);
         } else {
             connectionString = String.format("service:jmx:rmi:///jndi/rmi://%s:%s/%s", hostname, port, uriPath);
         }
@@ -124,7 +145,7 @@ public class JMXFetcher {
     /**
      * Sends to JMX the queries from the InputStream and sends the JMX results to an OutputStream. Each query is
      * read from a single line and the respective result is sent as a line to the outputstream.
-     *
+     * <p>
      * If the query is wrong, it just ignores it and does not sends any data to the output stream.
      *
      * @param inputStream  Source of the JMX queries.
