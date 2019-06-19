@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## 1.3.0 (2019-06-17)
 ## Added
 - Non standard (`jmxrmi`) URI path support via `-uriPath` argument.
+- JBoss remoting v3 support for JBoss Domain-mode as default and Standalone-mode
+  optionally.
 
 ## 1.2.1 (2019-06-04)
 ## Fixed
