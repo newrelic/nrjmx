@@ -116,7 +116,13 @@ public class JMXFetcher {
                 remoteProtocol = "remote";
             }
 
-            // https://stackoverflow.com/questions/42970921/what-is-http-remoting-protocol
+            // Official doc for remoting v3 is not available, see:
+            // - https://developer.jboss.org/thread/196619
+            // - http://jbossremoting.jboss.org/documentation/v3.html
+            // Some doc on URIS at:
+            // - https://github.com/jboss-remoting/jboss-remoting/blob/master/src/main/java/org/jboss/remoting3/EndpointImpl.java#L292-L304
+            // - https://stackoverflow.com/questions/42970921/what-is-http-remoting-protocol
+            // - http://www.mastertheboss.com/jboss-server/jboss-monitoring/using-jconsole-to-monitor-a-remote-wildfly-server
             connectionString = String.format("service:jmx:%s://%s:%s%s", remoteProtocol, hostname, port, uriPath);
         } else {
             connectionString = String.format("service:jmx:rmi:///jndi/rmi://%s:%s/%s", hostname, port, uriPath);
