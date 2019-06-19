@@ -34,7 +34,7 @@ public class Application {
             cliArgs.getUsername(), cliArgs.getPassword(),
             cliArgs.getKeyStore(), cliArgs.getKeyStorePassword(),
             cliArgs.getTrustStore(), cliArgs.getTrustStorePassword(),
-            cliArgs.getIsRemoteJMX()
+            cliArgs.getIsRemoteJMX(), cliArgs.getIsRemoteJBossStandalone()
         );
 
         try {

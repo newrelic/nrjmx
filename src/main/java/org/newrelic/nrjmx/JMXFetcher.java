@@ -40,7 +40,7 @@ import javax.rmi.ssl.SslRMIClientSocketFactory;
  */
 public class JMXFetcher {
     public static final String defaultURIPath = "jmxrmi";
-    public static final Boolean defaultJBossModeIsDomain = true;
+    public static final Boolean defaultJBossModeIsStandalone = false;
 
     private static final Logger logger = Logger.getLogger("nrjmx");
 
@@ -83,27 +83,27 @@ public class JMXFetcher {
     public JMXFetcher(String hostname, int port, String username, String password, String keyStore,
                       String keyStorePassword, String trustStore, String trustStorePassword, boolean isRemote) {
         this(hostname, port, defaultURIPath, username, password, keyStore,
-                keyStorePassword, trustStore, trustStorePassword, isRemote, defaultJBossModeIsDomain);
+                keyStorePassword, trustStore, trustStorePassword, isRemote, defaultJBossModeIsStandalone);
     }
 
     /**
      * Builds a new JMXFetcher
      *
-     * @param hostname           Hostname of the JMX endpoint
-     * @param port               Port of the JMX endpoint
-     * @param uriPath            URI path for the JMX endpoint
-     * @param username           User name of the JMX endpoint, or an empty string if authentication is disabled
-     * @param password           Password of the JMX endpoint,  or an empty string if authentication is disabled
-     * @param keyStore           Path of the client keystore file
-     * @param keyStorePassword   Password of the keystore file
-     * @param trustStore         Path of the client trust store file
-     * @param trustStorePassword Password of the trust store file
-     * @param isRemote           true if the connection is remote. False otherwise.
-     * @param isJBossModeDomain  true if JBoss is running on Domain-mode. False for JBoss Standalone mode.
+     * @param hostname              Hostname of the JMX endpoint
+     * @param port                  Port of the JMX endpoint
+     * @param uriPath               URI path for the JMX endpoint
+     * @param username              User name of the JMX endpoint, or an empty string if authentication is disabled
+     * @param password              Password of the JMX endpoint,  or an empty string if authentication is disabled
+     * @param keyStore              Path of the client keystore file
+     * @param keyStorePassword      Password of the keystore file
+     * @param trustStore            Path of the client trust store file
+     * @param trustStorePassword    Password of the trust store file
+     * @param isRemote              true if the connection is remote. False otherwise.
+     * @param isJBossStandaloneMode false if JBoss is running on Domain-mode, true for JBoss Standalone mode.
      */
     public JMXFetcher(String hostname, int port, String uriPath, String username, String password, String keyStore,
                       String keyStorePassword, String trustStore, String trustStorePassword, boolean isRemote,
-                      boolean isJBossModeDomain) {
+                      boolean isJBossStandaloneMode) {
         if (isRemote) {
             if (defaultURIPath.equals(uriPath)) {
                 uriPath = "";
@@ -111,9 +111,9 @@ public class JMXFetcher {
                 uriPath = uriPath.concat("/");
             }
 
-            String remoteProtocol = "remote+http";
-            if (isJBossModeDomain) {
-                remoteProtocol = "remote";
+            String remoteProtocol = "remote";
+            if (isJBossStandaloneMode) {
+                remoteProtocol = "remote+http";
             }
 
             // Official doc for remoting v3 is not available, see:
