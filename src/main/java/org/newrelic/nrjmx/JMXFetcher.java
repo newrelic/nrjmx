@@ -102,8 +102,13 @@ public class JMXFetcher {
     public JMXFetcher(String hostname, int port, String uriPath, String username, String password, String keyStore,
                       String keyStorePassword, String trustStore, String trustStorePassword, boolean isRemote) {
         if (isRemote) {
+            if (defaultURIPath.equals(uriPath)) {
+                uriPath = "";
+            } else {
+                uriPath = uriPath.concat("/");
+            }
             // https://stackoverflow.com/questions/42970921/what-is-http-remoting-protocol
-            connectionString = String.format("service:jmx:remote+http://%s:%s", hostname, port);
+            connectionString = String.format("service:jmx:remote+http://%s:%s%s", hostname, port, uriPath);
         } else {
             connectionString = String.format("service:jmx:rmi:///jndi/rmi://%s:%s/%s", hostname, port, uriPath);
         }
