@@ -12,7 +12,7 @@ Ie: `yum install nrjmx`
 
 `nrjmx` is *not* bundled within the `nri-jmx` package. But, it's declared as a dependency. 
 
-So while installing `nri-jmx` if you don't have `nrjmx` already installed it keeps the installed version, otherwise it'll try to get the latest `nrjmx` release.
+So while installing `nri-jmx` if you have `nrjmx` already installed it keeps the installed version, otherwise it'll try to get the latest `nrjmx` release.
 
 
 ## Custom Build
