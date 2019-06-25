@@ -59,7 +59,13 @@ $ echo
 
 ### Remote URL connection
 
-If you want to use a remoting-jmx URL you can use the flag `-remote`. In this case it will use the remoting connection URL: `service:jmx:remoting-jmx://host:port` instead of `service:jmx:rmi:///jndi/rmi://host:port/jmxrmi`
+If you want to use a remoting-jmx URL you can use the flag `-remote`. In this case it will use the remoting connection URL: `service:jmx:remote://host:port` instead of `service:jmx:rmi:///jndi/rmi://host:port/jmxrmi`
+
+This sets URI ready for JBoss Domain mode.
+
+#### JBoss Standalone mode
+
+This is supported via `-remoteJBossStandalone` and will set connection URL to `service:jmx:remote+http://host:port`.
 
 Example of usage with remoting:
 ```bash
