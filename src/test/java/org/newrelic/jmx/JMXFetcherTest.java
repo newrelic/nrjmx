@@ -47,21 +47,27 @@ public class JMXFetcherTest {
 
     @Test(timeout = 10_000)
     public void testJMX() throws Exception {
-        try (GenericContainer container = jmxService()) {
+        GenericContainer container = jmxService();
+        try {
             container.start();
             testJMXFetching(new JMXFetcher("localhost", 7199,
                 "", "", "", "", "", "", false));
+        } finally {
+            container.close();
         }
     }
 
     @Test(timeout = 10_000)
     public void testJMXWithSSL() throws Exception {
-        try (GenericContainer container = jmxSSLService()) {
+        GenericContainer container = jmxSSLService();
+        try {
             container.start();
             testJMXFetching(new JMXFetcher("localhost", 7199, "", "",
                 getClass().getResource("/clientkeystore").getPath(), "clientpass",
                 getClass().getResource("/clienttruststore").getPath(), "clienttrustpass",
                 false));
+        } finally {
+            container.close();
         }
     }
 
