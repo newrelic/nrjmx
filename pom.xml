@@ -87,7 +87,7 @@
                             <goal>copy</goal>
                         </goals>
                         <configuration>
-                            <sourceFile>target/${project.artifactId}-${project.version}-jar-with-dependencies.jar
+                            <sourceFile>target/${project.artifactId}-${project.version}.jar
                             </sourceFile>
                             <destinationFile>bin/nrjmx.jar</destinationFile>
                         </configuration>
@@ -136,7 +136,7 @@
                     <plugin>
                         <artifactId>maven-assembly-plugin</artifactId>
                         <configuration>
-                            <finalName>nrjmx_${project.version}-1_amd64</finalName>
+                            <finalName>${project.artifactId}-${project.version}</finalName>
                             <appendAssemblyId>false</appendAssemblyId>
                             <descriptor>assembly.xml</descriptor>
                         </configuration>
@@ -177,16 +177,16 @@
                             <dataSet>
                                 <data>
                                     <type>file</type>
-                                    <src>target/${project.artifactId}-${project.version}-jar-with-dependencies.jar</src>
+                                    <src>target/${project.artifactId}-${project.version}.jar</src>
                                     <dst>
-                                        /usr/lib/${project.artifactId}/${project.artifactId}-${project.version}-jar-with-dependencies.jar
+                                        /usr/lib/${project.artifactId}/${project.artifactId}-${project.version}.jar
                                     </dst>
                                 </data>
                                 <data>
                                     <type>link</type>
                                     <linkName>/usr/lib/${project.artifactId}/${project.artifactId}.jar</linkName>
                                     <linkTarget>
-                                        /usr/lib/${project.artifactId}/${project.artifactId}-${project.version}-jar-with-dependencies.jar
+                                        /usr/lib/${project.artifactId}/${project.artifactId}-${project.version}.jar
                                     </linkTarget>
                                     <symlink>true</symlink>
                                 </data>
@@ -248,12 +248,12 @@
                                     <sources>
                                         <source>
                                             <location>
-                                                target/${project.artifactId}-${project.version}-jar-with-dependencies.jar
+                                                target/${project.artifactId}-${project.version}.jar
                                             </location>
                                         </source>
                                         <softlinkSource>
                                             <location>
-                                                /usr/lib/${project.artifactId}/${project.artifactId}-${project.version}-jar-with-dependencies.jar
+                                                /usr/lib/${project.artifactId}/${project.artifactId}-${project.version}.jar
                                             </location>
                                             <destination>${project.artifactId}.jar</destination>
                                         </softlinkSource>
