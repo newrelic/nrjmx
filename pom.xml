@@ -87,7 +87,7 @@
                             <goal>copy</goal>
                         </goals>
                         <configuration>
-                            <sourceFile>target/${project.artifactId}-${project.version}.jar
+                            <sourceFile>target/${project.artifactId}_linux_${project.version}_noarch.jar
                             </sourceFile>
                             <destinationFile>bin/nrjmx.jar</destinationFile>
                         </configuration>
@@ -136,7 +136,7 @@
                     <plugin>
                         <artifactId>maven-assembly-plugin</artifactId>
                         <configuration>
-                            <finalName>${project.artifactId}-${project.version}</finalName>
+                            <finalName>${project.artifactId}_linux_${project.version}_noarch</finalName>
                             <appendAssemblyId>false</appendAssemblyId>
                             <descriptor>assembly.xml</descriptor>
                         </configuration>
@@ -177,16 +177,16 @@
                             <dataSet>
                                 <data>
                                     <type>file</type>
-                                    <src>target/${project.artifactId}-${project.version}.jar</src>
+                                    <src>target/${project.artifactId}_linux_${project.version}_noarch.jar</src>
                                     <dst>
-                                        /usr/lib/${project.artifactId}/${project.artifactId}-${project.version}.jar
+                                        /usr/lib/${project.artifactId}/${project.artifactId}_linux_${project.version}_noarch.jar
                                     </dst>
                                 </data>
                                 <data>
                                     <type>link</type>
                                     <linkName>/usr/lib/${project.artifactId}/${project.artifactId}.jar</linkName>
                                     <linkTarget>
-                                        /usr/lib/${project.artifactId}/${project.artifactId}-${project.version}.jar
+                                        /usr/lib/${project.artifactId}/${project.artifactId}_linux_${project.version}_noarch.jar
                                     </linkTarget>
                                     <symlink>true</symlink>
                                 </data>
@@ -248,12 +248,12 @@
                                     <sources>
                                         <source>
                                             <location>
-                                                target/${project.artifactId}-${project.version}.jar
+                                                target/${project.artifactId}_linux_${project.version}_noarch.jar
                                             </location>
                                         </source>
                                         <softlinkSource>
                                             <location>
-                                                /usr/lib/${project.artifactId}/${project.artifactId}-${project.version}.jar
+                                                /usr/lib/${project.artifactId}/${project.artifactId}_linux_${project.version}_noarch.jar
                                             </location>
                                             <destination>${project.artifactId}.jar</destination>
                                         </softlinkSource>
