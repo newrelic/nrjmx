@@ -248,12 +248,12 @@
                                     <sources>
                                         <source>
                                             <location>
-                                                target/${project.artifactId}-${project.version}.jar
+                                                target/${project.artifactId}_linux_${project.version}_noarch.jar
                                             </location>
                                         </source>
                                         <softlinkSource>
                                             <location>
-                                                /usr/lib/${project.artifactId}/${project.artifactId}-${project.version}.jar
+                                                /usr/lib/${project.artifactId}_linux_${project.version}_noarch.jar
                                             </location>
                                             <destination>${project.artifactId}.jar</destination>
                                         </softlinkSource>
