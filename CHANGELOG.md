@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.3.1 (2019-06-17)
+- (Linux-only) tar.gz packaging as an alternative to the current package managers
+
 ## 1.3.0 (2019-06-17)
 ## Added
 - Non standard (`jmxrmi`) URI path support via `-uriPath` argument.

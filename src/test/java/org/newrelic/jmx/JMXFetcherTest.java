@@ -3,10 +3,12 @@ package org.newrelic.jmx;
 import org.junit.Assert;
 import org.junit.Test;
 import org.newrelic.nrjmx.JMXFetcher;
+import org.newrelic.nrjmx.Logging;
 import org.testcontainers.containers.GenericContainer;
 
 import java.io.*;
 import java.util.Arrays;
+import java.util.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
 
@@ -73,6 +75,7 @@ public class JMXFetcherTest {
 
 
     public void testJMXFetching(JMXFetcher jmxFetcher) throws Exception {
+        Logging.setup(Logger.getLogger("nrjmx"), true);
         // Test preparation
         // builds a piped, readable output stream
         PipedOutputStream output = new PipedOutputStream();
