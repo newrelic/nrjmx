@@ -3,10 +3,15 @@ New Relic's JMX fetcher, a simple tool for extracting data out of any applicatio
 
 ## Installation
 
-Usual package managers could be used for this purpose: yum, apt, zypper.
+### Via package manager
+
+Usual package managers could be used for this purpose: *yum, apt, zypper*.
 
 Ie: `yum install nrjmx`
 
+### Via tarball
+
+You can download and decompress the Java executable as well from the [downloads url](http://download.newrelic.com/infrastructure_agent/binaries/linux/noarch/)
 
 ### nri-jmx relation
 
