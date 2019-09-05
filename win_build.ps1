@@ -1,6 +1,6 @@
 <#
     .SYNOPSIS
-        This script verifies, tests, builds and packages NRJMX
+        This script packages NRJMX
 #>
 param (
     # Target architecture: amd64 (default) or 386
