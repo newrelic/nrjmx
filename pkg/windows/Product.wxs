@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <?define ProductId = "*" ?>
+    <?define UpgradeCode = "{2fee3d98-828c-446f-9ec9-65e220a460b8}" ?>
+
+    <Product Id="$(var.ProductId)"
+             Name="NRJMX"
+             Language="1033"
+             Version="$(env.NRJMX_VERSION)"
+             Manufacturer="New Relic, Inc."
+             UpgradeCode="$(var.UpgradeCode)">
+        <Package Id="*"
+                 InstallerVersion="200"
+                 Compressed="yes"
+                 InstallScope="perMachine"
+                 Platform="x64"
+                 Manufacturer="New Relic, Inc."
+                 Comments="(c) 2019 New Relic, Inc."
+                 Keywords="infrastructure,MSI,nrjmx"/>
+
+        <MajorUpgrade DowngradeErrorMessage="A newer version of nrjmx is already installed."/>
+        <MediaTemplate EmbedCab="yes"/>
+
+        <Feature Id="ProductFeature" Title="NRJMX" Level="1">
+            <ComponentRef Id="CMP_V1_NRJMX_DIRECTORY"/>
+            <ComponentGroupRef Id="CMP_GRP_NRJMX_JAR"/>
+            <ComponentGroupRef Id="CMP_GRP_NRJMX_BAT"/>
+        </Feature>
+    </Product>
+
+    <Fragment>
+        <Directory Id="TARGETDIR" Name="SourceDir">
+            <Directory Id="ProgramFiles64Folder">
+                <Directory Id="CompanyFolder" Name="New Relic">
+                    <Directory Id="NrjmxDirectory" Name="nrjmx">
+                    </Directory>
+                </Directory>
+            </Directory>
+        </Directory>
+    </Fragment>
+
+    <Fragment>
+        <DirectoryRef Id="NrjmxDirectory">
+            <Component Id="CMP_V1_NRJMX_DIRECTORY" Guid="e4ed6da6-b45c-4d0e-abf9-8adee95aed3c" KeyPath="yes">
+                <CreateFolder/>
+            </Component>
+        </DirectoryRef>
+    </Fragment>
+
+    <Fragment>
+        <ComponentGroup Id="CMP_GRP_NRJMX_JAR" Directory="NrjmxDirectory">
+            <Component Id="CMP_NRJMX_JAR" Guid="9ac6648a-d7e4-4c85-8240-8208bddc57b5" Win64="yes">
+                <File Id="FILE_NRJMX_JAR"
+                      Source="$(var.JarPath)nrjmx-$(env.NRJMX_VERSION).jar"
+                      Name="nrjmx.jar"
+                      KeyPath="yes"/>
+            </Component>
+        </ComponentGroup>
+        <ComponentGroup Id="CMP_GRP_NRJMX_BAT" Directory="NrjmxDirectory">
+            <Component Id="CMP_NRJMX_BAT" Guid="fb3b675c-4905-45bd-a37f-8a9fb9dc2baf" Win64="yes">
+                <File Id="FILE_NRJMX_BAT"
+                      Source="$(var.BinPath)nrjmx.bat"
+                      KeyPath="yes"/>
+            </Component>
+        </ComponentGroup>
+    </Fragment>
+</Wix>
