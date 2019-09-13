@@ -37,10 +37,10 @@ provide the required tools), you can disable the `deb` and `rpm` Maven profiles 
 the command line:
 
 ```bash
-mvn clean package -P \!deb,\!rpm,\!tarball
+mvn clean package -P \!deb,\!rpm,\!tarball,\!test
 ```
 
-## Configuring java version.
+## Configuring java version
 
 `Note: nrjmx is targetted to work with Java 8`
 
@@ -54,11 +54,14 @@ or
 
 `NRIA_JAVA_HOME=/usr/lib/jvm/jdk1.x.yz`
 
-then pass the environment variable through the infra agent by appending the following lines to newrelic-infra.yml config file:
+The standard way is using JAVA_HOME, but the NRIA_JAVA_HOME takes precedence over JAVA_HOME in case your JAVA_HOME is already set and the version does not fit the NRJMX requirements.
+
+Then pass the environment variable through the infra agent by appending the following lines to newrelic-infra.yml config file:
 ```
 passthrough_environment:
-    - NRIA_JAVA_HOME (or JAVA_HOME)
+    - JAVA_HOME
 ```
+(replace JAVA_HOME by NRIA_JAVA_HOME if you have used the later property instead the standard one)
 
 ## Usage
 The applicaton just expects the connection parameters to the JMX interface.
