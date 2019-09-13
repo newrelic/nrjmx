@@ -37,7 +37,7 @@ provide the required tools), you can disable the `deb` and `rpm` Maven profiles 
 the command line:
 
 ```bash
-mvn clean package -P \!deb,\!rpm
+mvn clean package -P \!deb,\!rpm,\!tarball
 ```
 
 ## Configuring java version.
