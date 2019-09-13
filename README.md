@@ -40,7 +40,25 @@ the command line:
 mvn clean package -P \!deb,\!rpm
 ```
 
-Note: nrjmx is targetted to work with Java 7 ( [pom.xml](https://github.com/newrelic/nrjmx/blob/master/pom.xml#L217-L219) )
+## Configuring java version.
+
+`Note: nrjmx is targetted to work with Java 8`
+
+After installation, nrjmx will use the default java version installed on the environment (the one set in the $PATH).
+You can configure a different java version for nrjmx by adding one of the following environment variables at the end of the `/etc/environment` file:
+
+### e.g.:
+`JAVA_HOME=/usr/lib/jvm/jdk1.x.yz`
+
+or
+
+`NRIA_JAVA_HOME=/usr/lib/jvm/jdk1.x.yz`
+
+then pass the environment variable through the infra agent by appending the following lines to newrelic-infra.yml config file:
+```
+passthrough_environment:
+    - NRIA_JAVA_HOME (or JAVA_HOME)
+```
 
 ## Usage
 The applicaton just expects the connection parameters to the JMX interface.
