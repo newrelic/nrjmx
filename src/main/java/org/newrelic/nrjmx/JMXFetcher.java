@@ -318,7 +318,7 @@ public class JMXFetcher {
             return 0.0f;
         } else if (value == Float.NEGATIVE_INFINITY) {
             return Float.MIN_VALUE;
-        } else if (value == Double.POSITIVE_INFINITY) {
+        } else if (value == Float.POSITIVE_INFINITY) {
             return Float.MAX_VALUE;
         }
 
