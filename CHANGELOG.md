@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.4.1 (2019-10-01)
+- Fixed issue when parsing float NaN values.
+
 ## 1.4.0 (2019-09-18)
 - Upgrade project target to Java 1.8 and allow using a different Java version than 
 the default one by configuring JAVA_HOME or NRIA_JAVA_HOME environment variables.
