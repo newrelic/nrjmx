@@ -185,8 +185,12 @@ public class JMXFetcher {
                         logger.log(Level.FINE, e.getMessage(), e);
                     }
                 }
-
-                output.println(gson.toJson(popResults()));
+                try {
+                    output.println(gson.toJson(popResults()));
+                } catch (IllegalArgumentException e) {
+                    logger.warning(e.getMessage());
+                    logger.log(Level.FINE, e.getMessage(), e);
+                }
             }
             logger.info("Stopped receiving data, leaving...\n");
         }
@@ -263,6 +267,9 @@ public class JMXFetcher {
         } else if (value instanceof java.lang.Double) {
             Double ddata = parseDouble((Double) value);
             result.put(name, ddata);
+        } else if (value instanceof java.lang.Float) {
+            Float ddata = parseFloat((Float) value);
+            result.put(name, ddata);
         } else if (value instanceof Number || value instanceof String || value instanceof Boolean) {
             result.put(name, value);
         } else if (value instanceof CompositeData) {
@@ -297,6 +304,22 @@ public class JMXFetcher {
             return Double.MIN_VALUE;
         } else if (value == Double.POSITIVE_INFINITY) {
             return Double.MAX_VALUE;
+        }
+
+        return value;
+    }
+
+    /**
+     * XXX: JSON does not support NaN, Infinity, or -Infinity as they come back from JMX.
+     * So we parse them out to 0, Max Double, and Min Double respectively.
+     */
+    private Float parseFloat(Float value) {
+        if (value.isNaN()) {
+            return 0.0f;
+        } else if (value == Float.NEGATIVE_INFINITY) {
+            return Float.MIN_VALUE;
+        } else if (value == Float.POSITIVE_INFINITY) {
+            return Float.MAX_VALUE;
         }
 
         return value;
