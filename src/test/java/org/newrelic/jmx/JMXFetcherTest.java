@@ -47,7 +47,7 @@ public class JMXFetcherTest {
         return container;
     }
 
-    @Test(timeout = 10_000)
+    @Test(timeout = 20_000)
     public void testJMX() throws Exception {
         GenericContainer container = jmxService();
         try {
@@ -59,7 +59,7 @@ public class JMXFetcherTest {
         }
     }
 
-    @Test(timeout = 10_000)
+    @Test(timeout = 20_000)
     public void testJMXWithSSL() throws Exception {
         GenericContainer container = jmxSSLService();
         try {
