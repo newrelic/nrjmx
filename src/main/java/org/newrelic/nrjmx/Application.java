@@ -38,23 +38,21 @@ public class Application {
         );
 
         try {
-
             fetcher.run(System.in, System.out);
         } catch (JMXFetcher.ConnectionError e) {
-            logger.severe(e.getMessage());
-            logger.log(Level.FINE, e.getMessage(), e);
+            logger.severe("jmx connection error: " + e.getMessage());
+            logTrace(cliArgs, logger, e);
             System.exit(1);
         } catch (Exception e) {
-            if (cliArgs.isDebugMode()) {
-                e.printStackTrace();
-            } else {
-                System.out.println(e.getClass().getCanonicalName());
-                logger.severe(e.getClass().getCanonicalName() + ": " + e.getMessage());
-                logger.log(Level.FINE, e.getMessage(), e);
-            }
+            logger.severe("error running nrjmx: " + e.getMessage());
+            logTrace(cliArgs, logger, e);
             System.exit(1);
         }
+    }
 
-
+    private static void logTrace(Arguments cliArgs, Logger logger, Exception e) {
+        if (cliArgs.isDebugMode()) {
+            logger.info("exception trace for " + e.getClass().getCanonicalName() + ": " + e);
+        }
     }
 }
