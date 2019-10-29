@@ -86,7 +86,7 @@ public class JMXFetcherTest {
         // WITH some monitored objects
         final CatsClient cats = new CatsClient("http://localhost:4567");
 
-        eventually(5_000, new Runnable() {
+        eventually(10_000, new Runnable() {
             @Override
             public void run() {
                 Assert.assertEquals("ok!\n", cats.add("Isidoro"));
