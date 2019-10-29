@@ -192,7 +192,7 @@ public class JMXFetcher {
                     logger.log(Level.FINE, e.getMessage(), e);
                 }
             }
-            logger.info("Stopped receiving data, leaving...\n");
+            logger.fine("Stopped receiving data, leaving...\n");
         }
     }
 
