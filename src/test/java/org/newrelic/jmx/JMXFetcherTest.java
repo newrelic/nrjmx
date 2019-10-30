@@ -47,7 +47,7 @@ public class JMXFetcherTest {
         return container;
     }
 
-    @Test(timeout = 10_000)
+    @Test(timeout = 20_000)
     public void testJMX() throws Exception {
         GenericContainer container = jmxService();
         try {
@@ -59,7 +59,7 @@ public class JMXFetcherTest {
         }
     }
 
-    @Test(timeout = 10_000)
+    @Test(timeout = 20_000)
     public void testJMXWithSSL() throws Exception {
         GenericContainer container = jmxSSLService();
         try {
@@ -86,7 +86,7 @@ public class JMXFetcherTest {
         // WITH some monitored objects
         final CatsClient cats = new CatsClient("http://localhost:4567");
 
-        eventually(5_000, new Runnable() {
+        eventually(10_000, new Runnable() {
             @Override
             public void run() {
                 Assert.assertEquals("ok!\n", cats.add("Isidoro"));
