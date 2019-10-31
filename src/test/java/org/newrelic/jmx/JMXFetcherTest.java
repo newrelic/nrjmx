@@ -59,6 +59,19 @@ public class JMXFetcherTest {
         }
     }
 
+
+    @Test(timeout = 20_000)
+    public void testJMXFromConnectionURL() throws Exception {
+        GenericContainer container = jmxService();
+        try {
+            container.start();
+            testJMXFetching(new JMXFetcher("service:jmx:rmi:///jndi/rmi://localhost:7199/jmxrmi",
+                    "", "", "", "", "", ""));
+        } finally {
+            container.close();
+        }
+    }
+
     @Test(timeout = 20_000)
     public void testJMXWithSSL() throws Exception {
         GenericContainer container = jmxSSLService();

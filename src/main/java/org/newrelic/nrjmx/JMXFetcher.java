@@ -68,7 +68,24 @@ public class JMXFetcher {
     }
 
     /**
-     * Builds a new JMXFetcher
+     * Builds a new JMXFetcher with user & pass from a connection URL.
+     *
+     * @param connectionURL         Full connection URL.
+     * @param username              User name of the JMX endpoint, or an empty string if authentication is disabled
+     * @param password              Password of the JMX endpoint,  or an empty string if authentication is disabled
+     * @param keyStore              Path of the client keystore file
+     * @param keyStorePassword      Password of the keystore file
+     * @param trustStore            Path of the client trust store file
+     * @param trustStorePassword    Password of the trust store file
+     */
+    public JMXFetcher(String connectionURL, String username, String password, String keyStore,
+                      String keyStorePassword, String trustStore, String trustStorePassword) {
+        this("", 0, "", username, password, keyStore,
+                keyStorePassword, trustStore, trustStorePassword, false, false, connectionURL);
+    }
+
+    /**
+     * Builds a new JMXFetcher building the connection URL from arguments.
      *
      * @param hostname           Hostname of the JMX endpoint
      * @param port               Port of the JMX endpoint
@@ -87,7 +104,7 @@ public class JMXFetcher {
     }
 
     /**
-     * Builds a new JMXFetcher
+     * Builds a new JMXFetcher building the connection URL from arguments, with custom URI.
      *
      * @param hostname              Hostname of the JMX endpoint
      * @param port                  Port of the JMX endpoint
@@ -104,18 +121,17 @@ public class JMXFetcher {
     public JMXFetcher(String hostname, int port, String uriPath, String username, String password, String keyStore,
                       String keyStorePassword, String trustStore, String trustStorePassword, boolean isRemote,
                       boolean isJBossStandaloneMode) {
-        if (isRemote) {
-            if (defaultURIPath.equals(uriPath)) {
-                uriPath = "";
-            } else {
-                uriPath = uriPath.concat("/");
-            }
+        this(hostname, port, uriPath, username, password, keyStore,
+                keyStorePassword, trustStore, trustStorePassword, isRemote, isJBossStandaloneMode, "");
+    }
 
-            String remoteProtocol = "remote";
-            if (isJBossStandaloneMode) {
-                remoteProtocol = "remote+http";
-            }
 
+    private JMXFetcher(String hostname, int port, String uriPath, String username, String password, String keyStore,
+                      String keyStorePassword, String trustStore, String trustStorePassword, boolean isRemote,
+                      boolean isJBossStandaloneMode, String connectionURL) {
+        if (connectionURL != null && !connectionURL.equals("")) {
+            connectionString = connectionURL;
+        } else {
             // Official doc for remoting v3 is not available, see:
             // - https://developer.jboss.org/thread/196619
             // - http://jbossremoting.jboss.org/documentation/v3.html
@@ -123,9 +139,20 @@ public class JMXFetcher {
             // - https://github.com/jboss-remoting/jboss-remoting/blob/master/src/main/java/org/jboss/remoting3/EndpointImpl.java#L292-L304
             // - https://stackoverflow.com/questions/42970921/what-is-http-remoting-protocol
             // - http://www.mastertheboss.com/jboss-server/jboss-monitoring/using-jconsole-to-monitor-a-remote-wildfly-server
-            connectionString = String.format("service:jmx:%s://%s:%s%s", remoteProtocol, hostname, port, uriPath);
-        } else {
-            connectionString = String.format("service:jmx:rmi:///jndi/rmi://%s:%s/%s", hostname, port, uriPath);
+            if (isRemote) {
+                if (defaultURIPath.equals(uriPath)) {
+                    uriPath = "";
+                } else {
+                    uriPath = uriPath.concat("/");
+                }
+                String remoteProtocol = "remote";
+                if (isJBossStandaloneMode) {
+                    remoteProtocol = "remote+http";
+                }
+                connectionString = String.format("service:jmx:%s://%s:%s%s", remoteProtocol, hostname, port, uriPath);
+            } else {
+                connectionString = String.format("service:jmx:rmi:///jndi/rmi://%s:%s/%s", hostname, port, uriPath);
+            }
         }
 
         if (!"".equals(username)) {
