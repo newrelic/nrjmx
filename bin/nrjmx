@@ -9,7 +9,9 @@ elif [ ! -z "${JAVA_HOME}" ]; then
 fi
 
 if [ -f /usr/lib/nrjmx/nrjmx.jar ]; then
-   ${java_tool} -jar /usr/lib/nrjmx/nrjmx.jar $@
+    CLASSPATH=/usr/lib/nrjmx/*:/usr/lib/nrjmx/connectors/*
 else
-   ${java_tool} -jar `dirname $0`/nrjmx.jar $@
+    CLASSPATH=./*:./connectors/*
 fi
+
+${java_tool} -cp ${CLASSPATH} org.newrelic.nrjmx.Application $@

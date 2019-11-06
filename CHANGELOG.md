@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Set debug log entry on nice log lvl to be shown only for verbose mode
 - Clean up cmd execution log entries
 - Increase test timeout to build on slow boxes
+- Support custom connectors
 
 ## 1.4.1 (2019-10-01)
 - Fixed issue when parsing float NaN values.
