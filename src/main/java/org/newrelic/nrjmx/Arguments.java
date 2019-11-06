@@ -4,6 +4,7 @@ import org.apache.commons.cli.*;
 
 class Arguments {
     private String hostname;
+    private String connectionURL;
     private int port;
     private String uriPath;
     private String username;
@@ -26,6 +27,9 @@ class Arguments {
     static Options options() {
         if (options == null) {
             options = new Options();
+            Option connectionURl = Option.builder("C")
+                    .longOpt("hostname").desc("full connection URL. Default none.").hasArg().build();
+            options.addOption(connectionURl);
             Option hostname = Option.builder("H")
                 .longOpt("hostname").desc("JMX hostname (localhost)").hasArg().build();
             options.addOption(hostname);
@@ -80,6 +84,7 @@ class Arguments {
         CommandLine cmd = new DefaultParser().parse(options(), args);
 
         Arguments argsObj = new Arguments();
+        argsObj.connectionURL = cmd.getOptionValue("connectionURL", "");
         argsObj.hostname = cmd.getOptionValue("hostname", "localhost");
         argsObj.port = Integer.parseInt(cmd.getOptionValue("port", "7199"));
         argsObj.uriPath  = cmd.getOptionValue("uriPath", "jmxrmi");
@@ -95,6 +100,10 @@ class Arguments {
         argsObj.isRemoteJMX = cmd.hasOption("remote");
         argsObj.isRemoteJBossStandalone = cmd.hasOption("remoteJBossStandalone");
         return argsObj;
+    }
+
+    String getConnectionURL() {
+        return connectionURL;
     }
 
     String getHostname() {

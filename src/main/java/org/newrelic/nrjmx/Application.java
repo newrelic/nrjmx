@@ -29,13 +29,20 @@ public class Application {
         Logging.setup(logger, cliArgs.isVerbose());
 
         // Instantiate a JMXFetcher from the configuration arguments
-        JMXFetcher fetcher = new JMXFetcher(
-            cliArgs.getHostname(), cliArgs.getPort(), cliArgs.getUriPath(),
-            cliArgs.getUsername(), cliArgs.getPassword(),
-            cliArgs.getKeyStore(), cliArgs.getKeyStorePassword(),
-            cliArgs.getTrustStore(), cliArgs.getTrustStorePassword(),
-            cliArgs.getIsRemoteJMX(), cliArgs.getIsRemoteJBossStandalone()
-        );
+        JMXFetcher fetcher = cliArgs.getConnectionURL().equals("") ?
+                new JMXFetcher(
+                        cliArgs.getHostname(), cliArgs.getPort(), cliArgs.getUriPath(),
+                        cliArgs.getUsername(), cliArgs.getPassword(),
+                        cliArgs.getKeyStore(), cliArgs.getKeyStorePassword(),
+                        cliArgs.getTrustStore(), cliArgs.getTrustStorePassword(),
+                        cliArgs.getIsRemoteJMX(), cliArgs.getIsRemoteJBossStandalone()
+                ) :
+                new JMXFetcher(
+                        cliArgs.getConnectionURL(),
+                        cliArgs.getUsername(), cliArgs.getPassword(),
+                        cliArgs.getKeyStore(), cliArgs.getKeyStorePassword(),
+                        cliArgs.getTrustStore(), cliArgs.getTrustStorePassword()
+                );
 
         try {
             fetcher.run(System.in, System.out);
