@@ -88,7 +88,7 @@ $ echo
 JMX allows use of custom protocols to communicate with the application. In order to use a custom protocol you have to include the custom connectors in the nrjmx classpath.
 By default nrjmx will include the sub-folder connectors in it's class path. If this folder does not exist create it under the fodler where you have nrjmx installed.
 
-For example, to add support for JBoss, create a folder `connectors` under the default (Linux) library path `/usr/lib/nrjmx/` (`/usr/lib/nrjmx/connectors`) and copy the custom connector `jar` into the folder (`$JBOSS_HOME/bin/client/jboss-cli-client.jar`). You can now execute JMX queries against JBoss.
+For example, to add support for JBoss, create a folder `connectors` under the default (Linux) library path `/usr/lib/nrjmx/` (`/usr/lib/nrjmx/connectors`) and copy the custom connector `jar` (`$JBOSS_HOME/bin/client/jboss-cli-client.jar`) into it. You can now execute JMX queries against JBoss.
 
 ### Remote URL connection
 
