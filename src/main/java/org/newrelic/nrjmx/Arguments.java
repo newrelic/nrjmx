@@ -28,7 +28,7 @@ class Arguments {
         if (options == null) {
             options = new Options();
             Option connectionURl = Option.builder("C")
-                    .longOpt("hostname").desc("full connection URL. Default none.").hasArg().build();
+                    .longOpt("connURL").desc("full connection URL. Default none.").hasArg().build();
             options.addOption(connectionURl);
             Option hostname = Option.builder("H")
                 .longOpt("hostname").desc("JMX hostname (localhost)").hasArg().build();
