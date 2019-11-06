@@ -27,9 +27,9 @@ class Arguments {
     static Options options() {
         if (options == null) {
             options = new Options();
-            Option connectionURl = Option.builder("C")
+            Option connectionURL = Option.builder("C")
                     .longOpt("connURL").desc("full connection URL. Default none.").hasArg().build();
-            options.addOption(connectionURl);
+            options.addOption(connectionURL);
             Option hostname = Option.builder("H")
                 .longOpt("hostname").desc("JMX hostname (localhost)").hasArg().build();
             options.addOption(hostname);
@@ -84,7 +84,7 @@ class Arguments {
         CommandLine cmd = new DefaultParser().parse(options(), args);
 
         Arguments argsObj = new Arguments();
-        argsObj.connectionURL = cmd.getOptionValue("connectionURL", "");
+        argsObj.connectionURL = cmd.getOptionValue("connURL", "");
         argsObj.hostname = cmd.getOptionValue("hostname", "localhost");
         argsObj.port = Integer.parseInt(cmd.getOptionValue("port", "7199"));
         argsObj.uriPath  = cmd.getOptionValue("uriPath", "jmxrmi");
