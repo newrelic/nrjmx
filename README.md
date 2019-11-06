@@ -83,11 +83,20 @@ $ echo
 "org.apache.cassandra.metrics:type=Table,keyspace=*,scope=*,name=ReadLatency" | java -jar target/nrjmx-0.0.1-SNAPSHOT-jar-with-dependencies.jar -hostname 127.0.0.1 -port 7199 -username user -password pwd
 ```
 
+## Custom protocols
+
+JMX allows use of custom protocols to communicate with the application. In order to use a custom protocol you have to include the custom connectors in the nrjmx classpath.
+By default nrjmx will include the sub-folder connectors in it's class path. If this folder does not exist create it under the fodler where you have nrjmx installed.
+
+For example, to add support for JBoss, create a folder `connectors` under the default (Linux) library path `/usr/lib/nrjmx/` (`/usr/lib/nrjmx/connectors`) and copy the custom connector `jar` into the folder (`$JBOSS_HOME/bin/client/jboss-cli-client.jar`). You can now execute JMX queries against JBoss.
+
 ### Remote URL connection
 
 If you want to use a remoting-jmx URL you can use the flag `-remote`. In this case it will use the remoting connection URL: `service:jmx:remote://host:port` instead of `service:jmx:rmi:///jndi/rmi://host:port/jmxrmi`
 
 This sets URI ready for JBoss Domain mode.
+
+Note: you will need to add support for the custom JBoss protocol. See the previous section `Custom protocols`.
 
 #### JBoss Standalone mode
 
@@ -97,6 +106,7 @@ Example of usage with remoting:
 ```bash
 $ ./bin/nrjmx -hostname 127.0.0.1 -port 7199 -username user -password pwd -remote
 ```
+Note: you will need to add support for the custom JBoss protocol. See the previous section `Custom protocols`.
 
 ### Non-Standard JMX Service URI 
 

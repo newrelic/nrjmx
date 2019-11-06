@@ -2,7 +2,6 @@ package org.newrelic.nrjmx;
 
 import org.apache.commons.cli.HelpFormatter;
 
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Application {
