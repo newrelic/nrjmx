@@ -210,6 +210,17 @@
                                         <filemode>755</filemode>
                                     </mapper>
                                 </data>
+                                <!-- jmxterm -->
+                                <data>
+                                    <type>file</type>
+                                    <src>bin/jmxterm</src>
+                                    <dst>/usr/bin/${project.artifactId}/jmxterm</dst>
+                                    <mapper>
+                                        <type>perm</type>
+                                        <filemode>755</filemode>
+                                    </mapper>
+                                </data>
+                                <!-- doc -->
                                 <data>
                                     <type>file</type>
                                     <src>README.md</src>
@@ -283,6 +294,7 @@
                                         </source>
                                     </sources>
                                 </mapping>
+                                <!-- jmxterm -->
                                 <mapping>
                                     <directory>/usr/lib/jmxterm</directory>
                                     <sources>
@@ -312,6 +324,7 @@
                                         </source>
                                     </sources>
                                 </mapping>
+                                <!-- doc -->
                                 <mapping>
                                     <directory>/usr/share/doc/${project.artifactId}</directory>
                                     <documentation>true</documentation>
