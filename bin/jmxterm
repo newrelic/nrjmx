@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+
+java_tool="java"
+
+if [ ! -z "${NRIA_JAVA_HOME}" ]; then
+    java_tool="${NRIA_JAVA_HOME}/bin/${java_tool}"
+elif [ ! -z "${JAVA_HOME}" ]; then
+    java_tool="${JAVA_HOME}/bin/${java_tool}"
+fi
+
+if [ -f /usr/lib/nrjmx/jmxterm.jar ]; then
+   ${java_tool} -jar /usr/lib/nrjmx/jmxterm.jar $@
+else	else
+   ${java_tool} -jar `dirname $0`/jmxterm.jar $@
+fi

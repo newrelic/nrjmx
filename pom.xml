@@ -284,6 +284,35 @@
                                     </sources>
                                 </mapping>
                                 <mapping>
+                                    <directory>/usr/lib/jmxterm</directory>
+                                    <sources>
+                                        <source>
+                                            <location>
+                                                bin/jmxterm.jar
+                                            </location>
+                                        </source>
+                                        <softlinkSource>
+                                            <location>
+                                                /usr/lib/nrjmx/jmxterm.jar
+                                            </location>
+                                            <destination>jmxterm.jar</destination>
+                                        </softlinkSource>
+                                    </sources>
+                                </mapping>
+                                <mapping>
+                                    <directory>/usr/bin</directory>
+                                    <username>root</username>
+                                    <groupname>root</groupname>
+                                    <configuration>false</configuration>
+                                    <directoryIncluded>false</directoryIncluded>
+                                    <filemode>755</filemode>
+                                    <sources>
+                                        <source>
+                                            <location>bin/jmxterm</location>
+                                        </source>
+                                    </sources>
+                                </mapping>
+                                <mapping>
                                     <directory>/usr/share/doc/${project.artifactId}</directory>
                                     <documentation>true</documentation>
                                     <username>root</username>
