@@ -127,6 +127,24 @@
             <build>
                 <plugins>
                     <plugin>
+                        <groupId>com.googlecode.maven-download-plugin</groupId>
+                        <artifactId>download-maven-plugin</artifactId>
+                        <version>1.3.0</version>
+                        <executions>
+                            <execution>
+                                <phase>process-resources</phase>
+                                <goals>
+                                    <goal>wget</goal>
+                                </goals>
+                                <configuration>
+                                    <url>https://github.com/jiaqi/jmxterm/releases/download/v1.0.1/jmxterm-1.0.1-uber.jar</url>
+                                    <outputFileName>jmxterm.jar</outputFileName>
+                                    <outputDirectory>bin</outputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
                         <artifactId>maven-assembly-plugin</artifactId>
                         <configuration>
                             <finalName>${project.artifactId}_linux_${project.version}_noarch</finalName>
@@ -192,6 +210,17 @@
                                         <filemode>755</filemode>
                                     </mapper>
                                 </data>
+                                <!-- jmxterm -->
+                                <data>
+                                    <type>file</type>
+                                    <src>bin/jmxterm</src>
+                                    <dst>/usr/bin/${project.artifactId}/jmxterm</dst>
+                                    <mapper>
+                                        <type>perm</type>
+                                        <filemode>755</filemode>
+                                    </mapper>
+                                </data>
+                                <!-- doc -->
                                 <data>
                                     <type>file</type>
                                     <src>README.md</src>
@@ -265,6 +294,37 @@
                                         </source>
                                     </sources>
                                 </mapping>
+                                <!-- jmxterm -->
+                                <mapping>
+                                    <directory>/usr/lib/jmxterm</directory>
+                                    <sources>
+                                        <source>
+                                            <location>
+                                                bin/jmxterm.jar
+                                            </location>
+                                        </source>
+                                        <softlinkSource>
+                                            <location>
+                                                /usr/lib/nrjmx/jmxterm.jar
+                                            </location>
+                                            <destination>jmxterm.jar</destination>
+                                        </softlinkSource>
+                                    </sources>
+                                </mapping>
+                                <mapping>
+                                    <directory>/usr/bin</directory>
+                                    <username>root</username>
+                                    <groupname>root</groupname>
+                                    <configuration>false</configuration>
+                                    <directoryIncluded>false</directoryIncluded>
+                                    <filemode>755</filemode>
+                                    <sources>
+                                        <source>
+                                            <location>bin/jmxterm</location>
+                                        </source>
+                                    </sources>
+                                </mapping>
+                                <!-- doc -->
                                 <mapping>
                                     <directory>/usr/share/doc/${project.artifactId}</directory>
                                     <documentation>true</documentation>

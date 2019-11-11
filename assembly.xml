@@ -4,7 +4,6 @@
     <id>bin</id>
     <formats>
         <format>tar.gz</format>
-<!--        <format>zip</format>-->
     </formats>
     <includeBaseDirectory>false</includeBaseDirectory>
     <fileSets>
@@ -28,6 +27,13 @@
             <outputDirectory>/usr/</outputDirectory>
             <includes>
                 <include>bin/${project.artifactId}.jar</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}</directory>
+            <outputDirectory>/usr/</outputDirectory>
+            <includes>
+                <include>bin/jmxterm.jar</include>
             </includes>
         </fileSet>
     </fileSets>
