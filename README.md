@@ -209,6 +209,8 @@ Querying at `jmxterm` uses the same glob fashion mode. Just take into account th
 - `bean `<NAME>` sets or retrieves bean from current domain context, `*` unsets the domain
 - `get `<ATTRIBUTES>` fetches bean attributes info from current domain & bean context
 
+> A one liner query is possible as well, ie for querying all available attributes: `get -d DOMAIN -b BEAN *`
+
 
 ## Help
 
