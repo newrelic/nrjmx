@@ -206,7 +206,8 @@ You can navigate through your exposed JMX data using `jmxterm` REPL mod.
 Querying at `jmxterm` uses the same glob fashion mode. Just take into account that this tool divides *DOMAIN* and *BEAN* queries in 2 steps. So you can use
 
 - `domain <PATTERN>` causes subsequent bean queries to run against matched domains, ie `*` unsets the domain
-- `bean `<PATTERN>` fetches info from the current domain context
+- `bean `<NAME>` sets or retrieves bean from current domain context, `*` unsets the domain
+- `get `<PATTERN>` fetches info from the current domain & bean context
 
 
 ## Help
