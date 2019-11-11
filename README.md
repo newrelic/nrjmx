@@ -207,7 +207,7 @@ Querying at `jmxterm` uses the same glob fashion mode. Just take into account th
 
 - `domain <PATTERN>` causes subsequent bean queries to run against matched domains, ie `*` unsets the domain
 - `bean `<NAME>` sets or retrieves bean from current domain context, `*` unsets the domain
-- `get `<PATTERN>` fetches info from the current domain & bean context
+- `get `<ATTRIBUTES>` fetches bean attributes info from current domain & bean context
 
 
 ## Help
