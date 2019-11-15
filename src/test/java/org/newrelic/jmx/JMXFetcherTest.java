@@ -1,7 +1,6 @@
 package org.newrelic.jmx;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.newrelic.nrjmx.JMXFetcher;
 import org.newrelic.nrjmx.Logging;
@@ -48,7 +47,6 @@ public class JMXFetcherTest {
         return container;
     }
 
-    @Ignore("temporal skip")
     @Test(timeout = 20_000)
     public void testJMX() throws Exception {
         GenericContainer container = jmxService();
@@ -62,7 +60,6 @@ public class JMXFetcherTest {
     }
 
 
-    @Ignore("temporal skip")
     @Test(timeout = 20_000)
     public void testJMXFromConnectionURL() throws Exception {
         GenericContainer container = jmxService();
@@ -75,7 +72,6 @@ public class JMXFetcherTest {
         }
     }
 
-    @Ignore("temporal skip")
     @Test(timeout = 20_000)
     public void testJMXWithSSL() throws Exception {
         GenericContainer container = jmxSSLService();
