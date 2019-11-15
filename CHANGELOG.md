@@ -4,13 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## Next
+## 1.5.0
 
 - Build JMXFetcher from full connection URL
 - Set debug log entry on nice log lvl to be shown only for verbose mode
 - Clean up cmd execution log entries
-- Increase test timeout to build on slow boxes
 - Support custom connectors
+- Increase test timeout to build on slow boxes
+- Java version file
+- Windows build
+- Include `jmxterm` for troubleshooting queries within mvn packaging for:
+  * tarball
+  * rpm
+  * deb
 
 ## 1.4.1 (2019-10-01)
 - Fixed issue when parsing float NaN values.
