@@ -213,6 +213,13 @@
                                 <!-- jmxterm -->
                                 <data>
                                     <type>file</type>
+                                    <src>bin/jmxterm.jar</src>
+                                    <dst>
+                                        /usr/lib/${project.artifactId}/jmxterm.jar
+                                    </dst>
+                                </data>
+                                <data>
+                                    <type>file</type>
                                     <src>bin/jmxterm</src>
                                     <dst>/usr/bin/jmxterm</dst>
                                     <mapper>
@@ -296,7 +303,7 @@
                                 </mapping>
                                 <!-- jmxterm -->
                                 <mapping>
-                                    <directory>/usr/lib/jmxterm</directory>
+                                    <directory>/usr/lib/${project.artifactId}</directory>
                                     <sources>
                                         <source>
                                             <location>
