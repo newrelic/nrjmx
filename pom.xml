@@ -303,12 +303,6 @@
                                                 bin/jmxterm.jar
                                             </location>
                                         </source>
-                                        <softlinkSource>
-                                            <location>
-                                                /usr/lib/nrjmx/jmxterm.jar
-                                            </location>
-                                            <destination>jmxterm.jar</destination>
-                                        </softlinkSource>
                                     </sources>
                                 </mapping>
                                 <mapping>
