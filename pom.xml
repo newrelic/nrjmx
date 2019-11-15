@@ -214,7 +214,7 @@
                                 <data>
                                     <type>file</type>
                                     <src>bin/jmxterm</src>
-                                    <dst>/usr/bin/${project.artifactId}/jmxterm</dst>
+                                    <dst>/usr/bin/jmxterm</dst>
                                     <mapper>
                                         <type>perm</type>
                                         <filemode>755</filemode>
