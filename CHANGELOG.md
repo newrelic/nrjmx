@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 1.NEXT
+
+- Removed `org.yaml` unused bundled dependency. This will reduce the
+  size of the JAR file.
+
 ## 1.5.0
 
 - Build JMXFetcher from full connection URL
