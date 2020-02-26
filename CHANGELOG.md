@@ -9,8 +9,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Removed `org.yaml` unused bundled dependency. This will reduce the
   size of the JAR file.
 
-## 1.5.0
+## 1.5.2 (2019-11-18)
+## Fixed
+- Install `jmxterm` in `/usr/lib/nrjmx` for deb packages.
 
+## 1.5.1 (2019-11-15)
+## Fixed
+- Install `jmxterm` in `/usr/bin` for deb packages.
+
+## 1.5.0 (2019-11-15)
 - Build JMXFetcher from full connection URL
 - Set debug log entry on nice log lvl to be shown only for verbose mode
 - Clean up cmd execution log entries
