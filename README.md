@@ -1,5 +1,5 @@
-# NR-JMX
-New Relic's JMX fetcher, a simple tool for extracting data out of any application exposing a JMX interface.
+# `nrjmx`
+New Relic's JMX fetcher - a simple tool for extracting data out of any application exposing a JMX interface.
 
 ## Installation
 
@@ -11,69 +11,64 @@ Ie: `yum install nrjmx`
 
 ### Via tarball
 
-You can download and decompress the Java executable as well from the [downloads url](http://download.newrelic.com/infrastructure_agent/binaries/linux/noarch/)
+You can also download and decompress the Java executable from the [downloads url](http://download.newrelic.com/infrastructure_agent/binaries/linux/noarch/)
 
-### nri-jmx relation
+### `nri-jmx` relation
 
-`nrjmx` is *not* bundled within the `nri-jmx` package. But, it's declared as a dependency. 
+`nrjmx` is *not* bundled within the `nri-jmx` package. Instead, it's declared as a dependency. 
 
-So while installing `nri-jmx` if you have `nrjmx` already installed it keeps the installed version, otherwise it'll try to get the latest `nrjmx` release.
-
+If you already have `nrjmx` installed while installing `nri-jmx`, then it keeps the installed version. Otherwise, it will try to get the latest `nrjmx` release.
 
 ## Custom Build
-NR-JMX uses Maven for generating the binaries:
+
+`nrjmx` uses Maven for generating the binaries:
 
 ```bash
 $ mvn package
 ```
 
-This will create the `nrjmx.jar` file under the `./bin/` directory. Copy
-`bin/nrjmx` & `bin/nrjmx.jar` files to your preferred location. Both files must
-be located under the same folder.
+This will create the `nrjmx.jar` file under the `./bin/` directory. Copy the `bin/nrjmx` and `bin/nrjmx.jar` files to your preferred location. Both files must be located under the same folder.
 
-It will also create DEB and RPM packages to automatically install NR-JMX. If you
-want to skip DEB and RPM packages (e.g. because your development machine does not
-provide the required tools), you can disable the `deb` and `rpm` Maven profiles from
-the command line:
+It will also create DEB and RPM packages to automatically install `nrjmx`. If you want to skip DEB and RPM packages (e.g. because your development machine does no provide the required tools), you can disable the `deb` and `rpm` Maven profiles from the command line:
 
 ```bash
 mvn clean package -P \!deb,\!rpm,\!tarball,\!test
 ```
 
-## Configuring java version
+## Configuring Java version
 
-`Note: nrjmx is targetted to work with Java 8`
+*Note: `nrjmx` is targeted to work with Java 8*
 
-After installation, nrjmx will use the default java version installed on the environment (the one set in the $PATH).
-You can configure a different java version for nrjmx by adding one of the following environment variables at the end of the `/etc/environment` file:
+After installation, `nrjmx` will use the default Java version installed on the environment (the one set in the `$PATH`). You can configure a different Java version for `nrjmx` by adding one of the following environment variables at the end of the `/etc/environment` file:
 
 ### e.g.:
+
 `JAVA_HOME=/usr/lib/jvm/jdk1.x.yz`
 
 or
 
 `NRIA_JAVA_HOME=/usr/lib/jvm/jdk1.x.yz`
 
-The standard way is using JAVA_HOME, but the NRIA_JAVA_HOME takes precedence over JAVA_HOME in case your JAVA_HOME is already set and the version does not fit the NRJMX requirements.
+The standard way is using `JAVA_HOME`, but `NRIA_JAVA_HOME` takes precedence over `JAVA_HOME` in case your `JAVA_HOME` is already set and the version does not fit the `nrjmx` requirements.
 
-Then pass the environment variable through the infra agent by appending the following lines to newrelic-infra.yml config file:
-```
+Then pass the environment variable through the Infrastructure agent by appending the following lines to the `newrelic-infra.yml` config file:
+
+```bash
 passthrough_environment:
     - JAVA_HOME
 ```
-(replace JAVA_HOME by NRIA_JAVA_HOME if you have used the later property instead the standard one)
+
+(replace `JAVA_HOME` with `NRIA_JAVA_HOME` if you have used the latter property instead the standard one)
 
 ## Usage
-The applicaton just expects the connection parameters to the JMX interface.
+
+The application just expects the connection parameters to the JMX interface.
 
 ```bash
 $ ./bin/nrjmx -hostname 127.0.0.1 -port 7199 -username user -password pwd
 ```
 
-The tool will read lines from the standard input which should contain object
-name patterns for which we want to fetch their attributes. For each line, it
-will get the beans matching the pattern and output a JSON which all the
-attributes found.
+The tool will read lines from the standard input which should contain object name patterns for which we want to fetch their attributes. For each line, it will get the beans matching the pattern and output a JSON which all the attributes found.
 
 For instance, if you want to fetch some beans from Cassandra JMX metrics, you
 could execute:
@@ -85,8 +80,8 @@ $ echo
 
 ## Custom protocols
 
-JMX allows use of custom protocols to communicate with the application. In order to use a custom protocol you have to include the custom connectors in the nrjmx classpath.
-By default nrjmx will include the sub-folder connectors in it's class path. If this folder does not exist create it under the fodler where you have nrjmx installed.
+JMX allows use of custom protocols to communicate with the application. In order to use a custom protocol you have to include the custom connectors in the `nrjmx` classpath.
+By default, `nrjmx` will include the sub-folder connectors in its classpath. If this folder does not exist, create it under the folder where you have `nrjmx` installed.
 
 For example, to add support for JBoss, create a folder `connectors` under the default (Linux) library path `/usr/lib/nrjmx/` (`/usr/lib/nrjmx/connectors`) and copy the custom connector `jar` (`$JBOSS_HOME/bin/client/jboss-cli-client.jar`) into it. You can now execute JMX queries against JBoss.
 
@@ -96,17 +91,19 @@ If you want to use a remoting-jmx URL you can use the flag `-remote`. In this ca
 
 This sets URI ready for JBoss Domain mode.
 
-Note: you will need to add support for the custom JBoss protocol. See the previous section `Custom protocols`.
+*Note: you will need to add support for the custom JBoss protocol. See the previous section [Custom protocols](https://github.com/newrelic/nrjmx#custom-protocols).*
 
 #### JBoss Standalone mode
 
 This is supported via `-remoteJBossStandalone` and will set connection URL to `service:jmx:remote+http://host:port`.
 
 Example of usage with remoting:
+
 ```bash
 $ ./bin/nrjmx -hostname 127.0.0.1 -port 7199 -username user -password pwd -remote
 ```
-Note: you will need to add support for the custom JBoss protocol. See the previous section `Custom protocols`.
+
+*Note: you will need to add support for the custom JBoss protocol. See the previous section `Custom protocols`.*
 
 ### Non-Standard JMX Service URI 
 
@@ -114,39 +111,38 @@ If your JMX provider uses a non-standard JMX service URI path (default path is `
 
 For example:
 
-- A default URI path could be like: `service:jmx:rmi:///jndi/rmi://localhost:1689/jmxrmi` (path is last path of the URI without the prefix `/`)
-- ForgeRock OpenDJ uses a JMX service URI like: `service:jmx:rmi:///jndi/rmi://localhost:1689/org.opends.server.protocols.jmx.client-unknown`
+- A default URI path could be like: `service:jmx:rmi:///jndi/rmi://localhost:1689/jmxrmi` (path is last path of the URI without the prefix `/`).
+- ForgeRock OpenDJ uses a JMX service URI like: `service:jmx:rmi:///jndi/rmi://localhost:1689/org.opends.server.protocols.jmx.client-unknown`.
 
 To extract data from this application:
+
 ```bash
 $ ./bin/nrjmx -hostname localhost -port 1689 -uriPath "org.opends.server.protocols.jmx.client-unknown" -username user -password pwd
 ```
 
 ---
 
-
-# Troubleshooting via jmxterm
+# Troubleshooting via `jmxterm`
 
 If you are having difficulties with `nrjmx` to get data out of your JMX service, this interactive CLI tool could help you out in the process.
 
-
 ## Install
 
-Since `nrjmx` version 1.5.0 `jmxterm` comes bundled within the `nrjmx` package installer.
+Since `nrjmx` version 1.5.0, `jmxterm` comes bundled within the `nrjmx` package installer.
 
 For previous versions you can easily get it from https://docs.cyclopsgroup.org/jmxterm
 
-Or via your usual package manager. Ie, for Mac:
-```
+Or via your usual package manager. I.e., for Mac:
+
+```bash
 brew install jmxterm
 ```
 
-
 ## Connect
 
-As `jmxterm` is an interactive CLI REPL, you could simple launch `jmxterm` and then `open <URL>`. `URL` can be a `<PID>`, `<hostname>:<port>` or full qualified JMX service URL. For example:
+As `jmxterm` is an interactive CLI REPL, you could simply launch `jmxterm` and then `open <URL>`. `URL` can be a `<PID>`, `<hostname>:<port>`, or full qualified JMX service URL. For example:
 
-```
+```bash
  open localhost:7199,
  open jmx:service:...
 ```
@@ -157,16 +153,14 @@ There's an option to open connection before getting into the REPL mode via `-l/-
 jmxterm -l localhost:7199
 ```
 
-
 ### Connectivity issues
 
-If you face connection issues with `nrjmx` you can specify the connection URL in the same way via `-C/--connURL` argument, ie:
+If you face connection issues with `nrjmx`, you can specify the connection URL in the same way via `-C/--connURL` argument, ie:
 
 ```
 jmxterm -l service:jmx:rmi:///jndi/rmi://localhost:7199/jmxrmi
 nrjmx   -C service:jmx:rmi:///jndi/rmi://localhost:7199/jmxrmi
 ```
-
 
 ## Verbose
 
@@ -177,10 +171,9 @@ jmxterm -v/--verbose
 nrjmx   -v/--verbose
 ```
 
-
 ## Query
 
-We are interested on fetching:
+We are interested in fetching:
 
 - from a JMX *domain*
 - some MBean *objects*
@@ -199,9 +192,9 @@ For instance to retrieve:
 
 You can navigate through your exposed JMX data using `jmxterm` REPL mod.
 
-- `domains` list available domains
+- `domains` lists available domains.
 - `domain <DOMAIN_NAME>` will set current domain
-- `beans` list available MBeans within your current domain
+- `beans` lists available MBeans within your current domain.
 
 Querying at `jmxterm` uses the same glob fashion mode. Just take into account that this tool divides *DOMAIN* and *BEAN* queries in 2 steps. So you can use
 
@@ -209,8 +202,7 @@ Querying at `jmxterm` uses the same glob fashion mode. Just take into account th
 - `bean `<NAME>` sets or retrieves bean from current domain context, `*` unsets the domain
 - `get `<ATTRIBUTES>` fetches bean attributes info from current domain & bean context
 
-> A one liner query is possible as well, ie for querying all available attributes: `get -d DOMAIN -b BEAN *`
-
+> A one-liner query is possible as well, i.e. for querying all available attributes: `get -d DOMAIN -b BEAN *`
 
 ## Help
 
@@ -220,4 +212,3 @@ Both tools provide extra help via:
 jmxterm -h/--help
 nrjmx   -h/--help
 ```
-
