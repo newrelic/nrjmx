@@ -2,7 +2,7 @@
 
 # New Relic JMX fetcher
 
-A simple tool for extracting data out of any application exposing a JMX interface.
+A tool for extracting data out of any application exposing a JMX interface.
 
 ## Installation
 
