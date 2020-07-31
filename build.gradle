@@ -21,9 +21,7 @@ dependencies {
     testImplementation 'org.testcontainers:testcontainers:1.11.3'
 }
 
-group = 'nrjmx'
-version = '1.6.0-SNAPSHOT'
-description = 'nrjmx'
+
 sourceCompatibility = '1.8'
 
 publishing {
