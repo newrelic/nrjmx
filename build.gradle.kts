@@ -1,3 +1,11 @@
+// TODO: Check generated POM - should be the same as for maven build
+// TODO: Adapt maven-assembly-plugin
+// TODO: Adapt copy-rename-maven-plugin
+// TODO: Build the testserver (dockerfile-maven-plugin)
+// TODO: tarball profile equivalent
+// TODO: deb
+// TODO: rpm
+
 plugins {
     `java`
     `maven-publish`
@@ -19,6 +27,7 @@ dependencies {
 
 java {
     sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
 }
 
 publishing {
