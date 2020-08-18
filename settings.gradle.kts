@@ -1,9 +1,9 @@
-pluginManagement {
-    repositories {
-        gradlePluginPortal()
-        mavenCentral()
-        jcenter()
-        mavenLocal()
-    }
-}
+//pluginManagement {
+//    repositories {
+//        gradlePluginPortal()
+//        mavenCentral()
+//        jcenter()
+//        mavenLocal()
+//    }
+//}
 rootProject.name = "nrjmx"

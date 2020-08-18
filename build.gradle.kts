@@ -10,7 +10,7 @@ plugins {
     java
     `maven-publish`
     id("org.beryx.jlink") version("2.21.2")
-    id( "org.ysb33r.java.modulehelper") version("1.0.0-SNAPSHOT")
+    id( "org.ysb33r.java.modulehelper") version("0.9.0")
 }
 
 repositories {
@@ -56,6 +56,16 @@ publishing {
 
 application {
     mainClass.set("org.newrelic.nrjmx.Application")
-//    mainModule.set("org.newrelic.njrmx")
+    mainModule.set("org.newrelic.nrjmx")
 }
 
+jlink {
+//    mergedModule {
+//        requires 'java.naming'
+//        requires 'java.xml'
+//    }
+//    launcher{
+//        name = 'nrjmx'
+//        jvmArgs = ['-Dlogback.configurationFile=./logback.xml']
+//    }
+}
