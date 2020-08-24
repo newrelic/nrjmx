@@ -4,22 +4,14 @@ It builds a test service that introduces some monitoring.
 
 ## Build
 
-`mvn clean package` will generate both a runnable jar file in `target/test-server.jar` as
-  well as a container image named `testserver:latest`
+`./gradlew :test-server:build` will generate both a runnable jar file as well as copy the appropriate files
+from `src/docker` to a location where it can be used to build a container
 
 ## Run (with JMX enabled)
 
-* As a local service:
-```
-export JAVA_OPTS="-Dcom.sun.management.jmxremote.port=7199 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.rmi.port=7199 -Djava.rmi.server.hostname=localhost"
-java -jar target/test-server.jar
-```
-* As a container:
-
-```
-export JAVA_OPTS="-Dcom.sun.management.jmxremote.port=7199 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dcom.sun.management.jmxremote=true -Dcom.sun.management.jmxremote.rmi.port=7199 -Djava.rmi.server.hostname=localhost"
-docker run --rm --name testserver -p 4567:4567 -p 7199:7199 --env JAVA_OPTS="$JAVA_OPTS"  -it testserver
-```
+The project itself does not run the container. 
+Instead this happens when `./gradlew :test` is executed. 
+The container is built from within testcontainers and then executed.
 
 It uses the following ports:
 
@@ -39,9 +31,16 @@ If you want to enable SSL, `JAVA_OPTS` should be:
 -Djavax.net.ssl.trustStorePassword=servertrustpass
 ```
 
-The client certificates can be found in [../src/test/resources](../src/test/resources) (passwords are `clienttrustpass`
-and `clientpass`)
+(This is already done with the test code).
 
+## Building the container manually
+
+If you need to build and run the container manually then you can do:
+
+```
+./gradlew :test-server:dockerFile
+docker build test-server/build/dockerFiles
+```
 ## REST API:
 
 In the port `4567`:

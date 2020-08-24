@@ -28,3 +28,7 @@ tasks.register<Copy>("dockerFiles") {
 tasks.named<Test>("test") {
     enabled = false
 }
+
+tasks.assemble {
+    dependsOn("dockerFiles")
+}
