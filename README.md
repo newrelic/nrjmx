@@ -89,22 +89,21 @@ $ ./bin/nrjmx -hostname localhost -port 1689 -uriPath "org.opends.server.protoco
 
 If you are having difficulties with `nrjmx` to get data out of your JMX service, we provide a CLI tool (`jmxterm`) to help you [troubleshoot](./TROUBLESHOOT.md).
 
-
 ## Building
 
-nrjmx uses Maven for generating the binaries:
+nrjmx uses Gradle for generating the binaries:
 
 ```bash
-$ mvn package
+$ ./gradlew build
 ```
 
-This creates the `nrjmx.jar` file under the `./bin/` directory. Copy the `bin/nrjmx` and `bin/nrjmx.jar` files to your preferred location. Both files must
-be located under the same folder.
-
-It also creates DEB and RPM packages to automatically install nrjmx. If you want to skip the creation of DEB and RPM packages (for example, because your development machine does not provide the required tools), you can disable the `deb` and `rpm` Maven profiles from the command line:
+This creates the modularised `nrjmx.jar` file under the `./build/libs` directory as well as a `tar` and `zip` under the `build/distributions` directory. It can also build RPM & DEB packages.
 
 ```bash
-mvn clean package -P \!deb,\!rpm,\!tarball,\!test
+$ ./gradlew buildDeb  # Debian package
+$ ./gradlew buildRpm  # RPM package
+$ ./gradlew distTar   # Tar ball
+$ ./gradlew distZip   # ZIP package
 ```
 
 ## 

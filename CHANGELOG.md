@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## 1.NEXT
+- Migrate from Maven to Gradle for building the project
+- Add JLink support
 
 ## 1.5.3
 

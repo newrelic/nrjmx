@@ -1,3 +1,3 @@
 module org.junit.junit4.fake {
-    exports org.junit.rules;
+  exports org.junit.rules;
 }
