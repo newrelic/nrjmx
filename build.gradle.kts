@@ -1,4 +1,3 @@
-
 plugins {
     java
     `maven-publish`
@@ -84,102 +83,49 @@ tasks.named<JavaCompile>("compileJava") {
 tasks.named<Test>("test") {
     useJUnitPlatform()
     systemProperty("TEST_SERVER_DOCKER_FILES", File(project(":test-server").buildDir, "dockerFiles"))
+    dependsOn(":test-server:dockerFiles")
 }
 
 tasks.buildDeb {
     dependsOn(tasks.jlink)
 
-    from ("src/deb/usr/bin") {
-        into ("/usr/bin")
-        include ("**")
-        fileMode = 0x1ED
-    }
-    from("${buildDir}/image") {
-         into("/usr/lib/${project.name}")
-    }
-    from("LICENSE") {
-        into ("/usr/share/doc/${project.name}")
-    }
-    from("README.md") {
-        into ("/usr/share/doc/${project.name}")
-    }
-}
-
-tasks.buildRpm {
-    dependsOn(tasks.jlink)
-
-    from ("src/deb/usr/bin") {
-        into ("/usr/bin")
-        include ("**")
+    from("src/deb/usr/bin") {
+        into("/usr/bin")
+        include("**")
         fileMode = 0x1ED
     }
     from("${buildDir}/image") {
         into("/usr/lib/${project.name}")
     }
     from("LICENSE") {
-        into ("/usr/share/doc/${project.name}")
+        into("/usr/share/doc/${project.name}")
     }
     from("README.md") {
-        into ("/usr/share/doc/${project.name}")
+        into("/usr/share/doc/${project.name}")
     }
 }
-/*
 
-                        <configuration>
-                            <dataSet>
-                                <data>
-                                    <type>file</type>
-                                    <src>target/${project.artifactId}_linux_${project.version}_noarch.jar</src>
-                                    <dst>
-                                        /usr/lib/${project.artifactId}/${project.artifactId}_linux_${project.version}_noarch.jar
-                                    </dst>
-                                </data>
-                                <data>
-                                    <type>link</type>
-                                    <linkName>/usr/lib/${project.artifactId}/${project.artifactId}.jar</linkName>
-                                    <linkTarget>
-                                        /usr/lib/${project.artifactId}/${project.artifactId}_linux_${project.version}_noarch.jar
-                                    </linkTarget>
-                                    <symlink>true</symlink>
-                                </data>
-                                <data>
-                                    <type>file</type>
-                                    <src>bin/${project.artifactId}</src>
-                                    <dst>/usr/bin/${project.artifactId}</dst>
-                                    <mapper>
-                                        <type>perm</type>
-                                        <filemode>755</filemode>
-                                    </mapper>
-                                </data>
-                                <!-- jmxterm -->
-                                <data>
-                                    <type>file</type>
-                                    <src>bin/jmxterm.jar</src>
-                                    <dst>
-                                        /usr/lib/${project.artifactId}/jmxterm.jar
-                                    </dst>
-                                </data>
-                                <data>
-                                    <type>file</type>
-                                    <src>bin/jmxterm</src>
-                                    <dst>/usr/bin/jmxterm</dst>
-                                    <mapper>
-                                        <type>perm</type>
-                                        <filemode>755</filemode>
-                                    </mapper>
-                                </data>
-                                <!-- doc -->
-                                <data>
-                                    <type>file</type>
-                                    <src>README.md</src>
-                                    <dst>/usr/share/doc/${project.artifactId}/README</dst>
-                                </data>
-                                <data>
-                                    <type>file</type>
-                                    <src>LICENSE</src>
-                                    <dst>/usr/share/doc/${project.artifactId}/LICENSE</dst>
-                                </data>
-                            </dataSet>
-                        </configuration>
+tasks.buildRpm {
+    dependsOn(tasks.jlink)
 
- */
+    from("src/deb/usr/bin") {
+        into("/usr/bin")
+        include("**")
+        fileMode = 0x1ED
+    }
+    from("${buildDir}/image") {
+        into("/usr/lib/${project.name}")
+    }
+    from("LICENSE") {
+        into("/usr/share/doc/${project.name}")
+    }
+    from("README.md") {
+        into("/usr/share/doc/${project.name}")
+    }
+}
+
+tasks.register("package") {
+    group = "Distribution"
+    description = "Builds all packages"
+    dependsOn("distTar", "distZip", "buildDeb", "buildRpm")
+}
