@@ -4,16 +4,13 @@
 #
 #RUN mvn package
 
-FROM openjdk:8-jre
+FROM openjdk:11
 
 EXPOSE 4567
 EXPOSE 7199
 
-#COPY --from=builder target/test-server.jar /
-#COPY --from=builder servertruststore /
-#COPY --from=builder serverkeystore /
-COPY test-server.jar /
-COPY servertruststore /
-COPY serverkeystore /
-
-ENTRYPOINT exec java $JAVA_OPTS -jar /test-server.jar
+COPY bin /application/bin/
+COPY lib /application/lib/
+COPY server*store /
+#RUN chmod +x /application/bin/test-server
+ENTRYPOINT exec /application/bin/test-server

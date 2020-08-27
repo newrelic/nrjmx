@@ -9,7 +9,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.newrelic.nrjmx.JMXFetcher;
 import org.newrelic.nrjmx.Logging;
+import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 
 import java.io.*;
@@ -51,7 +53,10 @@ public class JMXFetcherTest {
     public void testJMXWithSSL() throws Exception {
         GenericContainer container = jmxSSLService();
         try {
+            Slf4jLogConsumer logConsumer = new Slf4jLogConsumer(LoggerFactory.getLogger("TESTCONT"));
+
             container.start();
+            container.followOutput(logConsumer);
             testJMXFetching(new JMXFetcher("localhost", 7199, "", "",
                     getClass().getResource("/clientkeystore").getPath(), "clientpass",
                     getClass().getResource("/clienttruststore").getPath(), "clienttrustpass",
@@ -115,7 +120,7 @@ public class JMXFetcherTest {
     // Runs the JMX-monitored test container without SSL enabled
     private static GenericContainer jmxService() {
         GenericContainer container = new GenericContainer<>(
-                new ImageFromDockerfile().withFileFromString(".", System.getProperty("TEST_SERVER_DOCKER_FILES"))
+                new ImageFromDockerfile().withFileFromFile(".", new File(System.getProperty("TEST_SERVER_DOCKER_FILES")))
         ).withExposedPorts(4567, 7199)
                 .withEnv("JAVA_OPTS", "-Dcom.sun.management.jmxremote.port=7199 " +
                         "-Dcom.sun.management.jmxremote.rmi.port=7199 " +
@@ -130,7 +135,7 @@ public class JMXFetcherTest {
     // Runs the JMX-monitored test container with SSL enabled
     private static GenericContainer jmxSSLService() {
         GenericContainer container = new GenericContainer<>(
-                new ImageFromDockerfile().withFileFromString(".", System.getProperty("TEST_SERVER_DOCKER_FILES"))
+                new ImageFromDockerfile().withFileFromFile(".", new File(System.getProperty("TEST_SERVER_DOCKER_FILES")))
         ).withEnv("JAVA_OPTS", "-Dcom.sun.management.jmxremote.port=7199 " +
                 "-Dcom.sun.management.jmxremote.rmi.port=7199 " +
                 "-Djava.rmi.server.hostname=localhost " +
