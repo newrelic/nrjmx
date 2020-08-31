@@ -1,3 +1,6 @@
+import org.redline_rpm.header.Architecture.X86_64
+import org.redline_rpm.header.Os.LINUX
+
 plugins {
     java
     `maven-publish`
@@ -9,7 +12,6 @@ plugins {
 
 allprojects {
     repositories {
-        mavenLocal()
         maven {
             url = uri("https://repo.maven.apache.org/maven2")
         }
@@ -28,18 +30,6 @@ extraJavaModules {
     module("gson-2.8.0.jar", "com.google.code.gson", "2.8.0") {
         exports("com.google.gson")
     }
-//    module("testcontainers-1.14.3.jar", "org.testcontainers", "1.14.3") {
-//        exports("org.testcontainers.containers")
-//        exports("org.testcontainers.images.builder")
-//        exports("org.testcontainers.shaded.okhttp3")
-//        requires("org.junit.jupiter.api")
-//    }
-//    module("tcp-unix-socket-proxy-1.0.2.jar", "tcp.unix.socket.proxy", "0")
-//    module("duct-tape-1.0.8.jar", "duct.tape", "0")
-//    module("visible-assertions-2.1.2.jar", "visible.assertions", "0")
-//    module("junixsocket-native-common-2.0.4.jar", "junixsocket.native", "0")
-//    module("junixsocket-common-2.0.4.jar", "junixsocket", "0")
-//    module("native-lib-loader-2.0.2.jar", "native.lib.loader", "0")
 }
 
 java {
@@ -92,9 +82,16 @@ tasks.buildDeb {
 }
 
 tasks.buildRpm {
+    setRelease("1")
+    setArch(X86_64)
+    setOs(LINUX)
+    setVendor("New Relic Infrastructure Team <infrastructure-eng@newrelic.com>")
+    setPackageGroup("Application/System")
+    setLicense("Apache 2.0")
+
     dependsOn(tasks.jlink)
 
-    from("src/deb/usr/bin") {
+    from("src/rpm/usr/bin") {
         into("/usr/bin")
         include("**")
         fileMode = 0x1ED
@@ -104,9 +101,11 @@ tasks.buildRpm {
     }
     from("LICENSE") {
         into("/usr/share/doc/${project.name}")
+        addParentDirs = false
     }
     from("README.md") {
         into("/usr/share/doc/${project.name}")
+        addParentDirs = false
     }
 }
 
