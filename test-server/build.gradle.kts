@@ -32,7 +32,3 @@ tasks.distTar {
 application {
     mainClass.set("org.newrelic.jmx.Service")
 }
-
-tasks.assemble {
-    dependsOn("dockerFiles")
-}

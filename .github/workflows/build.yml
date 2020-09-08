@@ -12,4 +12,4 @@ jobs:
           java-version: '11'
           java-package: jdk
       - name: Build with Gradle
-        run: ./gradlew build
+        run: ./gradlew build -i -s
