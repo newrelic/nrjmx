@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.*;
 import java.util.Arrays;
 import java.util.logging.Logger;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.newrelic.nrjmx.JMXFetcher;
@@ -49,6 +50,7 @@ public class JMXFetcherTest {
 
   @Test
   @Timeout(value = 20, unit = SECONDS)
+  @Disabled
   public void testJMXWithSSL() throws Exception {
     GenericContainer container = jmxSSLService();
     try {
