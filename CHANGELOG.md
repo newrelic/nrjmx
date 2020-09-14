@@ -6,8 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## 1.NEXT
 
+## 1.5.3
+
 - Removed `org.yaml` unused bundled dependency. This will reduce the
   size of the JAR file.
+- Upgraded `jmxterm` to v1.0.2 (fixes a vulnerability in bundled jar)
 
 ## 1.5.2 (2019-11-18)
 ## Fixed
