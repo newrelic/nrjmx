@@ -132,7 +132,7 @@
                                     <goal>wget</goal>
                                 </goals>
                                 <configuration>
-                                    <url>https://github.com/jiaqi/jmxterm/releases/download/v1.0.1/jmxterm-1.0.1-uber.jar</url>
+                                    <url>https://github.com/jiaqi/jmxterm/releases/download/v1.0.2/jmxterm-1.0.2-uber.jar</url>
                                     <outputFileName>jmxterm.jar</outputFileName>
                                     <outputDirectory>bin</outputDirectory>
                                 </configuration>
@@ -348,5 +348,4 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.compilerVersion>1.8</maven.compiler.compilerVersion>
     </properties>
-
 </project>
