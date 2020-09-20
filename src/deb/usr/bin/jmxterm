@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+exec /usr/lib/nrjmx/bin/java -jar /usr/lib/nrjmx/lib/jmxterm-uber.jar

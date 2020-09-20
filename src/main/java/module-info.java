@@ -6,4 +6,7 @@ module org.newrelic.nrjmx {
   requires java.logging;
   requires java.management;
   requires java.rmi;
+
+  // the following modules are not necessary for nrjmx, but we add them due to our jmxterm hack
+  requires java.desktop;
 }

@@ -1,5 +1,6 @@
 import org.redline_rpm.header.Architecture.X86_64
 import org.redline_rpm.header.Os.LINUX
+import fi.linuxbox.gradle.download.Download
 
 plugins {
     java
@@ -8,15 +9,21 @@ plugins {
     id("org.ysb33r.java.modulehelper") version ("0.9.0")
     id("com.github.sherter.google-java-format") version ("0.8")
     id("nebula.ospackage") version ("8.4.1")
+    id("fi.linuxbox.download") version ("0.6")
 }
+
+val jmxTermVersion: String by project
 
 allprojects {
     repositories {
+        mavenCentral()
         maven {
             url = uri("https://repo.maven.apache.org/maven2")
         }
     }
 }
+
+configurations.create("jmxterm")
 
 dependencies {
     implementation("commons-cli:commons-cli:1.4")
@@ -62,8 +69,31 @@ tasks.test {
     enabled = false
 }
 
+tasks.register<Download>("downloadJmxTerm") {
+    group = "JmxTerm"
+    description = "Downloads jmxterm"
+    from ("https://github.com/jiaqi/jmxterm/releases/download/v${jmxTermVersion}/jmxterm-${jmxTermVersion}-uber.jar")
+    to ("${buildDir}/jmxterm/lib/jmxterm-uber.jar")
+}
+
+tasks.register<CreateStartScripts>("jmxtermScripts") {
+    group = "JmxTerm"
+    description = "Scripts to wrap jmxterm"
+    applicationName = "jmxterm"
+    outputDir = file("${buildDir}/jmxterm/bin")
+    mainClassName = ""
+    (unixStartScriptGenerator as TemplateBasedScriptGenerator).template = project.resources.text.fromFile(file("src/jmxterm/jmxterm.template.sh"))
+    (windowsStartScriptGenerator as TemplateBasedScriptGenerator).template = project.resources.text.fromFile(file("src/jmxterm/jmxterm.template.bat"))
+}
+
+
 tasks.buildDeb {
     dependsOn(tasks.jlink)
+
+    from("${buildDir}/jmxterm") {
+        include ("lib/jmxterm-uber.jar")
+        into("/usr/lib/${project.name}")
+    }
 
     from("src/deb/usr/bin") {
         into("/usr/bin")
@@ -91,6 +121,11 @@ tasks.buildRpm {
 
     dependsOn(tasks.jlink)
 
+    from("${buildDir}/jmxterm") {
+        include ("lib/jmxterm-uber.jar")
+        into("/usr/lib/${project.name}")
+    }
+
     from("src/rpm/usr/bin") {
         into("/usr/bin")
         include("**")
@@ -106,6 +141,22 @@ tasks.buildRpm {
     from("README.md") {
         into("/usr/share/doc/${project.name}")
         addParentDirs = false
+    }
+}
+
+tasks.distZip {
+    dependsOn("downloadJmxTerm","jmxtermScripts")
+    from("${buildDir}/jmxterm") {
+        include ("**")
+        into ("${project.name}-${project.version}")
+    }
+}
+
+tasks.distTar {
+    dependsOn("downloadJmxTerm","jmxtermScripts")
+    from("${buildDir}/jmxterm") {
+        include ("**")
+        into ("${project.name}-${project.version}")
     }
 }
 
