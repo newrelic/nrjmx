@@ -13,9 +13,14 @@ dependencies {
     implementation ("org.slf4j:slf4j-simple:1.7.26")
 }
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
 tasks.installDist {
-    from ("src/docker") {
-        include ("**" )
+    from("src/docker") {
+        include("**")
     }
 }
 

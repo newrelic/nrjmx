@@ -113,6 +113,14 @@ New Relic hosts and moderates an online forum where customers can interact with 
 
 https://discuss.newrelic.com/c/support-products-agents/new-relic-infrastructure
 
+## Generating keys
+
+```
+keytool -genkeypair -keystore serverkeystore.jks -alias serverkey -validity 180 -storepass serverpass -keypass serverpass
+keytool -exportcert -keystore serverkeystore.jks -alias serverkey -storepass serverpass -file server.cer
+keytool -import -v -trustcacerts -alias serverkey -file server.cer -keystore clientkeystore.jks -keypass clientpass  -storepass clienttrustpass -nopromp
+```
+
 ## Contributing
 We encourage your contributions to improve New Relic JMX fetcher! Keep in mind when you submit your pull request, you'll need to sign the CLA via the click-through using CLA-Assistant. You only have to sign the CLA one time per project.
 If you have any questions, or to execute our corporate CLA, required if your contribution is on behalf of a company,  please drop us an email at opensource@newrelic.com.

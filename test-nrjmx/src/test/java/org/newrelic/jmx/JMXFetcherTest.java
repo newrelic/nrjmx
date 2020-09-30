@@ -11,9 +11,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.io.*;
 import java.util.Arrays;
 import java.util.logging.Logger;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.newrelic.nrjmx.JMXFetcher;
 import org.newrelic.nrjmx.Logging;
 import org.slf4j.LoggerFactory;
@@ -22,10 +22,11 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 
 public class JMXFetcherTest {
-  @Test
-  @Timeout(value = 20, unit = SECONDS)
-  public void testJMX() throws Exception {
-    GenericContainer container = jmxService();
+  @Timeout(value = 60, unit = SECONDS)
+  @ParameterizedTest
+  @ValueSource(strings = {"jdk11", "jdk8"})
+  public void testJMX(String jdkName) throws Exception {
+    GenericContainer container = jmxService(jdkName);
     try {
       container.start();
       testJMXFetching(new JMXFetcher("localhost", 7199, "", "", "", "", "", "", false));
@@ -34,10 +35,11 @@ public class JMXFetcherTest {
     }
   }
 
-  @Test
-  @Timeout(value = 20, unit = SECONDS)
-  public void testJMXFromConnectionURL() throws Exception {
-    GenericContainer container = jmxService();
+  @Timeout(value = 60, unit = SECONDS)
+  @ParameterizedTest
+  @ValueSource(strings = {"jdk11", "jdk8"})
+  public void testJMXFromConnectionURL(String jdkName) throws Exception {
+    GenericContainer container = jmxService(jdkName);
     try {
       container.start();
       testJMXFetching(
@@ -48,11 +50,11 @@ public class JMXFetcherTest {
     }
   }
 
-  @Test
-  @Timeout(value = 20, unit = SECONDS)
-  @Disabled
-  public void testJMXWithSSL() throws Exception {
-    GenericContainer container = jmxSSLService();
+  @Timeout(value = 60, unit = SECONDS)
+  @ParameterizedTest
+  @ValueSource(strings = {"jdk11", "jdk8"})
+  public void testJMXWithSSL(String jdkName) throws Exception {
+    GenericContainer container = jmxSSLService("jdk8");
     try {
       Slf4jLogConsumer logConsumer = new Slf4jLogConsumer(LoggerFactory.getLogger("TESTCONT"));
 
@@ -134,12 +136,9 @@ public class JMXFetcherTest {
   }
 
   // Runs the JMX-monitored test container without SSL enabled
-  private static GenericContainer jmxService() {
+  private static GenericContainer jmxService(String jdkName) {
     GenericContainer container =
-        new GenericContainer<>(
-                new ImageFromDockerfile()
-                    .withFileFromFile(
-                        ".", new File(System.getProperty("TEST_SERVER_DOCKER_FILES"))))
+        getContainerFromDockerfile(jdkName)
             .withExposedPorts(4567, 7199)
             .withEnv(
                 "JAVA_OPTS",
@@ -154,12 +153,10 @@ public class JMXFetcherTest {
   }
 
   // Runs the JMX-monitored test container with SSL enabled
-  private static GenericContainer jmxSSLService() {
+  private static GenericContainer jmxSSLService(String jdkName) {
     GenericContainer container =
-        new GenericContainer<>(
-                new ImageFromDockerfile()
-                    .withFileFromFile(
-                        ".", new File(System.getProperty("TEST_SERVER_DOCKER_FILES"))))
+        getContainerFromDockerfile(jdkName)
+            .withExposedPorts(4567, 7199)
             .withEnv(
                 "JAVA_OPTS",
                 "-Dcom.sun.management.jmxremote.port=7199 "
@@ -176,6 +173,17 @@ public class JMXFetcherTest {
                     + "-Djavax.net.ssl.trustStorePassword=servertrustpass");
     container.setPortBindings(Arrays.asList("7199:7199", "4567:4567"));
     return container;
+  }
+
+  private static GenericContainer getContainerFromDockerfile(String jdkName) {
+    return new GenericContainer<>(
+        new ImageFromDockerfile()
+            .withFileFromFile(
+                ".", new File(System.getProperty("TEST_SERVER_DOCKER_FILES"), jdkName))
+            .withFileFromFile(
+                "bin", new File(System.getProperty("TEST_SERVER_DOCKER_FILES"), "bin"))
+            .withFileFromFile(
+                "lib", new File(System.getProperty("TEST_SERVER_DOCKER_FILES"), "lib")));
   }
 
   private static void eventually(long timeoutMs, Runnable r) throws Exception {
