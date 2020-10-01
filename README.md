@@ -106,19 +106,95 @@ $ ./gradlew distTar   # Tar ball
 $ ./gradlew distZip   # ZIP package
 ```
 
-## 
 ## Support
 
 New Relic hosts and moderates an online forum where customers can interact with New Relic employees as well as other customers to get help and share best practices. Like all official New Relic open source projects, there's a related Community topic in the New Relic Explorers Hub. You can find this project's topic/threads here:
 
 https://discuss.newrelic.com/c/support-products-agents/new-relic-infrastructure
 
-## Generating keys
+## Using testservers for testing
+
+It builds a test service that introduces some monitoring.
+
+### Build
+
+`./gradlew :test-server-jdk8:build` will generate both a runnable jar file as well as copy the appropriate files from `src/docker` to a location where it can be used to build a container. 
+Replace `test-server-jdk8` with `test-server-jdk11` to build a runnable jar with JDK11
+
+
+### Run (with JMX enabled)
+
+The project itself does not run the container. 
+Instead this happens when `./gradlew :test` is executed. 
+The containers are built from within testcontainers and then executed.
+
+It uses the following ports:
+
+* `4567`: HTTP REST port
+* `7199`: JMX RMI port
+
+If you want to enable SSL, `JAVA_OPTS` should be:
 
 ```
-keytool -genkeypair -keystore serverkeystore.jks -alias serverkey -validity 180 -storepass serverpass -keypass serverpass
-keytool -exportcert -keystore serverkeystore.jks -alias serverkey -storepass serverpass -file server.cer
-keytool -import -v -trustcacerts -alias serverkey -file server.cer -keystore clientkeystore.jks -keypass clientpass  -storepass clienttrustpass -nopromp
+-Dcom.sun.management.jmxremote.authenticate=false
+-Dcom.sun.management.jmxremote.ssl=true
+-Dcom.sun.management.jmxremote.ssl.need.client.auth=true 
+-Dcom.sun.management.jmxremote.registry.ssl=true 
+-Djavax.net.ssl.keyStore=/serverkeystore 
+-Djavax.net.ssl.keyStorePassword=serverpass 
+-Djavax.net.ssl.trustStore=/servertruststore 
+-Djavax.net.ssl.trustStorePassword=servertrustpass
+```
+
+(This is already done with the test code).
+
+## Building the container manually
+
+If you need to build and run the container manually then you can do:
+
+```
+./gradlew :test-server-jdk8:install
+docker build test-server-jdk8/build/install/test-server-jdk8
+```
+
+(Replace with `test-server-jdk11` as appropriate).
+
+### REST API:
+
+In the port `4567`:
+
+* `POST /cat`
+    * BODY: `{"name":"Isidoro"}` would register in JMX a cat named Isidoro to the registry name
+
+* `PUT /clear`
+    * Will clear all the cats from JMX
+
+### Example JMX test
+
+```
+$ curl -X POST -d '{"name":"Isidoro"}' http://localhost:4567/cat
+ok!
+$ curl -X POST -d '{"name":"Heathcliff"}' http://localhost:4567/cat
+ok!
+$ ./nrjmx
+test:type=Cat,*
+{"test:type\u003dCat,name\u003dIsidoro,attr\u003dName":"Isidoro","test:type\u003dCat,name\u003dHeathcliff,attr\u003dName":"Heathcliff"}
+$ curl -X PUT http://localhost:4567/clear
+ok!
+$ ./nrjmx
+test:type=Cat,*
+{}
+```
+
+### Generating keys
+
+```
+keytool -genkeypair -dname "cn=server, ou=nrjmx, o=NR, c=US" -keystore serverkeystore -keyalg RSA -alias serverkey -validity 180 -storepass serverpass -keypass serverpass
+keytool -exportcert -keystore serverkeystore -alias serverkey -storepass serverpass -file server.cer
+keytool -import -v -trustcacerts -alias serverkey -file server.cer -keystore clienttruststore  -storepass clienttrustpass -noprompt
+keytool -genkeypair -dname "cn=client, ou=test, o=NR, c=US" -keystore clientkeystore -keyalg RSA -alias clientkey -validity 180 -storepass clientkeystore -keypass clientkeystore
+keytool -exportcert -keystore clientkeystore -alias clientkey -storepass clientkeystore -file client.cer
+keytool -import -v -trustcacerts -alias clientkey -file client.cer -keystore servertruststore -storepass servertrustpass -noprompt
 ```
 
 ## Contributing

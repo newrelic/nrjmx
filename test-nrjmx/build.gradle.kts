@@ -13,6 +13,9 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
-    systemProperty("TEST_SERVER_DOCKER_FILES", File(project(":test-server").buildDir, "install/test-server"))
-    dependsOn(":test-server:installDist")
+    systemProperty("TEST_SERVER_JDK8", File(project(":test-server-jdk8").buildDir, "install/test-server-jdk8"))
+    dependsOn(":test-server-jdk8:installDist")
+
+    systemProperty("TEST_SERVER_JDK11", File(project(":test-server-jdk11").buildDir, "install/test-server-jdk11"))
+    dependsOn(":test-server-jdk11:installDist")
 }

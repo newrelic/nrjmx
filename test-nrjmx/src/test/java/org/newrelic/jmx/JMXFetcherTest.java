@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.*;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.logging.Logger;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -54,7 +55,7 @@ public class JMXFetcherTest {
   @ParameterizedTest
   @ValueSource(strings = {"jdk11", "jdk8"})
   public void testJMXWithSSL(String jdkName) throws Exception {
-    GenericContainer container = jmxSSLService("jdk8");
+    GenericContainer container = jmxSSLService(jdkName);
     try {
       Slf4jLogConsumer logConsumer = new Slf4jLogConsumer(LoggerFactory.getLogger("TESTCONT"));
 
@@ -176,14 +177,15 @@ public class JMXFetcherTest {
   }
 
   private static GenericContainer getContainerFromDockerfile(String jdkName) {
+    String sysProp = System.getProperty("TEST_SERVER_" + jdkName.toUpperCase(Locale.US));
     return new GenericContainer<>(
         new ImageFromDockerfile()
             .withFileFromFile(
-                ".", new File(System.getProperty("TEST_SERVER_DOCKER_FILES"), jdkName))
-            .withFileFromFile(
-                "bin", new File(System.getProperty("TEST_SERVER_DOCKER_FILES"), "bin"))
-            .withFileFromFile(
-                "lib", new File(System.getProperty("TEST_SERVER_DOCKER_FILES"), "lib")));
+                ".", new File(sysProp)));
+//            .withFileFromFile(
+//                "bin", new File(System.getProperty("TEST_SERVER_DOCKER_FILES"), "bin"))
+//            .withFileFromFile(
+//                "lib", new File(System.getProperty("TEST_SERVER_DOCKER_FILES"), "lib")));
   }
 
   private static void eventually(long timeoutMs, Runnable r) throws Exception {

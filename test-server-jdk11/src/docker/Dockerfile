@@ -13,4 +13,4 @@ COPY bin /application/bin/
 COPY lib /application/lib/
 COPY server*store /
 #RUN chmod +x /application/bin/test-server
-ENTRYPOINT exec /application/bin/test-server
+ENTRYPOINT exec /application/bin/test-server-jdk11
