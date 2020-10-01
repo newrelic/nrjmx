@@ -179,13 +179,11 @@ public class JMXFetcherTest {
   private static GenericContainer getContainerFromDockerfile(String jdkName) {
     String sysProp = System.getProperty("TEST_SERVER_" + jdkName.toUpperCase(Locale.US));
     return new GenericContainer<>(
-        new ImageFromDockerfile()
-            .withFileFromFile(
-                ".", new File(sysProp)));
-//            .withFileFromFile(
-//                "bin", new File(System.getProperty("TEST_SERVER_DOCKER_FILES"), "bin"))
-//            .withFileFromFile(
-//                "lib", new File(System.getProperty("TEST_SERVER_DOCKER_FILES"), "lib")));
+        new ImageFromDockerfile().withFileFromFile(".", new File(sysProp)));
+    //            .withFileFromFile(
+    //                "bin", new File(System.getProperty("TEST_SERVER_DOCKER_FILES"), "bin"))
+    //            .withFileFromFile(
+    //                "lib", new File(System.getProperty("TEST_SERVER_DOCKER_FILES"), "lib")));
   }
 
   private static void eventually(long timeoutMs, Runnable r) throws Exception {

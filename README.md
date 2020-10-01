@@ -186,7 +186,7 @@ test:type=Cat,*
 {}
 ```
 
-### Generating keys
+### Re-generating keys
 
 ```
 keytool -genkeypair -dname "cn=server, ou=nrjmx, o=NR, c=US" -keystore serverkeystore -keyalg RSA -alias serverkey -validity 180 -storepass serverpass -keypass serverpass
