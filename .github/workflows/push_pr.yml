@@ -1,0 +1,40 @@
+---
+name: Java CI - PR
+
+on: [ pull_request ]
+
+env:
+  SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+jobs:
+
+  test:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 11
+        uses: actions/setup-java@v1
+        with:
+          java-version: '11'
+          java-package: jdk
+      - name: Build with Gradle
+        run: ./gradlew build --info --stacktrace
+      - name: Package with Gradle
+        run: ./gradlew package --warn --stacktrace
+      - name: Push bin to GH workflow artifacts cache
+        uses: actions/upload-artifact@v2
+        with:
+          name: dist-linux
+          path: build/distributions
+
+  snyk:
+    name: Run security checks via snyk
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/gradle-jdk11@master
+        env:
+          SNYK_TOKEN: ${{env.SNYK_TOKEN}}
+        with:
+          args: --severity-threshold=high

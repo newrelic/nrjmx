@@ -86,15 +86,15 @@ tasks.register<CreateStartScripts>("jmxtermScripts") {
     (windowsStartScriptGenerator as TemplateBasedScriptGenerator).template = project.resources.text.fromFile(file("src/jmxterm/jmxterm.template.bat"))
 }
 
-tasks.register<Jar>("uberJar") {
+tasks.register<Jar>("noarchJar") {
+    dependsOn(configurations.runtimeClasspath)
     destinationDirectory.set(file("${buildDir}/distributions"))
+    archiveClassifier.set("noarch")
 
     manifest.attributes("Main-Class" to "org.newrelic.nrjmx.Application")
-    archiveClassifier.set("noarch")
 
     from(sourceSets.main.get().output)
 
-    dependsOn(configurations.runtimeClasspath)
     from({
         configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
     })
@@ -116,7 +116,7 @@ tasks.register<Zip>("jlinkDistZip") {
         into("lib")
     }
     from("${buildDir}/jmxterm/bin") {
-        into ("bin")
+        into("bin")
         fileMode = 0x1ED
     }
 }
@@ -138,7 +138,7 @@ tasks.register<Tar>("jlinkDistTar") {
         into("lib")
     }
     from("${buildDir}/jmxterm/bin") {
-        into ("bin")
+        into("bin")
         fileMode = 0x1ED
     }
 }
@@ -222,5 +222,12 @@ tasks.distTar {
 tasks.register("package") {
     group = "Distribution"
     description = "Builds all packages"
-    dependsOn("distTar", "distZip", "buildDeb", "buildRpm", "jlinkDistZip","jlinkDistTar")
+    dependsOn(
+            "noarchJar",
+            "distTar",
+            "distZip",
+            "buildDeb",
+            "buildRpm",
+            "jlinkDistZip",
+            "jlinkDistTar")
 }
