@@ -5,18 +5,23 @@
 
 package org.newrelic.jmx;
 
-import org.testcontainers.shaded.okhttp3.*;
+import org.testcontainers.shaded.okhttp3.FormBody;
+import org.testcontainers.shaded.okhttp3.MediaType;
+import org.testcontainers.shaded.okhttp3.OkHttpClient;
+import org.testcontainers.shaded.okhttp3.Request;
+import org.testcontainers.shaded.okhttp3.RequestBody;
+import org.testcontainers.shaded.okhttp3.Response;
 
 public class CatsClient {
 
   private String baseURL;
   private OkHttpClient client = new OkHttpClient();
 
-  public CatsClient(String baseURL) {
+  public CatsClient(final String baseURL) {
     this.baseURL = baseURL;
   }
 
-  public String add(String catName) {
+  public String add(final String catName) {
 
     RequestBody catBody =
         FormBody.create(MediaType.parse("application/json"), "{\"name\":\"" + catName + "\"}");

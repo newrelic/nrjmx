@@ -8,8 +8,14 @@ package org.newrelic.jmx;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.InputStreamReader;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Locale;
 import java.util.logging.Logger;
 import org.junit.jupiter.api.Timeout;
@@ -23,16 +29,83 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 
 public class JMXFetcherTest {
+
+  // Runs the JMX-monitored test container without SSL enabled
+  private static GenericContainer jmxService(String jdkName) {
+    GenericContainer container =
+        getContainerFromDockerfile(jdkName)
+            .withExposedPorts(4567, 7199)
+            .withEnv(
+                "JAVA_OPTS",
+                "-Dcom.sun.management.jmxremote.port=7199 "
+                    + "-Dcom.sun.management.jmxremote.rmi.port=7199 "
+                    + "-Djava.rmi.server.hostname=localhost "
+                    + "-Dcom.sun.management.jmxremote=true "
+                    + "-Dcom.sun.management.jmxremote.authenticate=false "
+                    + "-Dcom.sun.management.jmxremote.ssl=false ");
+    container.setPortBindings(Arrays.asList("7199:7199", "4567:4567"));
+    Slf4jLogConsumer logConsumer = new Slf4jLogConsumer(LoggerFactory.getLogger("TESTCONT"));
+    container.setLogConsumers(Collections.singletonList(logConsumer));
+    return container;
+  }
+
+  // Runs the JMX-monitored test container with SSL enabled
+  private static GenericContainer jmxSSLService(String jdkName) {
+    GenericContainer container =
+        getContainerFromDockerfile(jdkName)
+            .withExposedPorts(4567, 7199)
+            .withEnv(
+                "JAVA_OPTS",
+                "-Dcom.sun.management.jmxremote.port=7199 "
+                    + "-Dcom.sun.management.jmxremote.rmi.port=7199 "
+                    + "-Djava.rmi.server.hostname=localhost "
+                    + "-Dcom.sun.management.jmxremote=true "
+                    + "-Dcom.sun.management.jmxremote.authenticate=false "
+                    + "-Dcom.sun.management.jmxremote.ssl=true "
+                    + "-Dcom.sun.management.jmxremote.ssl.need.client.auth=true  "
+                    + "-Dcom.sun.management.jmxremote.registry.ssl=true  "
+                    + "-Djavax.net.ssl.keyStore=/serverkeystore  "
+                    + "-Djavax.net.ssl.keyStorePassword=serverpass  "
+                    + "-Djavax.net.ssl.trustStore=/servertruststore  "
+                    + "-Djavax.net.ssl.trustStorePassword=servertrustpass");
+    container.setPortBindings(Arrays.asList("7199:7199", "4567:4567"));
+    Slf4jLogConsumer logConsumer = new Slf4jLogConsumer(LoggerFactory.getLogger("TESTCONT"));
+    container.setLogConsumers(Collections.singletonList(logConsumer));
+    return container;
+  }
+
+  private static GenericContainer getContainerFromDockerfile(String jdkName) {
+    String sysProp = System.getProperty("TEST_SERVER_" + jdkName.toUpperCase(Locale.US));
+    return new GenericContainer<>(
+        new ImageFromDockerfile().withFileFromFile(".", new File(sysProp)));
+    //            .withFileFromFile(
+    //                "bin", new File(System.getProperty("TEST_SERVER_DOCKER_FILES"), "bin"))
+    //            .withFileFromFile(
+    //                "lib", new File(System.getProperty("TEST_SERVER_DOCKER_FILES"), "lib")));
+  }
+
+  private static void eventually(long timeoutMs, Runnable r) throws Exception {
+    long timeoutNano = timeoutMs * 1_000_000;
+    long startTime = System.nanoTime();
+    Exception lastException = null;
+    while (System.nanoTime() - timeoutNano < startTime) {
+      try {
+        r.run();
+        return;
+      } catch (Exception e) {
+        lastException = e;
+      }
+    }
+    throw lastException;
+  }
+
   @Timeout(value = 60, unit = SECONDS)
   @ParameterizedTest
   @ValueSource(strings = {"jdk11", "jdk8"})
   public void testJMX(String jdkName) throws Exception {
-    GenericContainer container = jmxService(jdkName);
-    try {
+    try (GenericContainer container = jmxService(jdkName)) {
       container.start();
       testJMXFetching(new JMXFetcher("localhost", 7199, "", "", "", "", "", "", false));
-    } finally {
-      container.close();
     }
   }
 
@@ -40,14 +113,11 @@ public class JMXFetcherTest {
   @ParameterizedTest
   @ValueSource(strings = {"jdk11", "jdk8"})
   public void testJMXFromConnectionURL(String jdkName) throws Exception {
-    GenericContainer container = jmxService(jdkName);
-    try {
+    try (GenericContainer container = jmxService(jdkName)) {
       container.start();
       testJMXFetching(
           new JMXFetcher(
               "service:jmx:rmi:///jndi/rmi://localhost:7199/jmxrmi", "", "", "", "", "", ""));
-    } finally {
-      container.close();
     }
   }
 
@@ -55,12 +125,8 @@ public class JMXFetcherTest {
   @ParameterizedTest
   @ValueSource(strings = {"jdk11", "jdk8"})
   public void testJMXWithSSL(String jdkName) throws Exception {
-    GenericContainer container = jmxSSLService(jdkName);
-    try {
-      Slf4jLogConsumer logConsumer = new Slf4jLogConsumer(LoggerFactory.getLogger("TESTCONT"));
-
+    try (GenericContainer container = jmxSSLService(jdkName)) {
       container.start();
-      container.followOutput(logConsumer);
       testJMXFetching(
           new JMXFetcher(
               "localhost",
@@ -72,8 +138,6 @@ public class JMXFetcherTest {
               getClass().getResource("/clienttruststore").getPath(),
               "clienttrustpass",
               false));
-    } finally {
-      container.close();
     }
   }
 
@@ -134,70 +198,5 @@ public class JMXFetcherTest {
     assertEquals("{}", results.readLine());
 
     results.close();
-  }
-
-  // Runs the JMX-monitored test container without SSL enabled
-  private static GenericContainer jmxService(String jdkName) {
-    GenericContainer container =
-        getContainerFromDockerfile(jdkName)
-            .withExposedPorts(4567, 7199)
-            .withEnv(
-                "JAVA_OPTS",
-                "-Dcom.sun.management.jmxremote.port=7199 "
-                    + "-Dcom.sun.management.jmxremote.rmi.port=7199 "
-                    + "-Djava.rmi.server.hostname=localhost "
-                    + "-Dcom.sun.management.jmxremote=true "
-                    + "-Dcom.sun.management.jmxremote.authenticate=false "
-                    + "-Dcom.sun.management.jmxremote.ssl=false ");
-    container.setPortBindings(Arrays.asList("7199:7199", "4567:4567"));
-    return container;
-  }
-
-  // Runs the JMX-monitored test container with SSL enabled
-  private static GenericContainer jmxSSLService(String jdkName) {
-    GenericContainer container =
-        getContainerFromDockerfile(jdkName)
-            .withExposedPorts(4567, 7199)
-            .withEnv(
-                "JAVA_OPTS",
-                "-Dcom.sun.management.jmxremote.port=7199 "
-                    + "-Dcom.sun.management.jmxremote.rmi.port=7199 "
-                    + "-Djava.rmi.server.hostname=localhost "
-                    + "-Dcom.sun.management.jmxremote=true "
-                    + "-Dcom.sun.management.jmxremote.authenticate=false "
-                    + "-Dcom.sun.management.jmxremote.ssl=true "
-                    + "-Dcom.sun.management.jmxremote.ssl.need.client.auth=true  "
-                    + "-Dcom.sun.management.jmxremote.registry.ssl=true  "
-                    + "-Djavax.net.ssl.keyStore=/serverkeystore  "
-                    + "-Djavax.net.ssl.keyStorePassword=serverpass  "
-                    + "-Djavax.net.ssl.trustStore=/servertruststore  "
-                    + "-Djavax.net.ssl.trustStorePassword=servertrustpass");
-    container.setPortBindings(Arrays.asList("7199:7199", "4567:4567"));
-    return container;
-  }
-
-  private static GenericContainer getContainerFromDockerfile(String jdkName) {
-    String sysProp = System.getProperty("TEST_SERVER_" + jdkName.toUpperCase(Locale.US));
-    return new GenericContainer<>(
-        new ImageFromDockerfile().withFileFromFile(".", new File(sysProp)));
-    //            .withFileFromFile(
-    //                "bin", new File(System.getProperty("TEST_SERVER_DOCKER_FILES"), "bin"))
-    //            .withFileFromFile(
-    //                "lib", new File(System.getProperty("TEST_SERVER_DOCKER_FILES"), "lib")));
-  }
-
-  private static void eventually(long timeoutMs, Runnable r) throws Exception {
-    long timeoutNano = timeoutMs * 1_000_000;
-    long startTime = System.nanoTime();
-    Exception lastException = null;
-    while (System.nanoTime() - timeoutNano < startTime) {
-      try {
-        r.run();
-        return;
-      } catch (Exception e) {
-        lastException = e;
-      }
-    }
-    throw lastException;
   }
 }

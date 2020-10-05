@@ -5,9 +5,15 @@
 
 package org.newrelic.nrjmx;
 
-import org.apache.commons.cli.*;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 
 class Arguments {
+
+  private static Options options = null;
   private String hostname;
   private String connectionURL;
   private int port;
@@ -23,8 +29,6 @@ class Arguments {
   private boolean isRemoteJMX;
   private boolean isRemoteJBossStandalone;
   private boolean help;
-
-  private static Options options = null;
 
   private Arguments() {}
 

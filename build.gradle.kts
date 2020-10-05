@@ -7,7 +7,7 @@ plugins {
     `maven-publish`
     id("org.beryx.jlink") version ("2.21.2")
     id("org.ysb33r.java.modulehelper") version ("0.9.0")
-    id("com.github.sherter.google-java-format") version ("0.8")
+    id("com.github.sherter.google-java-format") version ("0.9")
     id("nebula.ospackage") version ("8.4.1")
     id("fi.linuxbox.download") version ("0.6")
 }
@@ -34,7 +34,7 @@ extraJavaModules {
     module("commons-cli-1.4.jar", "commons.cli", "1.4") {
         exports("org.apache.commons.cli")
     }
-    module("gson-2.8.0.jar", "com.google.code.gson", "2.8.0") {
+    module("gson-2.8.0.jar", "com.google.code.gson", "2.8.5") {
         exports("com.google.gson")
     }
 }

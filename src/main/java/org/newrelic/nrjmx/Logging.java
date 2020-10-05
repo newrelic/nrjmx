@@ -5,9 +5,14 @@
 
 package org.newrelic.nrjmx;
 
-import java.util.logging.*;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 public class Logging {
+
   public static void setup(Logger logger, boolean verbose) {
     logger.setUseParentHandlers(false);
     Handler consoleHandler = new ConsoleHandler();
