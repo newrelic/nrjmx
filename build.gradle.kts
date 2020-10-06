@@ -86,6 +86,20 @@ tasks.register<CreateStartScripts>("jmxtermScripts") {
     (windowsStartScriptGenerator as TemplateBasedScriptGenerator).template = project.resources.text.fromFile(file("src/jmxterm/jmxterm.template.bat"))
 }
 
+tasks.register<Jar>("uberJar") {
+    destinationDirectory.set(file("${buildDir}/distributions"))
+
+    manifest.attributes("Main-Class" to "org.newrelic.nrjmx.Application")
+    archiveClassifier.set("noarch")
+
+    from(sourceSets.main.get().output)
+
+    dependsOn(configurations.runtimeClasspath)
+    from({
+        configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
+    })
+}
+
 tasks.register<Zip>("jlinkDistZip") {
     dependsOn(tasks.jlink, "downloadJmxTerm", "jmxtermScripts")
     destinationDirectory.set(file("${buildDir}/distributions"))
