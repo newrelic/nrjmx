@@ -1,6 +1,6 @@
+import fi.linuxbox.gradle.download.Download
 import org.redline_rpm.header.Architecture.X86_64
 import org.redline_rpm.header.Os.LINUX
-import fi.linuxbox.gradle.download.Download
 
 plugins {
     java
@@ -72,8 +72,8 @@ tasks.test {
 tasks.register<Download>("downloadJmxTerm") {
     group = "JmxTerm"
     description = "Downloads jmxterm"
-    from ("https://github.com/jiaqi/jmxterm/releases/download/v${jmxTermVersion}/jmxterm-${jmxTermVersion}-uber.jar")
-    to ("${buildDir}/jmxterm/lib/jmxterm-uber.jar")
+    from("https://github.com/jiaqi/jmxterm/releases/download/v${jmxTermVersion}/jmxterm-${jmxTermVersion}-uber.jar")
+    to("${buildDir}/jmxterm/lib/jmxterm-uber.jar")
 }
 
 tasks.register<CreateStartScripts>("jmxtermScripts") {
@@ -86,12 +86,54 @@ tasks.register<CreateStartScripts>("jmxtermScripts") {
     (windowsStartScriptGenerator as TemplateBasedScriptGenerator).template = project.resources.text.fromFile(file("src/jmxterm/jmxterm.template.bat"))
 }
 
+tasks.register<Zip>("jlinkDistZip") {
+    dependsOn(tasks.jlink, "downloadJmxTerm", "jmxtermScripts")
+    destinationDirectory.set(file("${buildDir}/distributions"))
+    archiveFileName.set("${project.name}-${project.version}-jlink.zip")
+
+    into("${project.name}-${project.version}")
+
+    from("LICENSE")
+    from("README.md")
+    from("${buildDir}/image")
+
+    from("${buildDir}/jmxterm/lib") {
+        include("jmxterm-uber.jar")
+        into("lib")
+    }
+    from("${buildDir}/jmxterm/bin") {
+        into ("bin")
+        fileMode = 0x1ED
+    }
+}
+
+tasks.register<Tar>("jlinkDistTar") {
+    dependsOn(tasks.jlink, "downloadJmxTerm", "jmxtermScripts")
+    destinationDirectory.set(file("${buildDir}/distributions"))
+    archiveFileName.set("${project.name}-${project.version}-jlink.tar.bz2")
+    compression = Compression.BZIP2
+
+    into("${project.name}-${project.version}")
+
+    from("LICENSE")
+    from("README.md")
+    from("${buildDir}/image")
+
+    from("${buildDir}/jmxterm/lib") {
+        include("jmxterm-uber.jar")
+        into("lib")
+    }
+    from("${buildDir}/jmxterm/bin") {
+        into ("bin")
+        fileMode = 0x1ED
+    }
+}
 
 tasks.buildDeb {
-    dependsOn(tasks.jlink)
+    dependsOn(tasks.jlink, "downloadJmxTerm", "jmxtermScripts")
 
     from("${buildDir}/jmxterm") {
-        include ("lib/jmxterm-uber.jar")
+        include("lib/jmxterm-uber.jar")
         into("/usr/lib/${project.name}")
     }
 
@@ -119,10 +161,10 @@ tasks.buildRpm {
     setPackageGroup("Application/System")
     setLicense("Apache 2.0")
 
-    dependsOn(tasks.jlink)
+    dependsOn(tasks.jlink, "downloadJmxTerm", "jmxtermScripts")
 
     from("${buildDir}/jmxterm") {
-        include ("lib/jmxterm-uber.jar")
+        include("lib/jmxterm-uber.jar")
         into("/usr/lib/${project.name}")
     }
 
@@ -145,23 +187,26 @@ tasks.buildRpm {
 }
 
 tasks.distZip {
-    dependsOn("downloadJmxTerm","jmxtermScripts")
+    dependsOn("downloadJmxTerm", "jmxtermScripts")
     from("${buildDir}/jmxterm") {
-        include ("**")
-        into ("${project.name}-${project.version}")
+        include("**")
+        into("${project.name}-${project.version}")
     }
 }
 
 tasks.distTar {
-    dependsOn("downloadJmxTerm","jmxtermScripts")
+    dependsOn("downloadJmxTerm", "jmxtermScripts")
+    archiveExtension.set("tar.bz2")
+    compression = Compression.BZIP2
+
     from("${buildDir}/jmxterm") {
-        include ("**")
-        into ("${project.name}-${project.version}")
+        include("**")
+        into("${project.name}-${project.version}")
     }
 }
 
 tasks.register("package") {
     group = "Distribution"
     description = "Builds all packages"
-    dependsOn("distTar", "distZip", "buildDeb", "buildRpm")
+    dependsOn("distTar", "distZip", "buildDeb", "buildRpm", "jlinkDistZip","jlinkDistTar")
 }
