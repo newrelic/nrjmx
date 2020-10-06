@@ -34,7 +34,7 @@ extraJavaModules {
     module("commons-cli-1.4.jar", "commons.cli", "1.4") {
         exports("org.apache.commons.cli")
     }
-    module("gson-2.8.0.jar", "com.google.code.gson", "2.8.5") {
+    module("gson-2.8.0.jar", "com.google.code.gson", "2.8.6") {
         exports("com.google.gson")
     }
 }
