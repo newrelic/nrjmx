@@ -1,2 +1,2 @@
 @echo off
-java -jar "C:\Program Files\New Relic\nrjmx\nrjmx.jar" %*
+"%~dp0/bin/nrjmx.bat"

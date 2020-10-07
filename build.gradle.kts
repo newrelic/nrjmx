@@ -124,27 +124,47 @@ tasks.register<Zip>("jlinkDistZip") {
 tasks.register<Tar>("jlinkDistTar") {
     dependsOn(tasks.jlink, "downloadJmxTerm", "jmxtermScripts")
     destinationDirectory.set(file("${buildDir}/distributions"))
-    archiveFileName.set("${project.name}-${project.version}-jlink.tar.bz2")
-    compression = Compression.BZIP2
+    archiveFileName.set("${project.name}-${project.version}-jlink.tar.gz")
+    compression = Compression.GZIP
 
-    into("${project.name}-${project.version}")
+    from("LICENSE") {
+        into("usr/share/doc/nrjmx")
+    }
 
-    from("LICENSE")
-    from("README.md")
-    from("${buildDir}/image")
+    from("README.md") {
+        into("usr/share/doc/nrjmx")
+    }
+
+    from("${buildDir}/image") {
+        into("usr/lib/nrjmx")
+    }
 
     from("${buildDir}/jmxterm/lib") {
         include("jmxterm-uber.jar")
-        into("lib")
+        into("usr/lib/nrjmx/lib")
     }
+
     from("${buildDir}/jmxterm/bin") {
-        into("bin")
+        into("usr/lib/nrjmx/bin")
+        fileMode = 0x1ED
+    }
+
+    from("src/rpm/usr/bin") {
+        into("usr/bin")
+        include("**")
         fileMode = 0x1ED
     }
 }
 
 tasks.buildDeb {
     dependsOn(tasks.jlink, "downloadJmxTerm", "jmxtermScripts")
+
+    setRelease("1")
+    setArch("amd64")
+    setOs(LINUX)
+    setVendor("New Relic Infrastructure Team <infrastructure-eng@newrelic.com>")
+    setPackageGroup("Application/System")
+    setLicense("Apache 2.0")
 
     from("${buildDir}/jmxterm") {
         include("lib/jmxterm-uber.jar")
@@ -168,14 +188,14 @@ tasks.buildDeb {
 }
 
 tasks.buildRpm {
+    dependsOn(tasks.jlink, "downloadJmxTerm", "jmxtermScripts")
+
     setRelease("1")
     setArch(X86_64)
     setOs(LINUX)
     setVendor("New Relic Infrastructure Team <infrastructure-eng@newrelic.com>")
     setPackageGroup("Application/System")
     setLicense("Apache 2.0")
-
-    dependsOn(tasks.jlink, "downloadJmxTerm", "jmxtermScripts")
 
     from("${buildDir}/jmxterm") {
         include("lib/jmxterm-uber.jar")
@@ -210,8 +230,8 @@ tasks.distZip {
 
 tasks.distTar {
     dependsOn("downloadJmxTerm", "jmxtermScripts")
-    archiveExtension.set("tar.bz2")
-    compression = Compression.BZIP2
+    archiveExtension.set("tar.gz")
+    compression = Compression.GZIP
 
     from("${buildDir}/jmxterm") {
         include("**")

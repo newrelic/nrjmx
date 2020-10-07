@@ -7,11 +7,12 @@ param (
     [ValidateSet("amd64", "386")]
     [string]$arch="amd64",
     [string]$version="0.0.0"
-    # Creates a signed installer
-    #[switch]$installer=$false,
-    # Skip tests
-    #[switch]$skipTests=$false
 )
+
+If ($version.startswith("v"))
+  {
+    $version = $version.substring(1)
+  }
 
 echo "Checking MSBuild.exe..."
 $msBuild = (Get-ItemProperty hklm:\software\Microsoft\MSBuild\ToolsVersions\4.0).MSBuildToolsPath
