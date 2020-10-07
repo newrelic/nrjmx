@@ -7,7 +7,7 @@ plugins {
     `maven-publish`
     id("org.beryx.jlink") version ("2.21.2")
     id("org.ysb33r.java.modulehelper") version ("0.9.0")
-    id("com.github.sherter.google-java-format") version ("0.8")
+    id("com.github.sherter.google-java-format") version ("0.9")
     id("nebula.ospackage") version ("8.4.1")
     id("fi.linuxbox.download") version ("0.6")
 }
@@ -34,7 +34,7 @@ extraJavaModules {
     module("commons-cli-1.4.jar", "commons.cli", "1.4") {
         exports("org.apache.commons.cli")
     }
-    module("gson-2.8.0.jar", "com.google.code.gson", "2.8.0") {
+    module("gson-2.8.0.jar", "com.google.code.gson", "2.8.6") {
         exports("com.google.gson")
     }
 }
@@ -86,6 +86,20 @@ tasks.register<CreateStartScripts>("jmxtermScripts") {
     (windowsStartScriptGenerator as TemplateBasedScriptGenerator).template = project.resources.text.fromFile(file("src/jmxterm/jmxterm.template.bat"))
 }
 
+tasks.register<Jar>("noarchJar") {
+    dependsOn(configurations.runtimeClasspath)
+    destinationDirectory.set(file("${buildDir}/distributions"))
+    archiveClassifier.set("noarch")
+
+    manifest.attributes("Main-Class" to "org.newrelic.nrjmx.Application")
+
+    from(sourceSets.main.get().output)
+
+    from({
+        configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
+    })
+}
+
 tasks.register<Zip>("jlinkDistZip") {
     dependsOn(tasks.jlink, "downloadJmxTerm", "jmxtermScripts")
     destinationDirectory.set(file("${buildDir}/distributions"))
@@ -102,7 +116,7 @@ tasks.register<Zip>("jlinkDistZip") {
         into("lib")
     }
     from("${buildDir}/jmxterm/bin") {
-        into ("bin")
+        into("bin")
         fileMode = 0x1ED
     }
 }
@@ -124,7 +138,7 @@ tasks.register<Tar>("jlinkDistTar") {
         into("lib")
     }
     from("${buildDir}/jmxterm/bin") {
-        into ("bin")
+        into("bin")
         fileMode = 0x1ED
     }
 }
@@ -208,5 +222,12 @@ tasks.distTar {
 tasks.register("package") {
     group = "Distribution"
     description = "Builds all packages"
-    dependsOn("distTar", "distZip", "buildDeb", "buildRpm", "jlinkDistZip","jlinkDistTar")
+    dependsOn(
+            "noarchJar",
+            "distTar",
+            "distZip",
+            "buildDeb",
+            "buildRpm",
+            "jlinkDistZip",
+            "jlinkDistTar")
 }

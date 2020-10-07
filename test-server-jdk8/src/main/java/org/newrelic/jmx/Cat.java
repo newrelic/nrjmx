@@ -5,6 +5,7 @@ import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
 public class Cat implements CatMBean, MBeanRegistration {
+
   private String name;
 
   public Cat(String name) {

@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 import org.apache.commons.cli.HelpFormatter;
 
 public class Application {
+
   public static void printHelp() {
     new HelpFormatter().printHelp("nrjmx", Arguments.options());
   }

@@ -1,14 +1,14 @@
 <configuration>
-    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger - %msg%n</pattern>
-        </encoder>
-    </appender>
+  <appender class="ch.qos.logback.core.ConsoleAppender" name="STDOUT">
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger - %msg%n</pattern>
+    </encoder>
+  </appender>
 
-    <root level="info">
-        <appender-ref ref="STDOUT"/>
-    </root>
+  <logger level="INFO" name="org.testcontainers"/>
 
-    <logger name="org.testcontainers" level="INFO"/>
-    <logger name="com.github.dockerjava" level="WARN"/>
+  <logger level="WARN" name="com.github.dockerjava"/>
+  <root level="info">
+    <appender-ref ref="STDOUT"/>
+  </root>
 </configuration>

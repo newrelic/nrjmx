@@ -39,6 +39,7 @@ import javax.rmi.ssl.SslRMIClientSocketFactory;
  * OutputStream (usually stdout)
  */
 public class JMXFetcher {
+
   public static final String defaultURIPath = "jmxrmi";
   public static final Boolean defaultJBossModeIsStandalone = false;
 
@@ -48,24 +49,6 @@ public class JMXFetcher {
   private Map<String, Object> result = new HashMap<>();
   private String connectionString;
   private Map<String, Object> connectionEnv = new HashMap<>();
-
-  public class ConnectionError extends Exception {
-    public ConnectionError(String message, Exception cause) {
-      super(message, cause);
-    }
-  }
-
-  public class QueryError extends Exception {
-    public QueryError(String message, Exception cause) {
-      super(message, cause);
-    }
-  }
-
-  public class ValueError extends Exception {
-    public ValueError(String message) {
-      super(message);
-    }
-  }
 
   /**
    * Builds a new JMXFetcher with user & pass from a connection URL.
@@ -383,7 +366,9 @@ public class JMXFetcher {
       Set<String> fieldKeys = cdata.getCompositeType().keySet();
 
       for (String field : fieldKeys) {
-        if (field.length() < 1) continue;
+        if (field.length() < 1) {
+          continue;
+        }
 
         String fieldKey = field.substring(0, 1).toUpperCase() + field.substring(1);
         parseValue(String.format("%s.%s", name, fieldKey), cdata.get(field));
@@ -429,5 +414,26 @@ public class JMXFetcher {
     }
 
     return value;
+  }
+
+  public class ConnectionError extends Exception {
+
+    public ConnectionError(String message, Exception cause) {
+      super(message, cause);
+    }
+  }
+
+  public class QueryError extends Exception {
+
+    public QueryError(String message, Exception cause) {
+      super(message, cause);
+    }
+  }
+
+  public class ValueError extends Exception {
+
+    public ValueError(String message) {
+      super(message);
+    }
   }
 }
