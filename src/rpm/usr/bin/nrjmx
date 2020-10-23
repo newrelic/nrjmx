@@ -1,2 +1,2 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 exec /usr/lib/nrjmx/bin/$(basename $0) "$@"

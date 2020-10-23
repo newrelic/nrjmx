@@ -23,8 +23,8 @@
 
         <Feature Id="ProductFeature" Title="NRJMX" Level="1">
             <ComponentRef Id="CMP_V1_NRJMX_DIRECTORY"/>
-            <ComponentGroupRef Id="CMP_GRP_NRJMX_JAR"/>
             <ComponentGroupRef Id="CMP_GRP_NRJMX_BAT"/>
+            <ComponentGroupRef Id="JlinkFiles"/>
         </Feature>
     </Product>
 
@@ -32,8 +32,7 @@
         <Directory Id="TARGETDIR" Name="SourceDir">
             <Directory Id="ProgramFiles64Folder">
                 <Directory Id="CompanyFolder" Name="New Relic">
-                    <Directory Id="NrjmxDirectory" Name="nrjmx">
-                    </Directory>
+                    <Directory Id="NrjmxDirectory" Name="nrjmx" />
                 </Directory>
             </Directory>
         </Directory>
@@ -48,14 +47,6 @@
     </Fragment>
 
     <Fragment>
-        <ComponentGroup Id="CMP_GRP_NRJMX_JAR" Directory="NrjmxDirectory">
-            <Component Id="CMP_NRJMX_JAR" Guid="9ac6648a-d7e4-4c85-8240-8208bddc57b5" Win64="yes">
-                <File Id="FILE_NRJMX_JAR"
-                      Source="$(var.JarPath)nrjmx-$(env.NRJMX_VERSION).jar"
-                      Name="nrjmx.jar"
-                      KeyPath="yes"/>
-            </Component>
-        </ComponentGroup>
         <ComponentGroup Id="CMP_GRP_NRJMX_BAT" Directory="NrjmxDirectory">
             <Component Id="CMP_NRJMX_BAT" Guid="fb3b675c-4905-45bd-a37f-8a9fb9dc2baf" Win64="yes">
                 <File Id="FILE_NRJMX_BAT"
