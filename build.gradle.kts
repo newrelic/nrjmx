@@ -113,10 +113,15 @@ tasks.register<Zip>("jlinkDistZip") {
 
     from("${buildDir}/jmxterm/lib") {
         include("jmxterm-uber.jar")
-        into("lib")
     }
     from("${buildDir}/jmxterm/bin") {
         into("bin")
+        fileMode = 0x1ED
+    }
+    from("bin/nrjmx.bat") {
+        fileMode = 0x1ED
+    }
+    from("bin/jmxterm.bat") {
         fileMode = 0x1ED
     }
 }
@@ -243,6 +248,14 @@ tasks.register("package") {
     group = "Distribution"
     description = "Builds all packages"
     dependsOn(
+            "package-linux",
+            "package-windows")
+}
+
+tasks.register("package-linux") {
+    group = "Distribution"
+    description = "Builds all packages for Linux"
+    dependsOn(
             "noarchJar",
             "distTar",
             "distZip",
@@ -250,4 +263,13 @@ tasks.register("package") {
             "buildRpm",
             "jlinkDistZip",
             "jlinkDistTar")
+}
+
+tasks.register("package-windows") {
+    group = "Distribution"
+    description = "Builds all packages for Windows"
+    dependsOn(
+            "noarchJar",
+            "distZip",
+            "jlinkDistZip")
 }

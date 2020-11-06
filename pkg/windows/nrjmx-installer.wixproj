@@ -18,7 +18,7 @@
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
         <OutputPath>..\..\target\msi\$(Configuration)\</OutputPath>
         <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
-        <DefineConstants>Debug;ProjectRootPath=..\..\..\;BuildDir=..\..\build\image;BinPath=..\..\bin\</DefineConstants>
+        <DefineConstants>Debug;ProjectRootPath=..\..\..\;BuildDir=..\..\build\image;BinPath=..\..\bin\;JmxtermJarPath=..\..\build\jmxterm\lib\</DefineConstants>
         <SuppressAllWarnings>True</SuppressAllWarnings>
         <Pedantic>False</Pedantic>
         <CompilerAdditionalOptions>-arch x64</CompilerAdditionalOptions>
@@ -26,7 +26,7 @@
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
         <OutputPath>..\..\target\msi\$(Configuration)\</OutputPath>
         <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
-        <DefineConstants>Debug;ProjectRootPath=..\..\..\;BuildDir=..\..\build\image;BinPath=..\..\bin\</DefineConstants>
+        <DefineConstants>Debug;ProjectRootPath=..\..\..\;BuildDir=..\..\build\image;BinPath=..\..\bin\;JmxtermJarPath=..\..\build\jmxterm\lib\</DefineConstants>
         <CompilerAdditionalOptions>-arch x64</CompilerAdditionalOptions>
     </PropertyGroup>
     <ItemGroup>
