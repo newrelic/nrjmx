@@ -73,7 +73,7 @@ jobs:
       - name: Sign packages
         run: ./script/sign.sh
       - name: Upload release asset to GitHub Release
-        run: script/upload_to_linux_release.sh ./build/distributions/nrjmx ${{ env.TAG }}
+        run: script/upload_linux_release.sh ./build/distributions/nrjmx ${{ env.TAG }}
 
   package-windows:
     name: Run Windows package task
@@ -100,7 +100,7 @@ jobs:
           java-version: '11'
           java-package: jdk
       - name: Build jlink code
-        run: ./gradlew jlink --info --stacktrace
+        run: ./gradlew package-windows --info --stacktrace
       - name: Get PFX certificate from GH secrets
         run: '[IO.File]::WriteAllBytes("wincert.pfx", [Convert]::FromBase64String($env:PFX_CERTIFICATE_BASE64))'
       - name: Install cert
@@ -109,4 +109,7 @@ jobs:
         run: ./win_build.ps1 -arch ${{ matrix.arch }} -version ${{ env.TAG }}
       - name: Upload release asset to GitHub Release
         shell: bash
-        run: script/upload_to_release.sh ./target/msi/Release/nrjmx-${{ matrix.arch }} ${{ env.TAG }}
+        run: script/upload_windows_release.sh ./target/msi/Release/nrjmx-${{ matrix.arch }} ${{ env.TAG }}
+      - name: Upload release asset to GitHub Release
+        shell: bash
+        run: script/upload_zip_release.sh ./build/distributions/nrjmx ${{ env.TAG }}

@@ -24,6 +24,7 @@
         <Feature Id="ProductFeature" Title="NRJMX" Level="1">
             <ComponentRef Id="CMP_V1_NRJMX_DIRECTORY"/>
             <ComponentGroupRef Id="CMP_GRP_NRJMX_BAT"/>
+            <ComponentGroupRef Id="CMP_GRP_JMXTERM_BAT"/>
             <ComponentGroupRef Id="JlinkFiles"/>
         </Feature>
     </Product>
@@ -51,6 +52,21 @@
             <Component Id="CMP_NRJMX_BAT" Guid="fb3b675c-4905-45bd-a37f-8a9fb9dc2baf" Win64="yes">
                 <File Id="FILE_NRJMX_BAT"
                       Source="$(var.BinPath)nrjmx.bat"
+                      KeyPath="yes"/>
+            </Component>
+        </ComponentGroup>
+    </Fragment>
+
+    <Fragment>
+        <ComponentGroup Id="CMP_GRP_JMXTERM_BAT" Directory="NrjmxDirectory">
+            <Component Id="CMP_JMXTERM_BAT" Guid="fb3b675c-4905-45bd-a37f-8a9fb9dc2bcf" Win64="yes">
+                <File Id="FILE_JMXTERM_BAT"
+                      Source="$(var.BinPath)jmxterm.bat"
+                      KeyPath="yes"/>
+            </Component>
+            <Component Id="CMP_JMXTERM_JAR" Guid="fb3b675c-4905-45bd-a37f-8a9fb9dc2bdf" Win64="yes">
+                <File Id="FILE_JMXTERM_JAR"
+                      Source="$(var.JmxtermJarPath)jmxterm-uber.jar"
                       KeyPath="yes"/>
             </Component>
         </ComponentGroup>
