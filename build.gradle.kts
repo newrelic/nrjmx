@@ -103,7 +103,8 @@ tasks.register<Jar>("noarchJar") {
 tasks.register<Zip>("jlinkDistZip") {
     dependsOn(tasks.jlink, "downloadJmxTerm", "jmxtermScripts")
     destinationDirectory.set(file("${buildDir}/distributions"))
-    archiveFileName.set("${project.name}-${project.version}-jlink.zip")
+    // nrjmx_windows_x.y.z_amd64.zip
+    archiveFileName.set("${project.name}_windows_${project.version}_amd64.zip")
 
     into("${project.name}-${project.version}")
 
