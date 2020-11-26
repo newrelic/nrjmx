@@ -13,5 +13,6 @@ INTEGRATION_PATH=$1
 TAG=$2
 SEMVER=`echo "${TAG}" | cut -c 2-`
 
-echo "===> Uploading ${INTEGRATION_PATH}-${SEMVER}-jlink.zip to ${TAG}"
-hub release edit -a "${INTEGRATION_PATH}-${SEMVER}-jlink.zip" -m "${TAG}" "${TAG}"
+ZIP_FILE=${INTEGRATION_PATH}_windows_${SEMVER}_amd64.zip
+echo "===> Uploading ${ZIP_FILE} to ${TAG}"
+hub release edit -a "${ZIP_FILE}" -m "${TAG}" "${TAG}"
