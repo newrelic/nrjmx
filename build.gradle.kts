@@ -129,7 +129,8 @@ tasks.register<Zip>("jlinkDistZip") {
 tasks.register<Tar>("jlinkDistTar") {
     dependsOn(tasks.jlink, "downloadJmxTerm", "jmxtermScripts")
     destinationDirectory.set(file("${buildDir}/distributions"))
-    archiveFileName.set("${project.name}-${project.version}-jlink.tar.gz")
+    // nrjmx_linux_x.y.z_amd64.tar.gz
+    archiveFileName.set("${project.name}_linux_${project.version}_amd64.tar.gz")
     compression = Compression.GZIP
 
     from("LICENSE") {
@@ -233,17 +234,6 @@ tasks.distZip {
     }
 }
 
-tasks.distTar {
-    dependsOn("downloadJmxTerm", "jmxtermScripts")
-    archiveExtension.set("tar.gz")
-    compression = Compression.GZIP
-
-    from("${buildDir}/jmxterm") {
-        include("**")
-        into("${project.name}-${project.version}")
-    }
-}
-
 tasks.register("package") {
     group = "Distribution"
     description = "Builds all packages"
@@ -257,11 +247,8 @@ tasks.register("package-linux") {
     description = "Builds all packages for Linux"
     dependsOn(
             "noarchJar",
-            "distTar",
-            "distZip",
             "buildDeb",
             "buildRpm",
-            "jlinkDistZip",
             "jlinkDistTar")
 }
 
@@ -269,7 +256,5 @@ tasks.register("package-windows") {
     group = "Distribution"
     description = "Builds all packages for Windows"
     dependsOn(
-            "noarchJar",
-            "distZip",
             "jlinkDistZip")
 }
