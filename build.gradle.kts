@@ -127,7 +127,7 @@ tasks.register<Zip>("jlinkDistZip") {
     }
 }
 
-tasks.register<Tar>("jlinkDistTar") {
+tasks.register<Tar>("linuxDistTar") {
     dependsOn(tasks.jlink, "downloadJmxTerm", "jmxtermScripts")
     destinationDirectory.set(file("${buildDir}/distributions"))
     // nrjmx_linux_x.y.z_amd64.tar.gz
@@ -227,11 +227,50 @@ tasks.buildRpm {
     }
 }
 
-tasks.distZip {
-    dependsOn("downloadJmxTerm", "jmxtermScripts")
-    from("${buildDir}/jmxterm") {
+tasks.register<Tar>("linuxNoarchDistTar") {
+    dependsOn(tasks.distTar, "downloadJmxTerm", "jmxtermScripts")
+    destinationDirectory.set(file("${buildDir}/distributions"))
+    archiveFileName.set("${project.name}_linux_${project.version}_noarch.tar.gz")
+    compression = Compression.GZIP
+//    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+
+    distributions.main.get().contents.eachFile {
+        from(this.file.absolutePath) {
+            exclude("*.jar")
+            into("usr/lib/nrjmx/bin")
+        }
+        from(this.file.absolutePath) {
+            include("*.jar")
+            into("usr/lib/nrjmx/lib")
+        }
+    }
+
+    distributions.getByName("main").contents {
+        into("usr/lib/nrjmx/test")
+    }
+
+    from("${buildDir}/jmxterm/lib") {
+        include("jmxterm-uber.jar")
+        into("usr/lib/nrjmx/lib")
+    }
+
+    from("${buildDir}/jmxterm/bin") {
+        into("usr/lib/nrjmx/bin")
+        fileMode = 0x1ED
+    }
+
+    from("LICENSE") {
+        into("usr/share/doc/nrjmx")
+    }
+
+    from("README.md") {
+        into("usr/share/doc/nrjmx")
+    }
+
+    from("src/rpm/usr/bin") {
+        into("usr/bin")
         include("**")
-        into("${project.name}-${project.version}")
+        fileMode = 0x1ED
     }
 }
 
@@ -250,7 +289,8 @@ tasks.register("package-linux") {
             "noarchJar",
             "buildDeb",
             "buildRpm",
-            "jlinkDistTar")
+            "linuxNoarchDistTar",
+            "linuxDistTar")
 }
 
 tasks.register("package-windows") {
