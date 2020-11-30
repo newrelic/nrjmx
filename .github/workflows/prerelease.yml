@@ -43,7 +43,7 @@ jobs:
           java-version: '11'
           java-package: jdk
       - name: Build with Gradle
-        run: ./gradlew build --info --stacktrace
+        run: make build
 
   package-linux:
     name: Run Linux package task
@@ -67,7 +67,7 @@ jobs:
           java-version: '11'
           java-package: jdk
       - name: Package with Gradle
-        run: ./gradlew package --warn --stacktrace
+        run: make package/linux
       - name: Install debsigs
         run: sudo apt-get install -y debsigs
       - name: Sign packages
