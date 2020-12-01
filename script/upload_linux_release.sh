@@ -28,3 +28,7 @@ hub release edit -a "${NOARCH_JAR}" -m "${TAG}" "${TAG}"
 TAR_FILE=${INTEGRATION_PATH}_linux_${SEMVER}_amd64.tar.gz
 echo "===> Uploading ${TAR_FILE} to ${TAG}"
 hub release edit -a "${TAR_FILE}" -m "${TAG}" "${TAG}"
+
+TAR_NOARCH_FILE=${INTEGRATION_PATH}_linux_${SEMVER}_noarch.tar.gz
+echo "===> Uploading ${TAR_NOARCH_FILE} to ${TAG}"
+hub release edit -a "${TAR_NOARCH_FILE}" -m "${TAG}" "${TAG}"
