@@ -36,6 +36,7 @@ extraJavaModules {
     }
     module("gson-2.8.0.jar", "com.google.code.gson", "2.8.6") {
         exports("com.google.gson")
+        requires("java.sql")
     }
 }
 

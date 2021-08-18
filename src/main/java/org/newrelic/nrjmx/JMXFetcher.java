@@ -361,6 +361,8 @@ public class JMXFetcher {
       result.put(name, ddata);
     } else if (value instanceof Number || value instanceof String || value instanceof Boolean) {
       result.put(name, value);
+    } else if (value instanceof java.util.Date) {
+      result.put(name, value);
     } else if (value instanceof CompositeData) {
       CompositeData cdata = (CompositeData) value;
       Set<String> fieldKeys = cdata.getCompositeType().keySet();
