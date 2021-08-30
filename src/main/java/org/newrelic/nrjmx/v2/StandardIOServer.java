@@ -74,7 +74,7 @@ public class StandardIOServer extends TServer {
                     if (eventHandler_ != null) {
                         connectionContext = eventHandler_.createContext(inputProtocol, outputProtocol);
                     }
-                    while (true) {
+                    while (!stopped_) {
                         if (eventHandler_ != null) {
                             eventHandler_.processContext(connectionContext, inputTransport, outputTransport);
                         }
