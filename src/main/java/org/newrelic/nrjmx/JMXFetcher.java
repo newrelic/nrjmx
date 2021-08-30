@@ -5,8 +5,6 @@
 
 package org.newrelic.nrjmx;
 
-import com.google.gson.Gson;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -38,10 +36,11 @@ import javax.management.remote.JMXServiceURL;
 
 import javax.rmi.ssl.SslRMIClientSocketFactory;
 
+import com.google.gson.*;
 
 /**
- * JMXFetcher class reads queries from an InputStream (usually stdin) and sends the results to an OutputStream
- * (usually stdout)
+ * JMXFetcher class reads queries from an InputStream (usually stdin) and sends
+ * the results to an OutputStream (usually stdout)
  */
 public class JMXFetcher {
     public static final String defaultURIPath = "jmxrmi";
@@ -75,18 +74,20 @@ public class JMXFetcher {
     /**
      * Builds a new JMXFetcher with user & pass from a connection URL.
      *
-     * @param connectionURL         Full connection URL.
-     * @param username              User name of the JMX endpoint, or an empty string if authentication is disabled
-     * @param password              Password of the JMX endpoint,  or an empty string if authentication is disabled
-     * @param keyStore              Path of the client keystore file
-     * @param keyStorePassword      Password of the keystore file
-     * @param trustStore            Path of the client trust store file
-     * @param trustStorePassword    Password of the trust store file
+     * @param connectionURL      Full connection URL.
+     * @param username           User name of the JMX endpoint, or an empty string
+     *                           if authentication is disabled
+     * @param password           Password of the JMX endpoint, or an empty string if
+     *                           authentication is disabled
+     * @param keyStore           Path of the client keystore file
+     * @param keyStorePassword   Password of the keystore file
+     * @param trustStore         Path of the client trust store file
+     * @param trustStorePassword Password of the trust store file
      */
-    public JMXFetcher(String connectionURL, String username, String password, String keyStore,
-                      String keyStorePassword, String trustStore, String trustStorePassword) {
-        this("", 0, "", username, password, keyStore,
-                keyStorePassword, trustStore, trustStorePassword, false, false, connectionURL);
+    public JMXFetcher(String connectionURL, String username, String password, String keyStore, String keyStorePassword,
+            String trustStore, String trustStorePassword) {
+        this("", 0, "", username, password, keyStore, keyStorePassword, trustStore, trustStorePassword, false, false,
+                connectionURL);
     }
 
     /**
@@ -94,8 +95,10 @@ public class JMXFetcher {
      *
      * @param hostname           Hostname of the JMX endpoint
      * @param port               Port of the JMX endpoint
-     * @param username           User name of the JMX endpoint, or an empty string if authentication is disabled
-     * @param password           Password of the JMX endpoint,  or an empty string if authentication is disabled
+     * @param username           User name of the JMX endpoint, or an empty string
+     *                           if authentication is disabled
+     * @param password           Password of the JMX endpoint, or an empty string if
+     *                           authentication is disabled
      * @param keyStore           Path of the client keystore file
      * @param keyStorePassword   Password of the keystore file
      * @param trustStore         Path of the client trust store file
@@ -103,37 +106,41 @@ public class JMXFetcher {
      * @param isRemote           true if the connection is remote. False otherwise.
      */
     public JMXFetcher(String hostname, int port, String username, String password, String keyStore,
-                      String keyStorePassword, String trustStore, String trustStorePassword, boolean isRemote) {
-        this(hostname, port, defaultURIPath, username, password, keyStore,
-                keyStorePassword, trustStore, trustStorePassword, isRemote, defaultJBossModeIsStandalone);
+            String keyStorePassword, String trustStore, String trustStorePassword, boolean isRemote) {
+        this(hostname, port, defaultURIPath, username, password, keyStore, keyStorePassword, trustStore,
+                trustStorePassword, isRemote, defaultJBossModeIsStandalone);
     }
 
     /**
-     * Builds a new JMXFetcher building the connection URL from arguments, with custom URI.
+     * Builds a new JMXFetcher building the connection URL from arguments, with
+     * custom URI.
      *
      * @param hostname              Hostname of the JMX endpoint
      * @param port                  Port of the JMX endpoint
      * @param uriPath               URI path for the JMX endpoint
-     * @param username              User name of the JMX endpoint, or an empty string if authentication is disabled
-     * @param password              Password of the JMX endpoint,  or an empty string if authentication is disabled
+     * @param username              User name of the JMX endpoint, or an empty
+     *                              string if authentication is disabled
+     * @param password              Password of the JMX endpoint, or an empty string
+     *                              if authentication is disabled
      * @param keyStore              Path of the client keystore file
      * @param keyStorePassword      Password of the keystore file
      * @param trustStore            Path of the client trust store file
      * @param trustStorePassword    Password of the trust store file
-     * @param isRemote              true if the connection is remote. False otherwise.
-     * @param isJBossStandaloneMode false if JBoss is running on Domain-mode, true for JBoss Standalone mode.
+     * @param isRemote              true if the connection is remote. False
+     *                              otherwise.
+     * @param isJBossStandaloneMode false if JBoss is running on Domain-mode, true
+     *                              for JBoss Standalone mode.
      */
     public JMXFetcher(String hostname, int port, String uriPath, String username, String password, String keyStore,
-                      String keyStorePassword, String trustStore, String trustStorePassword, boolean isRemote,
-                      boolean isJBossStandaloneMode) {
-        this(hostname, port, uriPath, username, password, keyStore,
-                keyStorePassword, trustStore, trustStorePassword, isRemote, isJBossStandaloneMode, "");
+            String keyStorePassword, String trustStore, String trustStorePassword, boolean isRemote,
+            boolean isJBossStandaloneMode) {
+        this(hostname, port, uriPath, username, password, keyStore, keyStorePassword, trustStore, trustStorePassword,
+                isRemote, isJBossStandaloneMode, "");
     }
 
-
     private JMXFetcher(String hostname, int port, String uriPath, String username, String password, String keyStore,
-                      String keyStorePassword, String trustStore, String trustStorePassword, boolean isRemote,
-                      boolean isJBossStandaloneMode, String connectionURL) {
+            String keyStorePassword, String trustStore, String trustStorePassword, boolean isRemote,
+            boolean isJBossStandaloneMode, String connectionURL) {
         if (connectionURL != null && !connectionURL.equals("")) {
             connectionString = connectionURL;
         } else {
@@ -141,9 +148,11 @@ public class JMXFetcher {
             // - https://developer.jboss.org/thread/196619
             // - http://jbossremoting.jboss.org/documentation/v3.html
             // Some doc on URIS at:
-            // - https://github.com/jboss-remoting/jboss-remoting/blob/master/src/main/java/org/jboss/remoting3/EndpointImpl.java#L292-L304
+            // -
+            // https://github.com/jboss-remoting/jboss-remoting/blob/master/src/main/java/org/jboss/remoting3/EndpointImpl.java#L292-L304
             // - https://stackoverflow.com/questions/42970921/what-is-http-remoting-protocol
-            // - http://www.mastertheboss.com/jboss-server/jboss-monitoring/using-jconsole-to-monitor-a-remote-wildfly-server
+            // -
+            // http://www.mastertheboss.com/jboss-server/jboss-monitoring/using-jconsole-to-monitor-a-remote-wildfly-server
             if (isRemote) {
                 if (defaultURIPath.equals(uriPath)) {
                     uriPath = "";
@@ -161,7 +170,7 @@ public class JMXFetcher {
         }
 
         if (!"".equals(username)) {
-            connectionEnv.put(JMXConnector.CREDENTIALS, new String[]{username, password});
+            connectionEnv.put(JMXConnector.CREDENTIALS, new String[] { username, password });
         }
 
         if (!"".equals(keyStore) && !"".equals(trustStore)) {
@@ -175,10 +184,12 @@ public class JMXFetcher {
     }
 
     /**
-     * Sends to JMX the queries from the InputStream and sends the JMX results to an OutputStream. Each query is
-     * read from a single line and the respective result is sent as a line to the outputstream.
+     * Sends to JMX the queries from the InputStream and sends the JMX results to an
+     * OutputStream. Each query is read from a single line and the respective result
+     * is sent as a line to the outputstream.
      * <p>
-     * If the query is wrong, it just ignores it and does not sends any data to the output stream.
+     * If the query is wrong, it just ignores it and does not sends any data to the
+     * output stream.
      *
      * @param inputStream  Source of the JMX queries.
      * @param outputStream Destination of the found JMX MBeans.
@@ -194,8 +205,7 @@ public class JMXFetcher {
         }
 
         Gson gson = new Gson();
-        try (Scanner input = new Scanner(inputStream);
-             PrintStream output = new PrintStream(outputStream)) {
+        try (Scanner input = new Scanner(inputStream); PrintStream output = new PrintStream(outputStream)) {
 
             while (input.hasNextLine()) {
                 String beanName = input.nextLine();
@@ -274,7 +284,8 @@ public class JMXFetcher {
                     value = jmxAttr.getValue();
                 }
             } catch (Exception e) {
-                logger.warning("Can't get attribute " + attrName + " for bean " + objectName.toString() + ": " + e.getMessage());
+                logger.warning("Can't get attribute " + attrName + " for bean " + objectName.toString() + ": "
+                        + e.getMessage());
                 continue;
             }
 
@@ -309,7 +320,8 @@ public class JMXFetcher {
             Set<String> fieldKeys = cdata.getCompositeType().keySet();
 
             for (String field : fieldKeys) {
-                if (field.length() < 1) continue;
+                if (field.length() < 1)
+                    continue;
 
                 String fieldKey = field.substring(0, 1).toUpperCase() + field.substring(1);
                 parseValue(String.format("%s.%s", name, fieldKey), cdata.get(field));
@@ -326,8 +338,8 @@ public class JMXFetcher {
     }
 
     /**
-     * XXX: JSON does not support NaN, Infinity, or -Infinity as they come back from JMX.
-     * So we parse them out to 0, Max Double, and Min Double respectively.
+     * XXX: JSON does not support NaN, Infinity, or -Infinity as they come back from
+     * JMX. So we parse them out to 0, Max Double, and Min Double respectively.
      */
     private Double parseDouble(Double value) {
         if (value.isNaN()) {
@@ -342,8 +354,8 @@ public class JMXFetcher {
     }
 
     /**
-     * XXX: JSON does not support NaN, Infinity, or -Infinity as they come back from JMX.
-     * So we parse them out to 0, Max Double, and Min Double respectively.
+     * XXX: JSON does not support NaN, Infinity, or -Infinity as they come back from
+     * JMX. So we parse them out to 0, Max Double, and Min Double respectively.
      */
     private Float parseFloat(Float value) {
         if (value.isNaN()) {

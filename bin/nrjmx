@@ -14,10 +14,13 @@ else
     path=$(dirname $0) ;
 fi ;
 
-if [ -f /usr/lib/nrjmx/nrjmx.jar ]; then
-    CLASSPATH=/usr/lib/nrjmx/*:/usr/lib/nrjmx/connectors/*
-else
-    CLASSPATH=${path}/*:./connectors/*
-fi
+#if [ -f /home/cristi/workspace/cppc/java/nrjmx/bin/nrjmx.jar ]; then
+#    CLASSPATH=/home/cristi/workspace/cppc/java/nrjmx/bin/*:/usr/lib/nrjmx/connectors/*
+#else
+#    CLASSPATH=${path}/*:./connectors/*
+CLASSPATH=${path}/*:/Users/cciutea/workspace/nr/demo_jmx/src/cppc/java/nrjmx/bin/connectors/*
+#fi
 
-${java_tool} -cp ${CLASSPATH} org.newrelic.nrjmx.Application $@
+${java_tool} -cp ${CLASSPATH} org.newrelic.nrjmx.v2.Application $@
+
+
