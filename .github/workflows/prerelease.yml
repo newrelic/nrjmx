@@ -72,14 +72,12 @@ jobs:
           $id="nrjmx_linux_$id_noarch.tar.gz"
           echo "::set-output name=id::$id"
 
-      - name: Download artifact
-        uses: dsaltares/fetch-gh-release-asset@master
+
+      - name: Download the release artifact
+        uses: actions/download-artifact@v2
         with:
-          repo: "newrelic/nrjmx"
-          version: "tags/v1.7.0"
-          file: ${{steps.get-id.outputs.id}}
-          target: ${{steps.get-id.outputs.id}}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          name: release-${{ github.event.inputs.release }}
+          path: .
 
       - name: Running unit tests
         run: ./win_build.ps1
