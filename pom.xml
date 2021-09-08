@@ -157,7 +157,7 @@
                                 <configuration>
                                     <finalName>${project.artifactId}_linux_${project.version}_noarch</finalName>
                                     <appendAssemblyId>false</appendAssemblyId>
-                                    <descriptor>assembly.xml</descriptor>
+                                    <descriptor>build/assembly/targz.xml</descriptor>
                                 </configuration>
                                 <phase>package</phase>
                                 <goals>
@@ -169,7 +169,7 @@
                                 <configuration>
                                     <finalName>${project.artifactId}_windows_${project.version}_noarch</finalName>
                                     <appendAssemblyId>false</appendAssemblyId>
-                                    <descriptor>assembly-zip.xml</descriptor>
+                                    <descriptor>build/assembly/zip.xml</descriptor>
                                 </configuration>
                                 <phase>package</phase>
                                 <goals>
