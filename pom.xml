@@ -80,7 +80,6 @@
                 <executions>
                     <execution>
                         <id>copy-file</id>
-                        <phase>package</phase>
                         <goals>
                             <goal>copy</goal>
                         </goals>
@@ -131,24 +130,6 @@
             </activation>
             <build>
                 <plugins>
-                    <plugin>
-                        <groupId>com.googlecode.maven-download-plugin</groupId>
-                        <artifactId>download-maven-plugin</artifactId>
-                        <version>1.3.0</version>
-                        <executions>
-                            <execution>
-                                <phase>process-resources</phase>
-                                <goals>
-                                    <goal>wget</goal>
-                                </goals>
-                                <configuration>
-                                    <url>https://github.com/jiaqi/jmxterm/releases/download/v1.0.2/jmxterm-1.0.2-uber.jar</url>
-                                    <outputFileName>jmxterm.jar</outputFileName>
-                                    <outputDirectory>bin</outputDirectory>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
                     <plugin>
                         <artifactId>maven-assembly-plugin</artifactId>
                         <executions>
@@ -228,23 +209,6 @@
                                         <filemode>755</filemode>
                                     </mapper>
                                 </data>
-                                <!-- jmxterm -->
-                                <data>
-                                    <type>file</type>
-                                    <src>bin/jmxterm.jar</src>
-                                    <dst>
-                                        /usr/lib/${project.artifactId}/jmxterm.jar
-                                    </dst>
-                                </data>
-                                <data>
-                                    <type>file</type>
-                                    <src>bin/jmxterm</src>
-                                    <dst>/usr/bin/jmxterm</dst>
-                                    <mapper>
-                                        <type>perm</type>
-                                        <filemode>755</filemode>
-                                    </mapper>
-                                </data>
                                 <!-- doc -->
                                 <data>
                                     <type>file</type>
@@ -316,30 +280,6 @@
                                     <sources>
                                         <source>
                                             <location>bin/nrjmx</location>
-                                        </source>
-                                    </sources>
-                                </mapping>
-                                <!-- jmxterm -->
-                                <mapping>
-                                    <directory>/usr/lib/${project.artifactId}</directory>
-                                    <sources>
-                                        <source>
-                                            <location>
-                                                bin/jmxterm.jar
-                                            </location>
-                                        </source>
-                                    </sources>
-                                </mapping>
-                                <mapping>
-                                    <directory>/usr/bin</directory>
-                                    <username>root</username>
-                                    <groupname>root</groupname>
-                                    <configuration>false</configuration>
-                                    <directoryIncluded>false</directoryIncluded>
-                                    <filemode>755</filemode>
-                                    <sources>
-                                        <source>
-                                            <location>bin/jmxterm</location>
                                         </source>
                                     </sources>
                                 </mapping>

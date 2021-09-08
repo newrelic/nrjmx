@@ -30,7 +30,7 @@ publish:
 	@echo "=== [release/publish] publishing artifacts"
 	@bash $(CURDIR)/build/upload_artifacts_gh.sh
 
-release: package publish
+release: package sign publish
 	@echo "=== [release] full pre-release cycle complete for nix"
 
 .PHONY : ci/release
