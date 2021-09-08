@@ -51,7 +51,7 @@ jobs:
           password: ${{ env.DOCKER_HUB_PASSWORD }}
 
       - name: Releasing linux packages
-        run: make ci/prerelease/linux
+        run: make ci/release
 
 #  publishing-to-s3:
 #    name: Publish linux artifacts into s3 staging bucket
