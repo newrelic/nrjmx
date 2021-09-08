@@ -12,7 +12,7 @@ build:
 
 .PHONY : package
 package:
-	@($(MAVEN_BIN) clean package)
+	@($(MAVEN_BIN) clean -DskipTests package)
 
 .PHONY : test
 test:
@@ -29,3 +29,21 @@ ci/package: deps
 .PHONY : ci/test
 ci/test: deps
 	@($(DOCKER_CMD) make test)
+
+.PHONY : release/sign
+release/sign:
+	@echo "=== [release/sign] signing packages"
+	@bash $(CURDIR)/sign.sh
+
+.PHONY : release/publish
+release/publish:
+	@echo "=== [release/publish] publishing artifacts"
+	@bash $(CURDIR)/upload_artifacts_gh.sh
+
+.PHONY : release-linux
+release-linux: package release/sign release/publish
+	@echo "=== [release-linux] full pre-release cycle complete for nix"
+
+.PHONY : ci/release
+ci/release/sign: deps
+	@($(DOCKER_CMD) make release-linux)
