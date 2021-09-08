@@ -190,6 +190,7 @@
                             </execution>
                         </executions>
                         <configuration>
+                            <deb>target/${project.artifactId}_${project.version}-1_amd64.deb</deb>
                             <dataSet>
                                 <data>
                                     <type>file</type>

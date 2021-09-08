@@ -14,9 +14,37 @@ on:
     paths-ignore:
       - README.md
 jobs:
-  unit-test-linux:
-    name: Linux unit tests
-    runs-on: ubuntu-20.04
+#  unit-test-linux:
+#    name: Linux unit tests
+#    runs-on: ubuntu-20.04
+#
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: Login to DockerHub
+#        uses: docker/login-action@v1
+#        with:
+#          username: ${{ env.DOCKER_HUB_ID }}
+#          password: ${{ env.DOCKER_HUB_PASSWORD }}
+#
+#      - name: Running unit tests
+#        run: make ci/test
+#
+#  test-build:
+#    name: Test jar compilation
+#    runs-on: ubuntu-20.04
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: Login to DockerHub
+#        uses: docker/login-action@v1
+#        with:
+#          username: ${{ env.DOCKER_HUB_ID }}
+#          password: ${{ env.DOCKER_HUB_PASSWORD }}
+#      - name: Build noarch
+#        run: make ci/build
+
+  unit-test-windows:
+    name: Windows unit tests
+    runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v2
@@ -27,17 +55,4 @@ jobs:
           password: ${{ env.DOCKER_HUB_PASSWORD }}
 
       - name: Running unit tests
-        run: make ci/test
-
-  test-build:
-    name: Test jar compilation
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-      - name: Login to DockerHub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ env.DOCKER_HUB_ID }}
-          password: ${{ env.DOCKER_HUB_PASSWORD }}
-      - name: Build noarch
-        run: make ci/build
+        run: docker run -t ubuntu echo test
