@@ -1,5 +1,5 @@
 DOCKER_BIN 		?= docker
-DOCKER_CMD 		?= $(DOCKER_BIN) run --rm -it -v $(HOME)/.docker/:/root/.docker/ -v /var/run/docker.sock:/var/run/docker.sock -v $(CURDIR):/src/nrjmx -w /src/nrjmx nrjmx_builder
+DOCKER_CMD 		?= $(DOCKER_BIN) run --rm -t -v $(HOME)/.docker/:/root/.docker/ -v /var/run/docker.sock:/var/run/docker.sock -v $(CURDIR):/src/nrjmx -w /src/nrjmx nrjmx_builder
 MAVEN_BIN       ?= mvn
 
 .PHONY : deps
