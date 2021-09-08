@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
+        <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+        <ProductVersion>3.10</ProductVersion>
+        <ProjectGuid>2fee3d98-828c-446f-9ec9-65e220a460b8</ProjectGuid>
+        <SchemaVersion>2.0</SchemaVersion>
+        <OutputName>nrjmx</OutputName>
+        <OutputType>Package</OutputType>
+        <SignToolPath>C:\Program Files (x86)\Windows Kits\10\bin\x64\</SignToolPath>
+        <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' AND '$(MSBuildExtensionsPath32)' != '' ">$(MSBuildExtensionsPath32)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
+        <WixTargetsPath Condition=" '$(WixTargetsPath)' == '' ">$(MSBuildExtensionsPath)\Microsoft\WiX\v3.x\Wix.targets</WixTargetsPath>
+        <Name>newrelic-nrjmx-installer</Name>
+        <DefineSolutionProperties>false</DefineSolutionProperties>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+        <OutputPath>..\..\..\..\target\msi\$(Configuration)\</OutputPath>
+        <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+        <DefineConstants>Debug;ProjectRootPath=..\..\..\;JarPath=..\..\..\..\target\nrjmx\</DefineConstants>
+        <SuppressAllWarnings>True</SuppressAllWarnings>
+        <Pedantic>False</Pedantic>
+        <CompilerAdditionalOptions>-arch x64</CompilerAdditionalOptions>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+        <OutputPath>..\..\..\..\target\msi\$(Configuration)\</OutputPath>
+        <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
+        <DefineConstants>Debug;ProjectRootPath=..\..\..\;JarPath=..\..\..\..\target\nrjmx\</DefineConstants>
+        <CompilerAdditionalOptions>-arch x64</CompilerAdditionalOptions>
+    </PropertyGroup>
+    <ItemGroup>
+        <Compile Include="Product.wxs"/>
+    </ItemGroup>
+    <Import Project="$(WixTargetsPath)"/>
+    <Target Name="SignInstaller">
+        <Exec Command="&quot;$(SignToolPath)signtool.exe&quot; sign /d &quot;New Relic NRJMX&quot; /a &quot;$(OutputPath)$(OutputName).msi&quot;"/>
+        <Copy SourceFiles="$(OutputPath)$(OutputName).msi" DestinationFiles="$(OutputPath)$(OutputName).x.y.z.msi"/>
+    </Target>
+    <Target Name="AfterBuild" DependsOnTargets="SignInstaller"/>
+</Project>
