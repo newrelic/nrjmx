@@ -29,25 +29,6 @@ jobs:
       - name: Running unit tests
         run: make ci/test
 
-      - name: Coveralls Parallel
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: lcov.info
-          flag-name: run-linux
-          parallel: true
-
-  finish:
-    name: Finish
-    needs: [ unit-test-linux ]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Coveralls Finished
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          parallel-finished: true
-
   test-build:
     name: Test jar compilation
     runs-on: ubuntu-20.04
