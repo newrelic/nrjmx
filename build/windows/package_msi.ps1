@@ -67,5 +67,6 @@ Push-Location -Path "target\msi\Release\"
 echo "Making versioned installed copy"
 
 cp "nrjmx.msi" "nrjmx-$arch.$version.msi"
+mv "nrjmx.msi" "nrjmx-$arch.msi"
 
 Pop-Location
