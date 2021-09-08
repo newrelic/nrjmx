@@ -33,7 +33,7 @@
     </ItemGroup>
     <Import Project="$(WixTargetsPath)"/>
     <Target Name="SignInstaller">
-        <Exec Command="&quot;$(SignToolPath)signtool.exe&quot; sign /d &quot;New Relic NRJMX&quot; /a &quot;$(OutputPath)$(OutputName).msi&quot;"/>
+        <Exec Command="&quot;$(SignToolPath)signtool.exe&quot; sign /d &quot;New Relic&quot; /a &quot;$(OutputPath)$(OutputName).msi&quot;"/>
         <Copy SourceFiles="$(OutputPath)$(OutputName).msi" DestinationFiles="$(OutputPath)$(OutputName).x.y.z.msi"/>
     </Target>
     <Target Name="AfterBuild" DependsOnTargets="SignInstaller"/>
