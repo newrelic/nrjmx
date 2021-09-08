@@ -153,7 +153,7 @@
                         <artifactId>maven-assembly-plugin</artifactId>
                         <executions>
                             <execution>
-                                <id>create-archive</id>
+                                <id>create-targz</id>
                                 <configuration>
                                     <finalName>${project.artifactId}_linux_${project.version}_noarch</finalName>
                                     <appendAssemblyId>false</appendAssemblyId>
@@ -165,7 +165,7 @@
                                 </goals>
                             </execution>
                             <execution>
-                                <id>create-archive-zip</id>
+                                <id>create-zip</id>
                                 <configuration>
                                     <finalName>${project.artifactId}_windows_${project.version}_noarch</finalName>
                                     <appendAssemblyId>false</appendAssemblyId>

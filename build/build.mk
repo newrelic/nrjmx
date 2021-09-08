@@ -5,7 +5,7 @@ build:
 .PHONY : package
 package:
 	@($(MAVEN_BIN) versions:set -DnewVersion=\$(subst v,,$(TAG)))
-	@($(MAVEN_BIN) clean -DskipTests package)
+	@($(MAVEN_BIN) clean -DskipTests package -DskipTests -P \!deb,\!rpm,\!test)
 
 .PHONY : test
 test:
