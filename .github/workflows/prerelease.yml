@@ -78,7 +78,7 @@ jobs:
 
       - name: Build executables ${{ matrix.goarch }}
         shell: pwsh
-        run: .\build\windows\package_msi.ps1 -arch ${{ matrix.goarch }} -tag ${{env.TAG}}
+        run: .\build\windows\package_msi.ps1 -arch ${{ matrix.goarch }} -tag ${{env.TAG}} -skipSigning #Remove skipSigning
 
       - name: Upload MSI to GH
         shell: bash

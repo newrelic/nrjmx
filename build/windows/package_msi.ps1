@@ -7,7 +7,10 @@ param (
     [ValidateSet("amd64", "386")]
     [string]$arch="amd64",
     [string]$tag="v0.0.0",
-    [string]$scriptPath=$(split-path -parent $MyInvocation.MyCommand.Definition)
+    [string]$scriptPath=$(split-path -parent $MyInvocation.MyCommand.Definition),
+    
+    # Skip signing
+    [switch]$skipSigning=$false
 )
 
 # Trim v from tag.
@@ -50,18 +53,18 @@ echo "--- Building Installer"
 
 Push-Location -Path "$scriptPath\pkg\windows\"
 $env:NRJMX_VERSION = $version
-. $msBuild/MSBuild.exe nrjmx-installer.wixproj
+. $msBuild/MSBuild.exe nrjmx-installer.wixproj /p:SkipSigning=${skipSigning}
 
+Pop-Location
 if (-not $?)
 {
     echo "Failed building installer"
-    Pop-Location
     exit -1
 }
 
-echo "Making versioned installed copy"
+Push-Location -Path "target\msi\Release\"
 
-cd target\msi\Release
+echo "Making versioned installed copy"
 
 cp "nrjmx.msi" "nrjmx-$arch.$version.msi"
 
