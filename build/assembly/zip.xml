@@ -14,8 +14,14 @@
                 <include>README*</include>
                 <include>LICENSE*</include>
                 <include>bin/${project.artifactId}.bat</include>
-                <include>bin/${project.artifactId}.jar</include>
             </includes>
         </fileSet>
     </fileSets>
+    <files>
+        <file>
+            <source>target/${project.artifactId}_${project.version}_noarch.jar</source>
+            <outputDirectory>Program Files/New Relic/nrjmx/bin/</outputDirectory>
+            <destName>nrjmx.jar</destName>
+        </file>
+    </files>
 </assembly>

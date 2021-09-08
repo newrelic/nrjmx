@@ -61,7 +61,7 @@
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
-                    <finalName>${project.artifactId}_linux_${project.version}_noarch</finalName>
+                    <finalName>${project.artifactId}_${project.version}_noarch</finalName>
                     <appendAssemblyId>false</appendAssemblyId>
                 </configuration>
                 <executions>
@@ -75,16 +75,17 @@
             </plugin>
             <plugin>
                 <groupId>com.coderplus.maven.plugins</groupId>
-                <artifactId>copy-rename-maven-plugin</artifactId>
+                    <artifactId>copy-rename-maven-plugin</artifactId>
                 <version>1.0</version>
                 <executions>
                     <execution>
                         <id>copy-file</id>
+                        <phase>package</phase>
                         <goals>
                             <goal>copy</goal>
                         </goals>
                         <configuration>
-                            <sourceFile>target/${project.artifactId}_linux_${project.version}_noarch.jar
+                            <sourceFile>target/${project.artifactId}_${project.version}_noarch.jar
                             </sourceFile>
                             <destinationFile>bin/nrjmx.jar</destinationFile>
                         </configuration>

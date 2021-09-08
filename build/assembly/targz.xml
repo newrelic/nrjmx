@@ -22,12 +22,12 @@
                 <include>bin/${project.artifactId}</include>
             </includes>
         </fileSet>
-        <fileSet>
-            <directory>${project.basedir}</directory>
-            <outputDirectory>/usr/</outputDirectory>
-            <includes>
-                <include>bin/${project.artifactId}.jar</include>
-            </includes>
-        </fileSet>
     </fileSets>
+    <files>
+        <file>
+            <source>target/${project.artifactId}_${project.version}_noarch.jar</source>
+            <outputDirectory>usr/bin/</outputDirectory>
+            <destName>nrjmx.jar</destName>
+        </file>
+    </files>
 </assembly>
