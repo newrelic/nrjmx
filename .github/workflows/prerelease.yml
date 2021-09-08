@@ -58,29 +58,29 @@ jobs:
     runs-on: windows-latest
 #    needs: [ packaging-linux ]
 
+    strategy:
+      matrix:
+        goarch: [ amd64, 386 ]
     steps:
-      - uses: actions/checkout@v2
-      - name: Login to DockerHub
-        uses: docker/login-action@v1
+      - name: Checkout
+        uses: actions/checkout@v2
         with:
-          username: ${{ env.DOCKER_HUB_ID }}
-          password: ${{ env.DOCKER_HUB_PASSWORD }}
+          path: src/github.com/newrelic/infrastructure-agent
+      - name: Get PFX certificate from GH secrets
+        shell: bash
+        run: printf "%s" "$PFX_CERTIFICATE_BASE64" | base64 -d - > wincert.pfx
 
-#      - id: get-artifact-name
-#        run: |
-#          $id=$(echo ${{ env.TAG }} | % { $_.Substring(1) })
-#          $id="nrjmx_linux_$id_noarch.tar.gz"
-#          echo "::set-output name=id::$id"
-#
-#
-      - name: Download the release artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: nrjmx_linux_0.0.0_noarch.zip
-          path: .
+      - name: Import PFX certificate
+        shell: pwsh
+        run: build\windows\import_certificates.ps1 -pfx_passphrase "$env:PFX_PASSPHRASE" -pfx_certificate_description "$env:PFX_CERTIFICATE_DESCRIPTION"
 
-      - name: Running unit tests
-        run: ./win_build.ps1
+      - name: Build executables ${{ matrix.goarch }}
+        shell: pwsh
+        run: build\windows\package_msi.ps1 -arch ${{ matrix.goarch }} -tag ${{env.TAG}}
+
+      - name: Upload MSI to GH
+        shell: bash
+        run: build/upload_artifacts_gh.sh
 
 #      - name: Upload MSI to GH
 #        shell: bash
