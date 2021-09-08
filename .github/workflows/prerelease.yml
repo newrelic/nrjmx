@@ -1,4 +1,4 @@
-name: Prerelease Linux pipeline
+name: Prerelease pipeline
 
 on:
   release:
@@ -24,42 +24,42 @@ env:
   AWS_REGION: "us-east-1"
 
 jobs:
-#  unit-test-linux:
-#    name: Linux unit tests
-#    runs-on: ubuntu-20.04
-#
-#    steps:
-#      - uses: actions/checkout@v2
-#
-#      - name: Install Go
-#        uses: actions/setup-go@v2
-#        with:
-#          go-version: ${{env.GO_VERSION}}
-#
-#      - name: Running unit tests
-#        run: make ci/test
+  unit-test-linux:
+    name: Linux unit tests
+    runs-on: ubuntu-20.04
 
-#  packaging-linux:
-#    name: Build and upload all artifacts into GH Release assets
-#    runs-on: ubuntu-20.04
-##    needs: [unit-test-linux]
-#
-#    steps:
-#      - uses: actions/checkout@v2
-#
-#      - name: Login to DockerHub
-#        uses: docker/login-action@v1
-#        with:
-#          username: ${{ env.DOCKER_HUB_ID }}
-#          password: ${{ env.DOCKER_HUB_PASSWORD }}
-#
-#      - name: Releasing linux packages
-#        run: make ci/release
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{env.GO_VERSION}}
+
+      - name: Running unit tests
+        run: make ci/test
+
+  packaging-linux:
+    name: Build and upload all artifacts into GH Release assets
+    runs-on: ubuntu-20.04
+    needs: [unit-test-linux]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ env.DOCKER_HUB_ID }}
+          password: ${{ env.DOCKER_HUB_PASSWORD }}
+
+      - name: Releasing linux packages
+        run: make ci/release
 
   packaging-Windows:
     name: Windows MSI build
     runs-on: windows-latest
-#    needs: [ packaging-linux ]
+    needs: [ packaging-linux ]
 
     strategy:
       matrix:
@@ -83,10 +83,6 @@ jobs:
       - name: Upload MSI to GH
         shell: bash
         run: build/upload_artifacts_gh.sh
-
-#      - name: Upload MSI to GH
-#        shell: bash
-#        run: build/upload_artifacts_gh.sh
 
 #  publishing-to-s3:
 #    name: Publish linux artifacts into s3 staging bucket

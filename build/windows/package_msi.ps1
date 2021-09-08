@@ -23,8 +23,8 @@ Function DownloadNrjmx {
     Write-Output "--- Downloading nrjmx"
 
     # download
-    [string]$file="nrjmx_windows_0.0.0_noarch.zip"
-    $url="https://github.com/newrelic/nrjmx/releases/download/v1.7.1/${file}"
+    [string]$file="nrjmx_windows_${version}_noarch.zip"
+    $url="https://github.com/newrelic/nrjmx/releases/download/${tag}/${file}"
  
     DownloadAndExtractZip -dest:"$downloadPath\nrjmx" -url:"$url"
 
