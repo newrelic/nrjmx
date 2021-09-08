@@ -10,7 +10,7 @@ EXPOSE 4567
 EXPOSE 7199
 
 COPY --from=builder target/test-server.jar /
-COPY --from=builder servertruststore /
-COPY --from=builder serverkeystore /
+COPY --from=builder truststore /
+COPY --from=builder keystore /
 
 ENTRYPOINT exec java $JAVA_OPTS -jar /test-server.jar
