@@ -66,17 +66,17 @@ jobs:
           username: ${{ env.DOCKER_HUB_ID }}
           password: ${{ env.DOCKER_HUB_PASSWORD }}
 
-      - id: get-artifact-name
-        run: |
-          $id=$(echo ${{ env.TAG }} | % { $_.Substring(1) })
-          $id="nrjmx_linux_$id_noarch.tar.gz"
-          echo "::set-output name=id::$id"
-
-
+#      - id: get-artifact-name
+#        run: |
+#          $id=$(echo ${{ env.TAG }} | % { $_.Substring(1) })
+#          $id="nrjmx_linux_$id_noarch.tar.gz"
+#          echo "::set-output name=id::$id"
+#
+#
       - name: Download the release artifact
         uses: actions/download-artifact@v2
         with:
-          name: release-${{ github.event.inputs.release }}
+          name: nrjmx_linux_0.0.0_noarch.zip
           path: .
 
       - name: Running unit tests
