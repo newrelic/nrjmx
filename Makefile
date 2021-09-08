@@ -12,6 +12,7 @@ DOCKER_CMD 		?= $(DOCKER_BIN) run --rm -t \
 					-e GPG_PASSPHRASE \
 					-e GPG_PRIVATE_KEY_BASE64 \
 					nrjmx_builder
+TAG				?= v0.0.0
 
 .PHONY : deps
 deps:
@@ -23,6 +24,7 @@ build:
 
 .PHONY : package
 package:
+	@($(MAVEN_BIN) versions:set -DnewVersion=\$(subst v,,$(TAG)))
 	@($(MAVEN_BIN) clean -DskipTests package)
 
 .PHONY : test
