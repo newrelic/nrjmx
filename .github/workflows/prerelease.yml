@@ -75,15 +75,15 @@ jobs:
 
       - name: Import PFX certificate
         shell: pwsh
-        run: build\windows\import_certificates.ps1 -pfx_passphrase "$env:PFX_PASSPHRASE" -pfx_certificate_description "$env:PFX_CERTIFICATE_DESCRIPTION"
+        run: .\build\windows\import_certificates.ps1 -pfx_passphrase "$env:PFX_PASSPHRASE" -pfx_certificate_description "$env:PFX_CERTIFICATE_DESCRIPTION"
 
       - name: Build executables ${{ matrix.goarch }}
         shell: pwsh
-        run: build\windows\package_msi.ps1 -arch ${{ matrix.goarch }} -tag ${{env.TAG}}
+        run: .\build\windows\package_msi.ps1 -arch ${{ matrix.goarch }} -tag ${{env.TAG}}
 
       - name: Upload MSI to GH
         shell: bash
-        run: build/upload_artifacts_gh.sh
+        run: .\build/upload_artifacts_gh.sh
 
 #      - name: Upload MSI to GH
 #        shell: bash
