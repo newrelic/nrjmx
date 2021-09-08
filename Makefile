@@ -45,5 +45,5 @@ release-linux: package release/sign release/publish
 	@echo "=== [release-linux] full pre-release cycle complete for nix"
 
 .PHONY : ci/release
-ci/release/sign: deps
+ci/release: deps
 	@($(DOCKER_CMD) make release-linux)
