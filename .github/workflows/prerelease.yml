@@ -68,8 +68,8 @@ jobs:
 
       - id: get-artifact-name
         run: |
-          id=$(echo ${{github.event.client_payload.value}} | cut -d- -f2)
-          id="nrjmx_linux_$id_noarch.tar.gz"
+          $id=$(echo ${{github.event.client_payload.value}} | % { $_.Substring(1) })
+          $id="nrjmx_linux_$id_noarch.tar.gz"
           echo "::set-output name=id::$id"
 
       - name: Download artifact
