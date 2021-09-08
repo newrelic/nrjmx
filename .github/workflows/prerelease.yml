@@ -73,7 +73,8 @@ jobs:
       file: "nrjmx_linux_${{env.TAG:1}}_noarch.tar.gz"
       target: "nrjmx_linux_${{env.TAG:1}}_noarch.zip"
       token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Running unit tests
+      
+    - name: Running unit tests
       run: ./win_build.ps1
 
 #      - name: Upload MSI to GH
