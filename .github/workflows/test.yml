@@ -41,3 +41,4 @@ jobs:
           password: ${{ env.DOCKER_HUB_PASSWORD }}
       - name: Build noarch
         run: make ci/build
+
