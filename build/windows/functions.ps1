@@ -1,19 +1,7 @@
 <#
     .SYNOPSIS
-        This script contains common functions for building the Windows New Relic Infrastructure Agent.
+        This script contains common functions for building the Windows New Relic nrjmx.
 #>
-Function SignExecutable {
-    param (
-        # Signing tool
-        [string]$signtool='"C:\Program Files (x86)\Windows Kits\10\bin\x64\signtool.exe"',
-        [string]$executable=$(throw "-executable path is required")
-    )
-
-    Invoke-Expression "& $signtool sign /d 'New Relic Infrastructure Agent' /n 'New Relic, Inc.' $executable"
-    if ($lastExitCode -ne 0) {
-       throw "Failed to sign $executable"
-    }
-}
 
 Function DownloadFile {
     param (

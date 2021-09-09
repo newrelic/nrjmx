@@ -1,6 +1,6 @@
 <#
     .SYNOPSIS
-        This script imports the Newrelic Infrastructure Agent certificate.
+        This script imports the Newrelic Infrastructure certificate.
 #>
 param (
     [string]$pfx_passphrase="none",
