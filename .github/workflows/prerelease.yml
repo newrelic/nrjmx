@@ -93,6 +93,8 @@ jobs:
           - "targz"
           - "deb"
           - "rpm"
+          - "msi"
+          - "zip"
 
     steps:
       - name: Login to DockerHub
