@@ -61,9 +61,6 @@ jobs:
     runs-on: windows-latest
     needs: [ packaging ]
 
-    strategy:
-      matrix:
-        goarch: [ amd64, 386 ]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -76,9 +73,9 @@ jobs:
         shell: pwsh
         run: build\windows\import_certificates.ps1 -pfx_passphrase "$env:PFX_PASSPHRASE" -pfx_certificate_description "$env:PFX_CERTIFICATE_DESCRIPTION"
 
-      - name: Build MSI ${{ matrix.goarch }}
+      - name: Build MSI amd64
         shell: pwsh
-        run: build\windows\package_msi.ps1 -arch ${{ matrix.goarch }} -tag ${{env.TAG}} -skipSigning #Remove skipSigning
+        run: build\windows\package_msi.ps1 -arch amd64 -tag ${{env.TAG}} -skipSigning #Remove skipSigning
 
       - name: Upload MSI to GH
         shell: bash
