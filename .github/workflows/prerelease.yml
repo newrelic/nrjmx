@@ -86,23 +86,13 @@ jobs:
     runs-on: ubuntu-20.04
     needs: [packaging, packaging-msi]
 
-    strategy:
-      max-parallel: 1
-      matrix:
-        assetsType:
-          - "targz"
-          - "deb"
-          - "rpm"
-          - "msi"
-          - "zip"
-
     steps:
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
           username: ${{ env.DOCKER_HUB_ID }}
           password: ${{ env.DOCKER_HUB_PASSWORD }}
-      - name: Publish ${{ matrix.assetsType }} to S3 action
+      - name: Publish all to S3 action
         uses: newrelic/infrastructure-publish-action@cciutea/nrjmx_ci
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.OHAI_AWS_ACCESS_KEY_ID_STAGING }}
