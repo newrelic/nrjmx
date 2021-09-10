@@ -31,11 +31,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Install Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: ${{env.GO_VERSION}}
-
       - name: Running unit tests
         run: make ci/test
 
@@ -75,7 +70,7 @@ jobs:
 
       - name: Build MSI amd64
         shell: pwsh
-        run: build\windows\package_msi.ps1 -arch amd64 -tag ${{env.TAG}}  
+        run: build\windows\package_msi.ps1 -arch amd64 -tag ${{env.TAG}}
 
       - name: Upload MSI to GH
         shell: bash
