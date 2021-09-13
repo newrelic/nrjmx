@@ -1,7 +1,7 @@
 <assembly xmlns="http://maven.apache.org/ASSEMBLY/2.0.0"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
           xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.0.0 http://maven.apache.org/xsd/assembly-2.0.0.xsd">
-    <id>bin</id>
+    <id>targz</id>
     <formats>
         <format>tar.gz</format>
     </formats>
@@ -22,19 +22,12 @@
                 <include>bin/${project.artifactId}</include>
             </includes>
         </fileSet>
-        <fileSet>
-            <directory>${project.basedir}</directory>
-            <outputDirectory>/usr/</outputDirectory>
-            <includes>
-                <include>bin/${project.artifactId}.jar</include>
-            </includes>
-        </fileSet>
-        <fileSet>
-            <directory>${project.basedir}</directory>
-            <outputDirectory>/usr/</outputDirectory>
-            <includes>
-                <include>bin/jmxterm.jar</include>
-            </includes>
-        </fileSet>
     </fileSets>
+    <files>
+        <file>
+            <source>target/${project.artifactId}_${project.version}_noarch.jar</source>
+            <outputDirectory>usr/lib/nrjmx/</outputDirectory>
+            <destName>nrjmx.jar</destName>
+        </file>
+    </files>
 </assembly>

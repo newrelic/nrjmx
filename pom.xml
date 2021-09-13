@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>nrjmx</groupId>
     <artifactId>nrjmx</artifactId>
-    <version>1.4.2</version>
+    <version>0.0.0</version>
     <name>nrjmx</name>
     <description>The New Relic JMX tool provides a command line tool to connect to a JMX server and retrieve the MBeans
         it exposes.
@@ -33,8 +33,18 @@
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers</artifactId>
-            <version>1.11.3</version>
+            <version>1.16.0</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.32</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>1.7.32</version>
         </dependency>
     </dependencies>
     <build>
@@ -51,7 +61,7 @@
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
-                    <finalName>${project.artifactId}_linux_${project.version}_noarch</finalName>
+                    <finalName>${project.artifactId}_${project.version}_noarch</finalName>
                     <appendAssemblyId>false</appendAssemblyId>
                 </configuration>
                 <executions>
@@ -65,7 +75,7 @@
             </plugin>
             <plugin>
                 <groupId>com.coderplus.maven.plugins</groupId>
-                <artifactId>copy-rename-maven-plugin</artifactId>
+                    <artifactId>copy-rename-maven-plugin</artifactId>
                 <version>1.0</version>
                 <executions>
                     <execution>
@@ -75,7 +85,7 @@
                             <goal>copy</goal>
                         </goals>
                         <configuration>
-                            <sourceFile>target/${project.artifactId}_linux_${project.version}_noarch.jar
+                            <sourceFile>target/${project.artifactId}_${project.version}_noarch.jar
                             </sourceFile>
                             <destinationFile>bin/nrjmx.jar</destinationFile>
                         </configuration>
@@ -122,33 +132,27 @@
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>com.googlecode.maven-download-plugin</groupId>
-                        <artifactId>download-maven-plugin</artifactId>
-                        <version>1.3.0</version>
-                        <executions>
-                            <execution>
-                                <phase>process-resources</phase>
-                                <goals>
-                                    <goal>wget</goal>
-                                </goals>
-                                <configuration>
-                                    <url>https://github.com/jiaqi/jmxterm/releases/download/v1.0.2/jmxterm-1.0.2-uber.jar</url>
-                                    <outputFileName>jmxterm.jar</outputFileName>
-                                    <outputDirectory>bin</outputDirectory>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
                         <artifactId>maven-assembly-plugin</artifactId>
-                        <configuration>
-                            <finalName>${project.artifactId}_linux_${project.version}_noarch</finalName>
-                            <appendAssemblyId>false</appendAssemblyId>
-                            <descriptor>assembly.xml</descriptor>
-                        </configuration>
                         <executions>
                             <execution>
-                                <id>create-archive</id>
+                                <id>create-targz</id>
+                                <configuration>
+                                    <finalName>${project.artifactId}_linux_${project.version}_noarch</finalName>
+                                    <appendAssemblyId>false</appendAssemblyId>
+                                    <descriptor>build/assembly/targz.xml</descriptor>
+                                </configuration>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>create-zip</id>
+                                <configuration>
+                                    <finalName>${project.artifactId}_windows_${project.version}_noarch</finalName>
+                                    <appendAssemblyId>false</appendAssemblyId>
+                                    <descriptor>build/assembly/zip.xml</descriptor>
+                                </configuration>
                                 <phase>package</phase>
                                 <goals>
                                     <goal>single</goal>
@@ -180,6 +184,7 @@
                             </execution>
                         </executions>
                         <configuration>
+                            <deb>target/${project.artifactId}_${project.version}-1_amd64.deb</deb>
                             <dataSet>
                                 <data>
                                     <type>file</type>
@@ -200,23 +205,6 @@
                                     <type>file</type>
                                     <src>bin/${project.artifactId}</src>
                                     <dst>/usr/bin/${project.artifactId}</dst>
-                                    <mapper>
-                                        <type>perm</type>
-                                        <filemode>755</filemode>
-                                    </mapper>
-                                </data>
-                                <!-- jmxterm -->
-                                <data>
-                                    <type>file</type>
-                                    <src>bin/jmxterm.jar</src>
-                                    <dst>
-                                        /usr/lib/${project.artifactId}/jmxterm.jar
-                                    </dst>
-                                </data>
-                                <data>
-                                    <type>file</type>
-                                    <src>bin/jmxterm</src>
-                                    <dst>/usr/bin/jmxterm</dst>
                                     <mapper>
                                         <type>perm</type>
                                         <filemode>755</filemode>
@@ -293,30 +281,6 @@
                                     <sources>
                                         <source>
                                             <location>bin/nrjmx</location>
-                                        </source>
-                                    </sources>
-                                </mapping>
-                                <!-- jmxterm -->
-                                <mapping>
-                                    <directory>/usr/lib/${project.artifactId}</directory>
-                                    <sources>
-                                        <source>
-                                            <location>
-                                                bin/jmxterm.jar
-                                            </location>
-                                        </source>
-                                    </sources>
-                                </mapping>
-                                <mapping>
-                                    <directory>/usr/bin</directory>
-                                    <username>root</username>
-                                    <groupname>root</groupname>
-                                    <configuration>false</configuration>
-                                    <directoryIncluded>false</directoryIncluded>
-                                    <filemode>755</filemode>
-                                    <sources>
-                                        <source>
-                                            <location>bin/jmxterm</location>
                                         </source>
                                     </sources>
                                 </mapping>

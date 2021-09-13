@@ -15,17 +15,17 @@
         <DefineSolutionProperties>false</DefineSolutionProperties>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-        <OutputPath>..\..\target\msi\$(Configuration)\</OutputPath>
+        <OutputPath>..\..\..\..\target\msi\$(Configuration)\</OutputPath>
         <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
-        <DefineConstants>Debug;ProjectRootPath=..\..\..\;JarPath=..\..\target\</DefineConstants>
+        <DefineConstants>Debug;ProjectRootPath=..\..\..\;JarPath=..\..\..\..\target\nrjmx\</DefineConstants>
         <SuppressAllWarnings>True</SuppressAllWarnings>
         <Pedantic>False</Pedantic>
         <CompilerAdditionalOptions>-arch x64</CompilerAdditionalOptions>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-        <OutputPath>..\..\target\msi\$(Configuration)\</OutputPath>
+        <OutputPath>..\..\..\..\target\msi\$(Configuration)\</OutputPath>
         <IntermediateOutputPath>obj\$(Configuration)\</IntermediateOutputPath>
-        <DefineConstants>Debug;ProjectRootPath=..\..\..\;JarPath=..\..\target\;BinPath=..\..\bin\</DefineConstants>
+        <DefineConstants>Debug;ProjectRootPath=..\..\..\;JarPath=..\..\..\..\target\nrjmx\</DefineConstants>
         <CompilerAdditionalOptions>-arch x64</CompilerAdditionalOptions>
     </PropertyGroup>
     <ItemGroup>
@@ -36,5 +36,5 @@
         <Exec Command="&quot;$(SignToolPath)signtool.exe&quot; sign /d &quot;New Relic NRJMX&quot; /a &quot;$(OutputPath)$(OutputName).msi&quot;"/>
         <Copy SourceFiles="$(OutputPath)$(OutputName).msi" DestinationFiles="$(OutputPath)$(OutputName).x.y.z.msi"/>
     </Target>
-    <Target Name="AfterBuild" DependsOnTargets="SignInstaller"/>
+    <Target Name="AfterBuild" DependsOnTargets="SignInstaller" Condition=" '$(SkipSigning)' == 'False' " />
 </Project>
