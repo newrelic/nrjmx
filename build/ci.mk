@@ -1,4 +1,5 @@
 DOCKER_CMD 		?= $(DOCKER_BIN) run --rm -t \
+					--name "nrjmx-builder" \
 					-v $(HOME)/.docker/:/root/.docker/ \
 					-v /var/run/docker.sock:/var/run/docker.sock \
 					-v $(CURDIR):/src/nrjmx \
@@ -25,13 +26,6 @@ ci/package: deps
 .PHONY : ci/test
 ci/test: deps
 	@($(DOCKER_CMD) make test)
-
-publish:
-	@echo "=== [release/publish] publishing artifacts"
-	@bash $(CURDIR)/build/upload_artifacts_gh.sh
-
-release: package sign publish
-	@echo "=== [release] full pre-release cycle complete for nix"
 
 .PHONY : ci/release
 ci/release: deps
