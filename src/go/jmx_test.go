@@ -141,6 +141,52 @@ func Test_Query_Success(t *testing.T) {
 	assert.EqualValues(t, result, expected)
 }
 
+func Test_URL_Success(t *testing.T) {
+	ctx := context.Background()
+
+	// GIVEN a JMX Server running inside a container
+	container, err := runJMXServiceContainer(ctx)
+	require.NoError(t, err)
+	defer container.Terminate(ctx)
+
+	// Populate the JMX Server with mbeans
+	resp, err := addMBeans(ctx, container, map[string]interface{}{
+		"name":        "tomas",
+		"doubleValue": 1.2,
+		"floatValue":  2.2,
+		"numberValue": 3,
+		"boolValue":   true,
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, "ok!\n", string(resp))
+
+	defer cleanMBeans(ctx, container)
+
+	// THEN JMX connection can be oppened
+	jmxPort, err := container.MappedPort(ctx, testServerJMXPort)
+	require.NoError(t, err)
+	jmxHost, err := container.Host(ctx)
+	require.NoError(t, err)
+
+	err = jmx.OpenURL(fmt.Sprintf("service:jmx:rmi:///jndi/rmi://%s:%s/jmxrmi", jmxHost, jmxPort.Port()), "", "")
+	defer jmx.Close()
+	assert.NoError(t, err)
+
+	// AND Query returns expected data
+	result, err := jmx.Query("test:type=Cat,*", 10000)
+	assert.NoError(t, err)
+
+	expected := map[string]interface{}{
+		"test:type=Cat,name=tomas,attr=Name":        "tomas",
+		"test:type=Cat,name=tomas,attr=DoubleValue": 1.2,
+		"test:type=Cat,name=tomas,attr=FloatValue":  2.2,
+		"test:type=Cat,name=tomas,attr=BoolValue":   true,
+		"test:type=Cat,name=tomas,attr=NumberValue": float64(3),
+	}
+
+	assert.EqualValues(t, result, expected)
+}
+
 func Test_JavaNotInstalled(t *testing.T) {
 	// GIVEN a wrong Java Home
 	os.Setenv("NRIA_JAVA_HOME", "/wrong/path")
