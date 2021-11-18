@@ -9,7 +9,7 @@ test:
 CUR_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 GOMODULE_DIR:=$(CUR_DIR)/src/go/
 
-.PHONY : gotest
-gotest:
+.PHONY : gotests
+gotests:
 	@echo $(GOMODULE_DIR)
 	@cd $(GOMODULE_DIR); go clean -testcache; go test -v -timeout 60s github.com/newrelic/nrjmx
