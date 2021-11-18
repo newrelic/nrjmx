@@ -37,4 +37,4 @@ ci/release: deps
 	@($(DOCKER_CMD) make release)
 
 .PHONY : ci/go-test
-ci/go-tests: deps godeps build --private_gotest
+ci/go-test: deps godeps build --private_gotest
