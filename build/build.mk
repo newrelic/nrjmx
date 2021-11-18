@@ -11,4 +11,4 @@ GOMODULE_DIR:=$(CUR_DIR)/src/go/
 
 go-test: godeps build
 	@echo $(GOMODULE_DIR)
-	@cd $(GOMODULE_DIR); go clean -testcache; go test -v -timeout 60s github.com/newrelic/nrjmx
+	@cd $(GOMODULE_DIR); go clean -testcache; go test -v -timeout 300s github.com/newrelic/nrjmx
