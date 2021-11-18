@@ -36,6 +36,5 @@ ci/test: deps
 ci/release: deps
 	@($(DOCKER_CMD) make release)
 
-.PHONY : ci/go-test
-ci/go-test: deps godeps build
-	@($(DOCKER_CMD) make gotest)
+.PHONY : ci/go-tests
+ci/go-tests: deps godeps build --private_gotests
