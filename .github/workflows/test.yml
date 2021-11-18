@@ -47,7 +47,7 @@ jobs:
           password: ${{ env.DOCKER_HUB_PASSWORD }}
 
       - name: Running unit tests
-        run: make ci/go-test
+        run: make go-test
 
   test-build:
     name: Test jar compilation
