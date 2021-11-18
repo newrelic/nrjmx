@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -21,15 +22,16 @@ import (
 )
 
 const (
-	testServerHost              = "localhost"
-	testServerPort              = "4567"
-	testServerJMXPort           = "7199"
-	testServerAddDataEndpoint   = "/cat"
-	testServerCleanDataEndpoint = "/clear"
-	keystorePassword            = "password"
-	truststorePassword          = "password"
-	jmxUsername                 = "testuser"
-	jmxPassword                 = "testpassword"
+	testServerHost                 = "localhost"
+	testServerPort                 = "4567"
+	testServerJMXPort              = "7199"
+	testServerAddDataEndpoint      = "/cat"
+	testServerAddDataBatchEndpoint = "/cat_batch"
+	testServerCleanDataEndpoint    = "/clear"
+	keystorePassword               = "password"
+	truststorePassword             = "password"
+	jmxUsername                    = "testuser"
+	jmxPassword                    = "testpassword"
 )
 
 var prjDir, keystorePath, truststorepath string
@@ -45,6 +47,52 @@ func init() {
 	truststorepath = filepath.Join(prjDir, "test-server", "truststore")
 
 	os.Setenv("NR_JMX_TOOL", filepath.Join(prjDir, "bin", "nrjmx"))
+}
+
+func Test_Query_Success_LargeAmountOfData(t *testing.T) {
+	ctx := context.Background()
+
+	// GIVEN a JMX Server running inside a container
+	container, err := runJMXServiceContainer(ctx)
+	require.NoError(t, err)
+	defer container.Terminate(ctx)
+
+	data := []map[string]interface{}{}
+
+	name := strings.Repeat("tomas", 100)
+
+	for i := 0; i < 2000; i++ {
+		data = append(data, map[string]interface{}{
+			"name":        fmt.Sprintf("%s-%d", name, i),
+			"doubleValue": 1.2,
+			"floatValue":  2.2,
+			"numberValue": 3,
+			"boolValue":   true,
+		})
+	}
+
+	// Populate the JMX Server with mbeans
+	resp, err := addMBeansBatch(ctx, container, data)
+	assert.NoError(t, err)
+	assert.Equal(t, "ok!\n", string(resp))
+
+	defer cleanMBeans(ctx, container)
+
+	// THEN JMX connection can be oppened
+	jmxPort, err := container.MappedPort(ctx, testServerJMXPort)
+	require.NoError(t, err)
+	jmxHost, err := container.Host(ctx)
+	require.NoError(t, err)
+
+	err = jmx.Open(jmxHost, jmxPort.Port(), "", "")
+	defer jmx.Close()
+	assert.NoError(t, err)
+
+	result, err := jmx.Query("test:type=Cat,*", 600000)
+	assert.NoError(t, err)
+
+	// AND query returns at least 5Mb of data.
+	assert.GreaterOrEqual(t, len(fmt.Sprintf("%v", result)), 5*1024*1024)
 }
 
 func Test_Query_Success(t *testing.T) {
@@ -352,25 +400,37 @@ func cleanMBeans(ctx context.Context, container testcontainers.Container) ([]byt
 	return httpRequest(http.MethodPut, url, nil)
 }
 
+// addMBeansBatch will add new MBeans to the test-server.
+func addMBeansBatch(ctx context.Context, container testcontainers.Container, body []map[string]interface{}) ([]byte, error) {
+	url, err := getContainerServiceURL(ctx, container, testServerPort, testServerAddDataBatchEndpoint)
+	if err != nil {
+		return nil, err
+	}
+	json, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	return httpRequest(http.MethodPost, url, json)
+}
+
 // addMBeans will add new MBeans to the test-server.
 func addMBeans(ctx context.Context, container testcontainers.Container, body map[string]interface{}) ([]byte, error) {
 	url, err := getContainerServiceURL(ctx, container, testServerPort, testServerAddDataEndpoint)
 	if err != nil {
 		return nil, err
 	}
-	return httpRequest(http.MethodPost, url, body)
-}
-
-// httpRequest will perform the http request.
-func httpRequest(method, url string, body map[string]interface{}) ([]byte, error) {
-	client := &http.Client{}
-
 	json, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
+	return httpRequest(http.MethodPost, url, json)
+}
 
-	req, err := http.NewRequest(method, url, bytes.NewBuffer(json))
+// httpRequest will perform the http request.
+func httpRequest(method, url string, body []byte) ([]byte, error) {
+	client := &http.Client{}
+
+	req, err := http.NewRequest(method, url, bytes.NewBuffer(body))
 	if err != nil {
 		return nil, err
 	}

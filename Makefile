@@ -10,4 +10,3 @@ include $(INCLUDE_BUILD_DIR)/build.mk
 include $(INCLUDE_BUILD_DIR)/ci.mk
 include $(INCLUDE_BUILD_DIR)/release.mk
 include $(INCLUDE_BUILD_DIR)/release.mk
-include $(INCLUDE_BUILD_DIR)/gomodule.mk

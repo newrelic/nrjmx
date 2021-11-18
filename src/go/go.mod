@@ -3,6 +3,7 @@ module github.com/newrelic/nrjmx
 go 1.14
 
 require (
+	github.com/docker/docker v20.10.7+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/newrelic/infra-integrations-sdk v3.7.0+incompatible
 	github.com/stretchr/testify v1.7.0
