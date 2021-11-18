@@ -144,6 +144,7 @@ func Test_Query_Success(t *testing.T) {
 func Test_JavaNotInstalled(t *testing.T) {
 	// GIVEN a wrong Java Home
 	os.Setenv("NRIA_JAVA_HOME", "/wrong/path")
+	defer os.Unsetenv("NRIA_JAVA_HOME")
 
 	err := jmx.Open("wrong", "12345", "", "")
 	defer jmx.Close()
