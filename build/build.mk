@@ -28,4 +28,13 @@ code-gen: code-gen-deps
 	@($(DOCKER_THRIFT) thrift -r --out src/main/java/ --gen java ./commons/nrjmx.thrift)
 	@($(DOCKER_THRIFT) thrift -r --out src/go/ --gen go:package=protocol ./commons/nrjmx.thrift)
 
+TRACKED_GEN_DIR=src/main/java/protocol \
+				src/go/protocol
+.PHONY : check-gen-code
+check-gen-code: code-gen
+	@echo "Checking the generated code..." ; \
+	if [ `git status --porcelain --untracked-files=no $(TRACKED_GEN_DIR) | wc -l` -gt 0 ]; then \
+		echo "Code generator produced different code, make sure you pushed the latest changes!"; \
+		exit 1;	\
+	fi
 
