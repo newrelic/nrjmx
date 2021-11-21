@@ -26,10 +26,10 @@ code-gen-deps:
 .PHONY : code-gen
 code-gen: code-gen-deps
 	@($(DOCKER_THRIFT) thrift -r --out src/main/java/ --gen java ./commons/nrjmx.thrift)
-	@($(DOCKER_THRIFT) thrift -r --out src/go/ --gen go:package=protocol ./commons/nrjmx.thrift)
+	@($(DOCKER_THRIFT) thrift -r --out src/go/ --gen go:package_prefix=github.com/newrelic/nrjmx/,package=nrprotocol ./commons/nrjmx.thrift)
 
-TRACKED_GEN_DIR=src/main/java/protocol \
-				src/go/protocol
+TRACKED_GEN_DIR=src/main/java/prot \
+				src/go/prot
 .PHONY : check-gen-code
 check-gen-code: code-gen
 	@echo "Checking the generated code..." ; \

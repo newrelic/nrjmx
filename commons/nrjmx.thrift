@@ -1,4 +1,4 @@
-namespace java org.newrelic.nrjmx.v2.protocol
+namespace java org.newrelic.nrjmx.v2.nrprotocol
 
 struct JMXConfig {
   1: string connectionURL
@@ -19,20 +19,16 @@ enum ValueType {
   STRING = 1,
   DOUBLE = 2,
   INT    = 3,
-  BOOL   = 4
-}
-
-struct JMXAttributeValue {
-  1: ValueType valueType,
-  2: string stringValue,
-  3: double doubleValue,
-  4: i64 intValue,
-  5: bool boolValue
+  BOOL   = 4,
 }
 
 struct JMXAttribute {
   1: string attribute
-  2: JMXAttributeValue value
+  2: ValueType valueType,
+  3: string stringValue,
+  4: double doubleValue,
+  5: i64 intValue,
+  6: bool boolValue
 }
 
 struct LogMessage {

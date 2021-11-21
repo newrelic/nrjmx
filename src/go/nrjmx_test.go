@@ -1,4 +1,4 @@
-package main
+package nrjmx
 
 import (
 	"bytes"
@@ -15,6 +15,7 @@ import (
 
 	"github.com/docker/go-connections/nat"
 	"github.com/newrelic/infra-integrations-sdk/jmx"
+	"github.com/newrelic/nrjmx/nrprotocol"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
@@ -78,17 +79,28 @@ func Test_Query_Success_LargeAmountOfData(t *testing.T) {
 
 	defer cleanMBeans(ctx, container)
 
+	// time.Sleep(1 * time.Hour)
+
 	// THEN JMX connection can be oppened
 	jmxPort, err := container.MappedPort(ctx, testServerJMXPort)
 	require.NoError(t, err)
 	jmxHost, err := container.Host(ctx)
 	require.NoError(t, err)
 
-	err = jmx.Open(jmxHost, jmxPort.Port(), "", "")
-	defer jmx.Close()
+	client, err := NewJMXServiceClient(ctx)
 	assert.NoError(t, err)
 
-	result, err := jmx.Query("test:type=Cat,*", 600000)
+	config := &nrprotocol.JMXConfig{
+		Hostname: jmxHost,
+		Port:     int32(jmxPort.Int()),
+		UriPath:  "jmxrmi",
+	}
+
+	_, err = client.Connect(ctx, config)
+	defer client.Disconnect(ctx)
+	assert.NoError(t, err)
+
+	result, err := client.QueryMbean(ctx, "test:type=Cat,*")
 	assert.NoError(t, err)
 
 	// AND query returns at least 5Mb of data.
@@ -107,7 +119,7 @@ func Test_Query_Success(t *testing.T) {
 	resp, err := addMBeans(ctx, container, map[string]interface{}{
 		"name":        "tomas",
 		"doubleValue": 1.2,
-		"floatValue":  2.2,
+		"floatValue":  2.2222222,
 		"numberValue": 3,
 		"boolValue":   true,
 	})
@@ -122,23 +134,57 @@ func Test_Query_Success(t *testing.T) {
 	jmxHost, err := container.Host(ctx)
 	require.NoError(t, err)
 
-	err = jmx.Open(jmxHost, jmxPort.Port(), "", "")
-	defer jmx.Close()
+	client, err := NewJMXServiceClient(ctx)
+	assert.NoError(t, err)
+
+	config := &nrprotocol.JMXConfig{
+		Hostname: jmxHost,
+		Port:     int32(jmxPort.Int()),
+		UriPath:  "jmxrmi",
+	}
+
+	_, err = client.Connect(ctx, config)
+	defer client.Disconnect(ctx)
 	assert.NoError(t, err)
 
 	// AND Query returns expected data
-	result, err := jmx.Query("test:type=Cat,*", 10000)
+	actual, err := client.QueryMbean(ctx, "test:type=Cat,*")
 	assert.NoError(t, err)
 
-	expected := map[string]interface{}{
-		"test:type=Cat,name=tomas,attr=Name":        "tomas",
-		"test:type=Cat,name=tomas,attr=DoubleValue": 1.2,
-		"test:type=Cat,name=tomas,attr=FloatValue":  2.2,
-		"test:type=Cat,name=tomas,attr=BoolValue":   true,
-		"test:type=Cat,name=tomas,attr=NumberValue": float64(3),
+	expected := []*nrprotocol.JMXAttribute{
+		{
+			Attribute: "test:type=Cat,name=tomas,attr=FloatValue",
+
+			ValueType:   nrprotocol.ValueType_DOUBLE,
+			DoubleValue: 2.222222,
+		},
+		{
+			Attribute: "test:type=Cat,name=tomas,attr=NumberValue",
+
+			ValueType: nrprotocol.ValueType_INT,
+			IntValue:  3,
+		},
+		{
+			Attribute: "test:type=Cat,name=tomas,attr=BoolValue",
+
+			ValueType: nrprotocol.ValueType_BOOL,
+			BoolValue: true,
+		},
+		{
+			Attribute: "test:type=Cat,name=tomas,attr=DoubleValue",
+
+			ValueType:   nrprotocol.ValueType_DOUBLE,
+			DoubleValue: 1.2,
+		},
+		{
+			Attribute: "test:type=Cat,name=tomas,attr=Name",
+
+			ValueType:   nrprotocol.ValueType_STRING,
+			StringValue: "tomas",
+		},
 	}
 
-	assert.EqualValues(t, result, expected)
+	assert.Equal(t, expected, actual)
 }
 
 func Test_URL_Success(t *testing.T) {

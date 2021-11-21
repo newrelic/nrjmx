@@ -6,7 +6,19 @@
 package org.newrelic.nrjmx;
 
 import java.util.logging.Logger;
+
 import org.apache.commons.cli.HelpFormatter;
+import org.apache.thrift.TProcessor;
+import org.apache.thrift.protocol.TBinaryProtocol;
+import org.apache.thrift.protocol.TCompactProtocol;
+import org.apache.thrift.protocol.TJSONProtocol;
+import org.apache.thrift.server.TServer;
+import org.apache.thrift.transport.TServerTransport;
+import org.apache.thrift.server.TServer.Args;
+import org.newrelic.nrjmx.v2.JMXServiceHandler;
+import org.newrelic.nrjmx.v2.StandardIOServer;
+import org.newrelic.nrjmx.v2.StandardIOTransportServer;
+import org.newrelic.nrjmx.v2.nrprotocol.JMXService;
 
 public class Application {
 
@@ -29,6 +41,15 @@ public class Application {
       System.exit(0);
     }
 
+    if (!cliArgs.isProtocolV2()) {
+      runV1(cliArgs);
+    } else {
+      runV2(cliArgs);
+    }
+    
+  }
+
+  private static void runV1(Arguments cliArgs) {
     Logger logger = Logger.getLogger("nrjmx");
     Logging.setup(logger, cliArgs.isVerbose());
 
@@ -67,6 +88,20 @@ public class Application {
       logTrace(cliArgs, logger, e);
       System.exit(1);
     }
+  }
+
+  private static void runV2(Arguments cliArgs) {
+    JMXServiceHandler handler = new JMXServiceHandler();
+    TProcessor processor = new JMXService.Processor<JMXServiceHandler>(handler);
+
+    TServerTransport serverTransport = new StandardIOTransportServer();
+    TServer server = new StandardIOServer(
+            new Args(serverTransport).processor(processor).protocolFactory(new TCompactProtocol.Factory()));
+
+    handler.addServer(server);
+    server.serve();
+
+    serverTransport.close();
   }
 
   private static void logTrace(Arguments cliArgs, Logger logger, Exception e) {
