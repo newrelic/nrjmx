@@ -26,7 +26,6 @@ func Usage() {
   fmt.Fprintln(os.Stderr, "  bool connect(JMXConfig config)")
   fmt.Fprintln(os.Stderr, "  void disconnect()")
   fmt.Fprintln(os.Stderr, "   queryMbean(string beanName)")
-  fmt.Fprintln(os.Stderr, "   queryMbean2(string beanName)")
   fmt.Fprintln(os.Stderr, "   getLogs()")
   fmt.Fprintln(os.Stderr)
   os.Exit(0)
@@ -154,19 +153,19 @@ func main() {
       fmt.Fprintln(os.Stderr, "Connect requires 1 args")
       flag.Usage()
     }
-    arg16 := flag.Arg(1)
-    mbTrans17 := thrift.NewTMemoryBufferLen(len(arg16))
-    defer mbTrans17.Close()
-    _, err18 := mbTrans17.WriteString(arg16)
-    if err18 != nil {
+    arg12 := flag.Arg(1)
+    mbTrans13 := thrift.NewTMemoryBufferLen(len(arg12))
+    defer mbTrans13.Close()
+    _, err14 := mbTrans13.WriteString(arg12)
+    if err14 != nil {
       Usage()
       return
     }
-    factory19 := thrift.NewTJSONProtocolFactory()
-    jsProt20 := factory19.GetProtocol(mbTrans17)
+    factory15 := thrift.NewTJSONProtocolFactory()
+    jsProt16 := factory15.GetProtocol(mbTrans13)
     argvalue0 := nrprotocol.NewJMXConfig()
-    err21 := argvalue0.Read(jsProt20)
-    if err21 != nil {
+    err17 := argvalue0.Read(jsProt16)
+    if err17 != nil {
       Usage()
       return
     }
@@ -190,16 +189,6 @@ func main() {
     argvalue0 := flag.Arg(1)
     value0 := argvalue0
     fmt.Print(client.QueryMbean(context.Background(), value0))
-    fmt.Print("\n")
-    break
-  case "queryMbean2":
-    if flag.NArg() - 1 != 1 {
-      fmt.Fprintln(os.Stderr, "QueryMbean2 requires 1 args")
-      flag.Usage()
-    }
-    argvalue0 := flag.Arg(1)
-    value0 := argvalue0
-    fmt.Print(client.QueryMbean2(context.Background(), value0))
     fmt.Print("\n")
     break
   case "getLogs":
