@@ -17,14 +17,14 @@ DOCKER_THRIFT=$(DOCKER_BIN) run --rm -t \
 					--name "nrjmx-code-generator" \
 					-v $(CURDIR):/src/nrjmx \
 					-w /src/nrjmx \
-					nrjmx-code-generator
+					cciutea/thrift
 
 .PHONY : code-gen-deps
 code-gen-deps:
 		@($(DOCKER_BIN) build -t nrjmx-code-generator ./commons/.)
 
 .PHONY : code-gen
-code-gen: code-gen-deps
+code-gen: 
 	@($(DOCKER_THRIFT) thrift -r --out src/main/java/ --gen java ./commons/nrjmx.thrift)
 	@($(DOCKER_THRIFT) thrift -r --out src/go/ --gen go:package_prefix=github.com/newrelic/nrjmx/,package=nrprotocol ./commons/nrjmx.thrift)
 

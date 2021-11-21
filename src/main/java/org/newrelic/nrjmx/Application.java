@@ -9,12 +9,10 @@ import java.util.logging.Logger;
 
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.thrift.TProcessor;
-import org.apache.thrift.protocol.TBinaryProtocol;
 import org.apache.thrift.protocol.TCompactProtocol;
-import org.apache.thrift.protocol.TJSONProtocol;
 import org.apache.thrift.server.TServer;
-import org.apache.thrift.transport.TServerTransport;
 import org.apache.thrift.server.TServer.Args;
+import org.apache.thrift.transport.TServerTransport;
 import org.newrelic.nrjmx.v2.JMXServiceHandler;
 import org.newrelic.nrjmx.v2.StandardIOServer;
 import org.newrelic.nrjmx.v2.StandardIOTransportServer;

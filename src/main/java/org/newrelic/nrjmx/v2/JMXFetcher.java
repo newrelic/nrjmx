@@ -7,7 +7,6 @@ package org.newrelic.nrjmx.v2;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -33,7 +32,6 @@ import javax.management.remote.JMXServiceURL;
 import javax.rmi.ssl.SslRMIClientSocketFactory;
 
 import org.newrelic.nrjmx.v2.nrprotocol.JMXAttribute;
-import org.newrelic.nrjmx.v2.nrprotocol.JMXAttributeValue;
 import org.newrelic.nrjmx.v2.nrprotocol.JMXConfig;
 import org.newrelic.nrjmx.v2.nrprotocol.JMXConnectionError;
 import org.newrelic.nrjmx.v2.nrprotocol.JMXError;

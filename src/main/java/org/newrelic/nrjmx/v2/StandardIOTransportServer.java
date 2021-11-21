@@ -1,8 +1,5 @@
 package org.newrelic.nrjmx.v2;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.apache.thrift.transport.TIOStreamTransport;
 import org.apache.thrift.transport.TServerTransport;
 import org.apache.thrift.transport.TTransport;
@@ -23,7 +20,7 @@ public class StandardIOTransportServer extends TServerTransport {
     }
 
     @Override
-    protected TTransport acceptImpl() throws TTransportException {
+    public TTransport accept() throws TTransportException {
         transport = new TIOStreamTransport(System.in, System.out);
         return transport;
     }

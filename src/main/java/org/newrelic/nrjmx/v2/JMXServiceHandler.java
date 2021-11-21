@@ -1,15 +1,11 @@
 package org.newrelic.nrjmx.v2;
 
-import java.nio.ByteBuffer;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.thrift.TException;
 import org.apache.thrift.server.TServer;
 import org.newrelic.nrjmx.v2.nrprotocol.JMXAttribute;
 import org.newrelic.nrjmx.v2.nrprotocol.JMXConfig;
-import org.newrelic.nrjmx.v2.nrprotocol.JMXConnectionError;
-import org.newrelic.nrjmx.v2.nrprotocol.JMXError;
 import org.newrelic.nrjmx.v2.nrprotocol.JMXService;
 import org.newrelic.nrjmx.v2.nrprotocol.LogMessage;
 
@@ -45,11 +41,4 @@ public class JMXServiceHandler implements JMXService.Iface {
     public void addServer(TServer server) {
         this.server = server;
     }
-
-    @Override
-    public Map<String, String> queryMbean2(String beanName) throws JMXConnectionError, JMXError, TException {
-        return jmxFetcher.queryMbean2(beanName);
-    }
-
-
 }

@@ -1,7 +1,5 @@
 package org.newrelic.nrjmx.v2;
 
-import java.io.BufferedInputStream;
-
 /*
 * Licensed to the Apache Software Foundation (ASF) under one
 * or more contributor license agreements. See the NOTICE file
@@ -26,11 +24,12 @@ import org.apache.thrift.TProcessor;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.server.ServerContext;
 import org.apache.thrift.server.TServer;
-import org.apache.thrift.transport.TFramedTransport;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
+import org.apache.thrift.transport.layered.TFramedTransport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 public class StandardIOServer extends TServer {
     /**
@@ -73,8 +72,8 @@ public class StandardIOServer extends TServer {
                 if (client != null) {
                     processor = processorFactory_.getProcessor(client);
                    
-                    inputTransport = new TFramedTransport(inputTransportFactory_.getTransport(client), 8192);//inputTransportFactory_.getTransport(client);
-                    outputTransport = new TFramedTransport(outputTransportFactory_.getTransport(client), 8192);// outputTransportFactory_.getTransport(client);
+                    inputTransport = new TFramedTransport(inputTransportFactory_.getTransport(client), 8192);
+                    outputTransport = new TFramedTransport(outputTransportFactory_.getTransport(client), 8192);
                     inputProtocol = inputProtocolFactory_.getProtocol(inputTransport);
                     outputProtocol = outputProtocolFactory_.getProtocol(outputTransport);
                     if (eventHandler_ != null) {
