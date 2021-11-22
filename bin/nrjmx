@@ -16,6 +16,8 @@ fi ;
 
 if [ -f /usr/lib/nrjmx/nrjmx.jar ]; then
     CLASSPATH=/usr/lib/nrjmx/*:/usr/lib/nrjmx/connectors/*
+elif [ -f /usr/local/lib/nrjmx/nrjmx.jar ]; then
+    CLASSPATH=/usr/local/lib/nrjmx/connectors/*:/usr/local/lib/nrjmx/*
 else
     CLASSPATH=${path}/*:./connectors/*
 fi
