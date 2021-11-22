@@ -65,7 +65,7 @@ func Test_Query_Success_LargeAmountOfData(t *testing.T) {
 
 	name := strings.Repeat("tomas", 100)
 
-	for i := 0; i < 2000; i++ {
+	for i := 0; i < 1500; i++ {
 		data = append(data, map[string]interface{}{
 			"name":        fmt.Sprintf("%s-%d", name, i),
 			"doubleValue": 1.2,
@@ -82,14 +82,12 @@ func Test_Query_Success_LargeAmountOfData(t *testing.T) {
 
 	defer cleanMBeans(ctx, container)
 
-	// time.Sleep(1 * time.Hour)
-
-	// THEN JMX connection can be oppened
 	jmxPort, err := container.MappedPort(ctx, testServerJMXPort)
 	require.NoError(t, err)
 	jmxHost, err := container.Host(ctx)
 	require.NoError(t, err)
 
+	// THEN JMX connection can be oppened
 	client, err := NewJMXServiceClient(ctx)
 	assert.NoError(t, err)
 
@@ -100,13 +98,12 @@ func Test_Query_Success_LargeAmountOfData(t *testing.T) {
 	}
 
 	err = client.Connect(ctx, config)
+	assert.NoError(t, err)
 	defer client.Disconnect(ctx)
-	assert.NoError(t, err)
-
-	result, err := client.QueryMbean(ctx, "test:type=Cat,*")
-	assert.NoError(t, err)
 
 	// AND query returns at least 5Mb of data.
+	result, err := client.QueryMbean(ctx, "test:type=Cat,*")
+	assert.NoError(t, err)
 	assert.GreaterOrEqual(t, len(fmt.Sprintf("%v", result)), 5*1024*1024)
 }
 
@@ -131,12 +128,12 @@ func Test_Query_Success(t *testing.T) {
 
 	defer cleanMBeans(ctx, container)
 
-	// THEN JMX connection can be oppened
 	jmxPort, err := container.MappedPort(ctx, testServerJMXPort)
 	require.NoError(t, err)
 	jmxHost, err := container.Host(ctx)
 	require.NoError(t, err)
 
+	// THEN JMX connection can be oppened
 	client, err := NewJMXServiceClient(ctx)
 	assert.NoError(t, err)
 
@@ -208,14 +205,14 @@ func Test_URL_Success(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.Equal(t, "ok!\n", string(resp))
-
 	defer cleanMBeans(ctx, container)
 
-	// THEN JMX connection can be oppened
 	jmxPort, err := container.MappedPort(ctx, testServerJMXPort)
 	require.NoError(t, err)
 	jmxHost, err := container.Host(ctx)
 	require.NoError(t, err)
+
+	// THEN JMX connection can be oppened
 	client, err := NewJMXServiceClient(ctx)
 	assert.NoError(t, err)
 
@@ -273,14 +270,14 @@ func Test_JavaNotInstalled(t *testing.T) {
 
 	config := &nrprotocol.JMXConfig{}
 
+	// THEN connect fails with expected error
 	err = client.Connect(ctx, config)
 	defer client.Disconnect(ctx)
 	assert.EqualError(t, err, "EOF") // TODO: this error message should be fixed
 
-	// AND Query returns expected data
+	// AND Query fails with expected error
 	actual, err := client.QueryMbean(ctx, "test:type=Cat,*")
 	assert.Nil(t, actual)
-	// Error is returned
 	assert.EqualError(t, err, "write |1: broken pipe") // TODO: this error message should be fixed
 }
 
@@ -292,11 +289,12 @@ func Test_WrongMbeanFormat(t *testing.T) {
 	require.NoError(t, err)
 	defer container.Terminate(ctx)
 
-	// THEN JMX connection can be oppened
 	jmxPort, err := container.MappedPort(ctx, testServerJMXPort)
 	require.NoError(t, err)
 	jmxHost, err := container.Host(ctx)
 	require.NoError(t, err)
+
+	// THEN JMX connection can be oppened
 	client, err := NewJMXServiceClient(ctx)
 	assert.NoError(t, err)
 
@@ -308,7 +306,7 @@ func Test_WrongMbeanFormat(t *testing.T) {
 	defer client.Disconnect(ctx)
 	assert.NoError(t, err)
 
-	// AND Query returns expected data
+	// AND Query returns expected error
 	actual, err := client.QueryMbean(ctx, "wrong_format")
 	assert.Nil(t, actual)
 
@@ -328,12 +326,12 @@ func Test_Wrong_Connection(t *testing.T) {
 		UriPath:  "jmxrmi",
 	}
 
-	// WHEN connecting
+	// WHEN connecting expected error is returned
 	err = client.Connect(ctx, config)
 	defer client.Disconnect(ctx)
 	assert.Contains(t, err.Error(), "Connection refused to host: localhost;")
 
-	// Error is returned
+	// AND query returns expected error
 	actual, err := client.QueryMbean(ctx, "test:type=Cat,*")
 	assert.Nil(t, actual)
 	assert.Contains(t, err.Error(), "Connection refused to host: localhost;") // TODO: fix this, doesn't return the correct error
@@ -437,11 +435,10 @@ func Test_Wrong_Credentials(t *testing.T) {
 	jmxHost, err := container.Host(ctx)
 	require.NoError(t, err)
 
-	// THEN SSL JMX connection can be oppened
+	// WHEN wrong jmx username and password is provided
 	client, err := NewJMXServiceClient(ctx)
 	assert.NoError(t, err)
 
-	// WHEN wrong jmx username and password is provided
 	config := &nrprotocol.JMXConfig{
 		Hostname:           jmxHost,
 		Port:               int32(jmxPort.Int()),
@@ -454,6 +451,7 @@ func Test_Wrong_Credentials(t *testing.T) {
 		TrustStorePassword: truststorePassword,
 	}
 
+	// THEN connect fails with expected error
 	err = client.Connect(ctx, config)
 	defer client.Disconnect(ctx)
 	assert.Contains(t, err.Error(), "Authentication failed! Invalid username or password")
@@ -477,11 +475,10 @@ func Test_Wrong_Certificate_password(t *testing.T) {
 	jmxHost, err := container.Host(ctx)
 	require.NoError(t, err)
 
-	// THEN SSL JMX connection can be oppened
+	// WHEN wrong jmx username and password is provided
 	client, err := NewJMXServiceClient(ctx)
 	assert.NoError(t, err)
 
-	// WHEN wrong jmx username and password is provided
 	config := &nrprotocol.JMXConfig{
 		Hostname:           jmxHost,
 		Port:               int32(jmxPort.Int()),
@@ -494,7 +491,7 @@ func Test_Wrong_Certificate_password(t *testing.T) {
 		TrustStorePassword: truststorePassword,
 	}
 
-	// THEN connect returns error
+	// THEN Connect returns expected error
 	err = client.Connect(ctx, config)
 	defer client.Disconnect(ctx)
 	assert.Contains(t, err.Error(), "SSLContext") // TODO: improve this error from java
@@ -520,12 +517,12 @@ func Test_Connector_Success(t *testing.T) {
 
 	defer os.Remove(dstFile)
 
-	// THEN JMX connection can be oppened
 	jmxPort, err := container.MappedPort(ctx, jbossJMXPort)
 	require.NoError(t, err)
 	jmxHost, err := container.Host(ctx)
 	require.NoError(t, err)
 
+	// THEN JMX connection can be oppened
 	client, err := NewJMXServiceClient(ctx)
 	assert.NoError(t, err)
 
