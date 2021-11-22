@@ -13,7 +13,7 @@ Next, import the dependency into your application:
 import "github.com/newrelic/nrjmx/gojmx"
 ```
 
-This go module will call nrjmx library java application in order to fetch the metrics.
+This go module will call nrjmx library in order to fetch the metrics.
 
 To install nrjmx library on your system, packages are available on this repository
 in the release assets or on our package manager repositories stored [here](https://download.newrelic.com/infrastructure_agent/). You can folow this [documentation](https://docs.newrelic.com/docs/infrastructure/install-infrastructure-agent/linux-installation/install-infrastructure-monitoring-agent-linux/#ubuntu-repository) to include our repository into your package manager.
@@ -33,13 +33,13 @@ docker run -d -p 7199:7199 nrjmx/test-server
 func main() {
 	ctx := context.Background()
 
-    // Start the nrjmx process
+	// Start the nrjmx process
 	client, err := gojmx.NewJMXServiceClient(ctx)
 	if err != nil {
 		panic(err)
 	}
 
-    // Connect to the JMX endpoint
+	// Connect to the JMX endpoint
 	err = client.Connect(ctx, &nrprotocol.JMXConfig{
 		Hostname: "localhost",
 		Port:     7199,
@@ -50,8 +50,8 @@ func main() {
 	}
 	defer client.Disconnect(ctx)
 
-    // Query for the mbeans. The library also supports
-    // using `*` as a wildcard
+	// Query for the mbeans. The library also supports
+	// using `*` as a wildcard
 	result, err := client.QueryMbean(ctx, "*:*")
 	if err != nil {
 		panic(err)
