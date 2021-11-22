@@ -1203,7 +1203,7 @@ func (p *JMXConnectionError) Error() string {
 type JMXService interface {
   // Parameters:
   //  - Config
-  Connect(ctx context.Context, config *JMXConfig) (r bool, err error)
+  Connect(ctx context.Context, config *JMXConfig) (err error)
   Disconnect(ctx context.Context) (err error)
   // Parameters:
   //  - BeanName
@@ -1238,7 +1238,7 @@ func (p *JMXServiceClient) Client_() thrift.TClient {
 }
 // Parameters:
 //  - Config
-func (p *JMXServiceClient) Connect(ctx context.Context, config *JMXConfig) (r bool, err error) {
+func (p *JMXServiceClient) Connect(ctx context.Context, config *JMXConfig) (err error) {
   var _args0 JMXServiceConnectArgs
   _args0.Config = config
   var _result1 JMXServiceConnectResult
@@ -1247,12 +1247,12 @@ func (p *JMXServiceClient) Connect(ctx context.Context, config *JMXConfig) (r bo
   }
   switch {
   case _result1.ConnErr!= nil:
-    return r, _result1.ConnErr
+    return _result1.ConnErr
   case _result1.JmxErr!= nil:
-    return r, _result1.JmxErr
+    return _result1.JmxErr
   }
 
-  return _result1.GetSuccess(), nil
+  return nil
 }
 
 func (p *JMXServiceClient) Disconnect(ctx context.Context) (err error) {
@@ -1360,9 +1360,8 @@ func (p *jMXServiceProcessorConnect) Process(ctx context.Context, seqId int32, i
 
   iprot.ReadMessageEnd()
   result := JMXServiceConnectResult{}
-var retval bool
   var err2 error
-  if retval, err2 = p.handler.Connect(ctx, args.Config); err2 != nil {
+  if err2 = p.handler.Connect(ctx, args.Config); err2 != nil {
   switch v := err2.(type) {
     case *JMXConnectionError:
   result.ConnErr = v
@@ -1376,9 +1375,7 @@ var retval bool
     oprot.Flush(ctx)
     return true, err2
   }
-  } else {
-    result.Success = &retval
-}
+  }
   if err2 = oprot.WriteMessageBegin("connect", thrift.REPLY, seqId); err2 != nil {
     err = err2
   }
@@ -1652,11 +1649,9 @@ func (p *JMXServiceConnectArgs) String() string {
 }
 
 // Attributes:
-//  - Success
 //  - ConnErr
 //  - JmxErr
 type JMXServiceConnectResult struct {
-  Success *bool `thrift:"success,0" db:"success" json:"success,omitempty"`
   ConnErr *JMXConnectionError `thrift:"connErr,1" db:"connErr" json:"connErr,omitempty"`
   JmxErr *JMXError `thrift:"jmxErr,2" db:"jmxErr" json:"jmxErr,omitempty"`
 }
@@ -1665,13 +1660,6 @@ func NewJMXServiceConnectResult() *JMXServiceConnectResult {
   return &JMXServiceConnectResult{}
 }
 
-var JMXServiceConnectResult_Success_DEFAULT bool
-func (p *JMXServiceConnectResult) GetSuccess() bool {
-  if !p.IsSetSuccess() {
-    return JMXServiceConnectResult_Success_DEFAULT
-  }
-return *p.Success
-}
 var JMXServiceConnectResult_ConnErr_DEFAULT *JMXConnectionError
 func (p *JMXServiceConnectResult) GetConnErr() *JMXConnectionError {
   if !p.IsSetConnErr() {
@@ -1686,10 +1674,6 @@ func (p *JMXServiceConnectResult) GetJmxErr() *JMXError {
   }
 return p.JmxErr
 }
-func (p *JMXServiceConnectResult) IsSetSuccess() bool {
-  return p.Success != nil
-}
-
 func (p *JMXServiceConnectResult) IsSetConnErr() bool {
   return p.ConnErr != nil
 }
@@ -1711,16 +1695,6 @@ func (p *JMXServiceConnectResult) Read(iprot thrift.TProtocol) error {
     }
     if fieldTypeId == thrift.STOP { break; }
     switch fieldId {
-    case 0:
-      if fieldTypeId == thrift.BOOL {
-        if err := p.ReadField0(iprot); err != nil {
-          return err
-        }
-      } else {
-        if err := iprot.Skip(fieldTypeId); err != nil {
-          return err
-        }
-      }
     case 1:
       if fieldTypeId == thrift.STRUCT {
         if err := p.ReadField1(iprot); err != nil {
@@ -1756,15 +1730,6 @@ func (p *JMXServiceConnectResult) Read(iprot thrift.TProtocol) error {
   return nil
 }
 
-func (p *JMXServiceConnectResult)  ReadField0(iprot thrift.TProtocol) error {
-  if v, err := iprot.ReadBool(); err != nil {
-  return thrift.PrependError("error reading field 0: ", err)
-} else {
-  p.Success = &v
-}
-  return nil
-}
-
 func (p *JMXServiceConnectResult)  ReadField1(iprot thrift.TProtocol) error {
   p.ConnErr = &JMXConnectionError{}
   if err := p.ConnErr.Read(iprot); err != nil {
@@ -1785,7 +1750,6 @@ func (p *JMXServiceConnectResult) Write(oprot thrift.TProtocol) error {
   if err := oprot.WriteStructBegin("connect_result"); err != nil {
     return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err) }
   if p != nil {
-    if err := p.writeField0(oprot); err != nil { return err }
     if err := p.writeField1(oprot); err != nil { return err }
     if err := p.writeField2(oprot); err != nil { return err }
   }
@@ -1794,18 +1758,6 @@ func (p *JMXServiceConnectResult) Write(oprot thrift.TProtocol) error {
   if err := oprot.WriteStructEnd(); err != nil {
     return thrift.PrependError("write struct stop error: ", err) }
   return nil
-}
-
-func (p *JMXServiceConnectResult) writeField0(oprot thrift.TProtocol) (err error) {
-  if p.IsSetSuccess() {
-    if err := oprot.WriteFieldBegin("success", thrift.BOOL, 0); err != nil {
-      return thrift.PrependError(fmt.Sprintf("%T write field begin error 0:success: ", p), err) }
-    if err := oprot.WriteBool(bool(*p.Success)); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T.success (0) field write error: ", p), err) }
-    if err := oprot.WriteFieldEnd(); err != nil {
-      return thrift.PrependError(fmt.Sprintf("%T write field end error 0:success: ", p), err) }
-  }
-  return err
 }
 
 func (p *JMXServiceConnectResult) writeField1(oprot thrift.TProtocol) (err error) {

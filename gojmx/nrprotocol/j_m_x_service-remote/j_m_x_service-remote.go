@@ -23,7 +23,7 @@ func Usage() {
   fmt.Fprintln(os.Stderr, "Usage of ", os.Args[0], " [-h host:port] [-u url] [-f[ramed]] function [arg1 [arg2...]]:")
   flag.PrintDefaults()
   fmt.Fprintln(os.Stderr, "\nFunctions:")
-  fmt.Fprintln(os.Stderr, "  bool connect(JMXConfig config)")
+  fmt.Fprintln(os.Stderr, "  void connect(JMXConfig config)")
   fmt.Fprintln(os.Stderr, "  void disconnect()")
   fmt.Fprintln(os.Stderr, "   queryMbean(string beanName)")
   fmt.Fprintln(os.Stderr, "   getLogs()")

@@ -12,7 +12,7 @@ public class JMXService {
 
   public interface Iface {
 
-    public boolean connect(JMXConfig config) throws JMXConnectionError, JMXError, org.apache.thrift.TException;
+    public void connect(JMXConfig config) throws JMXConnectionError, JMXError, org.apache.thrift.TException;
 
     public void disconnect() throws JMXError, org.apache.thrift.TException;
 
@@ -24,7 +24,7 @@ public class JMXService {
 
   public interface AsyncIface {
 
-    public void connect(JMXConfig config, org.apache.thrift.async.AsyncMethodCallback<java.lang.Boolean> resultHandler) throws org.apache.thrift.TException;
+    public void connect(JMXConfig config, org.apache.thrift.async.AsyncMethodCallback<Void> resultHandler) throws org.apache.thrift.TException;
 
     public void disconnect(org.apache.thrift.async.AsyncMethodCallback<Void> resultHandler) throws org.apache.thrift.TException;
 
@@ -54,10 +54,10 @@ public class JMXService {
       super(iprot, oprot);
     }
 
-    public boolean connect(JMXConfig config) throws JMXConnectionError, JMXError, org.apache.thrift.TException
+    public void connect(JMXConfig config) throws JMXConnectionError, JMXError, org.apache.thrift.TException
     {
       send_connect(config);
-      return recv_connect();
+      recv_connect();
     }
 
     public void send_connect(JMXConfig config) throws org.apache.thrift.TException
@@ -67,20 +67,17 @@ public class JMXService {
       sendBase("connect", args);
     }
 
-    public boolean recv_connect() throws JMXConnectionError, JMXError, org.apache.thrift.TException
+    public void recv_connect() throws JMXConnectionError, JMXError, org.apache.thrift.TException
     {
       connect_result result = new connect_result();
       receiveBase(result, "connect");
-      if (result.isSetSuccess()) {
-        return result.success;
-      }
       if (result.connErr != null) {
         throw result.connErr;
       }
       if (result.jmxErr != null) {
         throw result.jmxErr;
       }
-      throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "connect failed: unknown result");
+      return;
     }
 
     public void disconnect() throws JMXError, org.apache.thrift.TException
@@ -174,16 +171,16 @@ public class JMXService {
       super(protocolFactory, clientManager, transport);
     }
 
-    public void connect(JMXConfig config, org.apache.thrift.async.AsyncMethodCallback<java.lang.Boolean> resultHandler) throws org.apache.thrift.TException {
+    public void connect(JMXConfig config, org.apache.thrift.async.AsyncMethodCallback<Void> resultHandler) throws org.apache.thrift.TException {
       checkReady();
       connect_call method_call = new connect_call(config, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
       ___manager.call(method_call);
     }
 
-    public static class connect_call extends org.apache.thrift.async.TAsyncMethodCall<java.lang.Boolean> {
+    public static class connect_call extends org.apache.thrift.async.TAsyncMethodCall<Void> {
       private JMXConfig config;
-      public connect_call(JMXConfig config, org.apache.thrift.async.AsyncMethodCallback<java.lang.Boolean> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      public connect_call(JMXConfig config, org.apache.thrift.async.AsyncMethodCallback<Void> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
         this.config = config;
       }
@@ -196,13 +193,13 @@ public class JMXService {
         prot.writeMessageEnd();
       }
 
-      public java.lang.Boolean getResult() throws JMXConnectionError, JMXError, org.apache.thrift.TException {
+      public Void getResult() throws JMXConnectionError, JMXError, org.apache.thrift.TException {
         if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
           throw new java.lang.IllegalStateException("Method call not finished!");
         }
         org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
         org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
-        return (new Client(prot)).recv_connect();
+        return null;
       }
     }
 
@@ -337,8 +334,7 @@ public class JMXService {
       public connect_result getResult(I iface, connect_args args) throws org.apache.thrift.TException {
         connect_result result = new connect_result();
         try {
-          result.success = iface.connect(args.config);
-          result.setSuccessIsSet(true);
+          iface.connect(args.config);
         } catch (JMXConnectionError connErr) {
           result.connErr = connErr;
         } catch (JMXError jmxErr) {
@@ -453,7 +449,7 @@ public class JMXService {
       return processMap;
     }
 
-    public static class connect<I extends AsyncIface> extends org.apache.thrift.AsyncProcessFunction<I, connect_args, java.lang.Boolean> {
+    public static class connect<I extends AsyncIface> extends org.apache.thrift.AsyncProcessFunction<I, connect_args, Void> {
       public connect() {
         super("connect");
       }
@@ -462,13 +458,11 @@ public class JMXService {
         return new connect_args();
       }
 
-      public org.apache.thrift.async.AsyncMethodCallback<java.lang.Boolean> getResultHandler(final org.apache.thrift.server.AbstractNonblockingServer.AsyncFrameBuffer fb, final int seqid) {
+      public org.apache.thrift.async.AsyncMethodCallback<Void> getResultHandler(final org.apache.thrift.server.AbstractNonblockingServer.AsyncFrameBuffer fb, final int seqid) {
         final org.apache.thrift.AsyncProcessFunction fcall = this;
-        return new org.apache.thrift.async.AsyncMethodCallback<java.lang.Boolean>() { 
-          public void onComplete(java.lang.Boolean o) {
+        return new org.apache.thrift.async.AsyncMethodCallback<Void>() { 
+          public void onComplete(Void o) {
             connect_result result = new connect_result();
-            result.success = o;
-            result.setSuccessIsSet(true);
             try {
               fcall.sendResponse(fb, result, org.apache.thrift.protocol.TMessageType.REPLY,seqid);
             } catch (org.apache.thrift.transport.TTransportException e) {
@@ -518,7 +512,7 @@ public class JMXService {
         return false;
       }
 
-      public void start(I iface, connect_args args, org.apache.thrift.async.AsyncMethodCallback<java.lang.Boolean> resultHandler) throws org.apache.thrift.TException {
+      public void start(I iface, connect_args args, org.apache.thrift.async.AsyncMethodCallback<Void> resultHandler) throws org.apache.thrift.TException {
         iface.connect(args.config,resultHandler);
       }
     }
@@ -1094,20 +1088,17 @@ public class JMXService {
   public static class connect_result implements org.apache.thrift.TBase<connect_result, connect_result._Fields>, java.io.Serializable, Cloneable, Comparable<connect_result>   {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("connect_result");
 
-    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.BOOL, (short)0);
     private static final org.apache.thrift.protocol.TField CONN_ERR_FIELD_DESC = new org.apache.thrift.protocol.TField("connErr", org.apache.thrift.protocol.TType.STRUCT, (short)1);
     private static final org.apache.thrift.protocol.TField JMX_ERR_FIELD_DESC = new org.apache.thrift.protocol.TField("jmxErr", org.apache.thrift.protocol.TType.STRUCT, (short)2);
 
     private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new connect_resultStandardSchemeFactory();
     private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new connect_resultTupleSchemeFactory();
 
-    public boolean success; // required
     public @org.apache.thrift.annotation.Nullable JMXConnectionError connErr; // required
     public @org.apache.thrift.annotation.Nullable JMXError jmxErr; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-      SUCCESS((short)0, "success"),
       CONN_ERR((short)1, "connErr"),
       JMX_ERR((short)2, "jmxErr");
 
@@ -1125,8 +1116,6 @@ public class JMXService {
       @org.apache.thrift.annotation.Nullable
       public static _Fields findByThriftId(int fieldId) {
         switch(fieldId) {
-          case 0: // SUCCESS
-            return SUCCESS;
           case 1: // CONN_ERR
             return CONN_ERR;
           case 2: // JMX_ERR
@@ -1172,13 +1161,9 @@ public class JMXService {
     }
 
     // isset id assignments
-    private static final int __SUCCESS_ISSET_ID = 0;
-    private byte __isset_bitfield = 0;
     public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
     static {
       java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
-      tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
       tmpMap.put(_Fields.CONN_ERR, new org.apache.thrift.meta_data.FieldMetaData("connErr", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, JMXConnectionError.class)));
       tmpMap.put(_Fields.JMX_ERR, new org.apache.thrift.meta_data.FieldMetaData("jmxErr", org.apache.thrift.TFieldRequirementType.DEFAULT, 
@@ -1191,13 +1176,10 @@ public class JMXService {
     }
 
     public connect_result(
-      boolean success,
       JMXConnectionError connErr,
       JMXError jmxErr)
     {
       this();
-      this.success = success;
-      setSuccessIsSet(true);
       this.connErr = connErr;
       this.jmxErr = jmxErr;
     }
@@ -1206,8 +1188,6 @@ public class JMXService {
      * Performs a deep copy on <i>other</i>.
      */
     public connect_result(connect_result other) {
-      __isset_bitfield = other.__isset_bitfield;
-      this.success = other.success;
       if (other.isSetConnErr()) {
         this.connErr = new JMXConnectionError(other.connErr);
       }
@@ -1222,33 +1202,8 @@ public class JMXService {
 
     @Override
     public void clear() {
-      setSuccessIsSet(false);
-      this.success = false;
       this.connErr = null;
       this.jmxErr = null;
-    }
-
-    public boolean isSuccess() {
-      return this.success;
-    }
-
-    public connect_result setSuccess(boolean success) {
-      this.success = success;
-      setSuccessIsSet(true);
-      return this;
-    }
-
-    public void unsetSuccess() {
-      __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __SUCCESS_ISSET_ID);
-    }
-
-    /** Returns true if field success is set (has been assigned a value) and false otherwise */
-    public boolean isSetSuccess() {
-      return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __SUCCESS_ISSET_ID);
-    }
-
-    public void setSuccessIsSet(boolean value) {
-      __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __SUCCESS_ISSET_ID, value);
     }
 
     @org.apache.thrift.annotation.Nullable
@@ -1303,14 +1258,6 @@ public class JMXService {
 
     public void setFieldValue(_Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
       switch (field) {
-      case SUCCESS:
-        if (value == null) {
-          unsetSuccess();
-        } else {
-          setSuccess((java.lang.Boolean)value);
-        }
-        break;
-
       case CONN_ERR:
         if (value == null) {
           unsetConnErr();
@@ -1333,9 +1280,6 @@ public class JMXService {
     @org.apache.thrift.annotation.Nullable
     public java.lang.Object getFieldValue(_Fields field) {
       switch (field) {
-      case SUCCESS:
-        return isSuccess();
-
       case CONN_ERR:
         return getConnErr();
 
@@ -1353,8 +1297,6 @@ public class JMXService {
       }
 
       switch (field) {
-      case SUCCESS:
-        return isSetSuccess();
       case CONN_ERR:
         return isSetConnErr();
       case JMX_ERR:
@@ -1377,15 +1319,6 @@ public class JMXService {
         return false;
       if (this == that)
         return true;
-
-      boolean this_present_success = true;
-      boolean that_present_success = true;
-      if (this_present_success || that_present_success) {
-        if (!(this_present_success && that_present_success))
-          return false;
-        if (this.success != that.success)
-          return false;
-      }
 
       boolean this_present_connErr = true && this.isSetConnErr();
       boolean that_present_connErr = true && that.isSetConnErr();
@@ -1412,8 +1345,6 @@ public class JMXService {
     public int hashCode() {
       int hashCode = 1;
 
-      hashCode = hashCode * 8191 + ((success) ? 131071 : 524287);
-
       hashCode = hashCode * 8191 + ((isSetConnErr()) ? 131071 : 524287);
       if (isSetConnErr())
         hashCode = hashCode * 8191 + connErr.hashCode();
@@ -1433,16 +1364,6 @@ public class JMXService {
 
       int lastComparison = 0;
 
-      lastComparison = java.lang.Boolean.valueOf(isSetSuccess()).compareTo(other.isSetSuccess());
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-      if (isSetSuccess()) {
-        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.success, other.success);
-        if (lastComparison != 0) {
-          return lastComparison;
-        }
-      }
       lastComparison = java.lang.Boolean.valueOf(isSetConnErr()).compareTo(other.isSetConnErr());
       if (lastComparison != 0) {
         return lastComparison;
@@ -1484,10 +1405,6 @@ public class JMXService {
       java.lang.StringBuilder sb = new java.lang.StringBuilder("connect_result(");
       boolean first = true;
 
-      sb.append("success:");
-      sb.append(this.success);
-      first = false;
-      if (!first) sb.append(", ");
       sb.append("connErr:");
       if (this.connErr == null) {
         sb.append("null");
@@ -1522,8 +1439,6 @@ public class JMXService {
 
     private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, java.lang.ClassNotFoundException {
       try {
-        // it doesn't seem like you should have to do this, but java serialization is wacky, and doesn't call the default constructor.
-        __isset_bitfield = 0;
         read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
       } catch (org.apache.thrift.TException te) {
         throw new java.io.IOException(te);
@@ -1548,14 +1463,6 @@ public class JMXService {
             break;
           }
           switch (schemeField.id) {
-            case 0: // SUCCESS
-              if (schemeField.type == org.apache.thrift.protocol.TType.BOOL) {
-                struct.success = iprot.readBool();
-                struct.setSuccessIsSet(true);
-              } else { 
-                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-              }
-              break;
             case 1: // CONN_ERR
               if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
                 struct.connErr = new JMXConnectionError();
@@ -1589,11 +1496,6 @@ public class JMXService {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
-        if (struct.isSetSuccess()) {
-          oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
-          oprot.writeBool(struct.success);
-          oprot.writeFieldEnd();
-        }
         if (struct.connErr != null) {
           oprot.writeFieldBegin(CONN_ERR_FIELD_DESC);
           struct.connErr.write(oprot);
@@ -1622,19 +1524,13 @@ public class JMXService {
       public void write(org.apache.thrift.protocol.TProtocol prot, connect_result struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol oprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
         java.util.BitSet optionals = new java.util.BitSet();
-        if (struct.isSetSuccess()) {
+        if (struct.isSetConnErr()) {
           optionals.set(0);
         }
-        if (struct.isSetConnErr()) {
+        if (struct.isSetJmxErr()) {
           optionals.set(1);
         }
-        if (struct.isSetJmxErr()) {
-          optionals.set(2);
-        }
-        oprot.writeBitSet(optionals, 3);
-        if (struct.isSetSuccess()) {
-          oprot.writeBool(struct.success);
-        }
+        oprot.writeBitSet(optionals, 2);
         if (struct.isSetConnErr()) {
           struct.connErr.write(oprot);
         }
@@ -1646,17 +1542,13 @@ public class JMXService {
       @Override
       public void read(org.apache.thrift.protocol.TProtocol prot, connect_result struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-        java.util.BitSet incoming = iprot.readBitSet(3);
+        java.util.BitSet incoming = iprot.readBitSet(2);
         if (incoming.get(0)) {
-          struct.success = iprot.readBool();
-          struct.setSuccessIsSet(true);
-        }
-        if (incoming.get(1)) {
           struct.connErr = new JMXConnectionError();
           struct.connErr.read(iprot);
           struct.setConnErrIsSet(true);
         }
-        if (incoming.get(2)) {
+        if (incoming.get(1)) {
           struct.jmxErr = new JMXError();
           struct.jmxErr.read(iprot);
           struct.setJmxErrIsSet(true);

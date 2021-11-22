@@ -67,8 +67,7 @@ public class JMXFetcher {
         }
     }
 
-    public boolean connect() throws JMXConnectionError {
-
+    public void connect() throws JMXConnectionError {
         try {
             JMXServiceURL address = new JMXServiceURL(connectionString);
 
@@ -80,8 +79,6 @@ public class JMXFetcher {
                     e.getMessage());
             throw new JMXConnectionError(1, message);
         }
-
-        return true;
     }
 
     public boolean StringIsNullOrEmpty(String value) {

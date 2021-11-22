@@ -15,9 +15,9 @@ public class JMXServiceHandler implements JMXService.Iface {
     private TServer server;
 
     @Override
-    public boolean connect(JMXConfig config) throws TException {
+    public void connect(JMXConfig config) throws TException {
         this.jmxFetcher = new JMXFetcher(config);
-        return jmxFetcher.connect();
+        jmxFetcher.connect();
     }
 
     @Override

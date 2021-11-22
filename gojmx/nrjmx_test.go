@@ -99,7 +99,7 @@ func Test_Query_Success_LargeAmountOfData(t *testing.T) {
 		UriPath:  "jmxrmi",
 	}
 
-	_, err = client.Connect(ctx, config)
+	err = client.Connect(ctx, config)
 	defer client.Disconnect(ctx)
 	assert.NoError(t, err)
 
@@ -146,7 +146,7 @@ func Test_Query_Success(t *testing.T) {
 		UriPath:  "jmxrmi",
 	}
 
-	_, err = client.Connect(ctx, config)
+	err = client.Connect(ctx, config)
 	defer client.Disconnect(ctx)
 	assert.NoError(t, err)
 
@@ -223,7 +223,7 @@ func Test_URL_Success(t *testing.T) {
 		ConnectionURL: fmt.Sprintf("service:jmx:rmi:///jndi/rmi://%s:%s/jmxrmi", jmxHost, jmxPort.Port()),
 	}
 
-	_, err = client.Connect(ctx, config)
+	err = client.Connect(ctx, config)
 	defer client.Disconnect(ctx)
 	assert.NoError(t, err)
 
@@ -273,7 +273,7 @@ func Test_JavaNotInstalled(t *testing.T) {
 
 	config := &nrprotocol.JMXConfig{}
 
-	_, err = client.Connect(ctx, config)
+	err = client.Connect(ctx, config)
 	defer client.Disconnect(ctx)
 	assert.EqualError(t, err, "EOF") // TODO: this error message should be fixed
 
@@ -304,7 +304,7 @@ func Test_WrongMbeanFormat(t *testing.T) {
 		ConnectionURL: fmt.Sprintf("service:jmx:rmi:///jndi/rmi://%s:%s/jmxrmi", jmxHost, jmxPort.Port()),
 	}
 
-	_, err = client.Connect(ctx, config)
+	err = client.Connect(ctx, config)
 	defer client.Disconnect(ctx)
 	assert.NoError(t, err)
 
@@ -329,7 +329,7 @@ func Test_Wrong_Connection(t *testing.T) {
 	}
 
 	// WHEN connecting
-	_, err = client.Connect(ctx, config)
+	err = client.Connect(ctx, config)
 	defer client.Disconnect(ctx)
 	assert.Contains(t, err.Error(), "Connection refused to host: localhost;")
 
@@ -380,7 +380,7 @@ func Test_SSLQuery_Success(t *testing.T) {
 		TrustStorePassword: truststorePassword,
 	}
 
-	_, err = client.Connect(ctx, config)
+	err = client.Connect(ctx, config)
 	defer client.Disconnect(ctx)
 	assert.NoError(t, err)
 
@@ -454,7 +454,7 @@ func Test_Wrong_Credentials(t *testing.T) {
 		TrustStorePassword: truststorePassword,
 	}
 
-	_, err = client.Connect(ctx, config)
+	err = client.Connect(ctx, config)
 	defer client.Disconnect(ctx)
 	assert.Contains(t, err.Error(), "Authentication failed! Invalid username or password")
 
@@ -495,7 +495,7 @@ func Test_Wrong_Certificate_password(t *testing.T) {
 	}
 
 	// THEN connect returns error
-	_, err = client.Connect(ctx, config)
+	err = client.Connect(ctx, config)
 	defer client.Disconnect(ctx)
 	assert.Contains(t, err.Error(), "SSLContext") // TODO: improve this error from java
 
@@ -538,7 +538,7 @@ func Test_Connector_Success(t *testing.T) {
 		IsRemote:              true,
 	}
 
-	_, err = client.Connect(ctx, config)
+	err = client.Connect(ctx, config)
 	defer client.Disconnect(ctx)
 	assert.NoError(t, err)
 

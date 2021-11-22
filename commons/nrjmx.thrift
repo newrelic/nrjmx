@@ -46,7 +46,7 @@ exception JMXConnectionError {
 }
 
 service JMXService {
-    bool connect(1:JMXConfig config) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr),
+    void connect(1:JMXConfig config) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr),
 
     void disconnect() throws (1:JMXError err),
 
