@@ -27,6 +27,12 @@
             <artifactId>jetty-io</artifactId>
             <version>9.4.39.v20210325</version>
         </dependency>
+        <!-- This dependency is required to fix a security issue in a dependency -->
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-server</artifactId>
+            <version>11.0.7</version>
+        </dependency>
         <dependency>
             <groupId>com.sparkjava</groupId>
             <artifactId>spark-core</artifactId>
