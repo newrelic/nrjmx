@@ -13,7 +13,7 @@ import (
 	"strconv"
 	"strings"
 	thrift "github.com/apache/thrift/lib/go/thrift"
-	"github.com/newrelic/nrjmx/nrprotocol"
+	"github.com/newrelic/nrjmx/gojmx/nrprotocol"
 )
 
 var _ = nrprotocol.GoUnusedProtection__
