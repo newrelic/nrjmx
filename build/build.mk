@@ -1,13 +1,13 @@
 .PHONY : build
 build:
-	@($(MAVEN_BIN) clean package -DskipTests -P \!deb,\!rpm,\!tarball,\!test)
+	@($(MAVEN_BIN) clean package -DskipTests -P \!deb,\!rpm,\!tarball,\!test,\!tarball)
 
 .PHONY : test
 test:
 	@($(MAVEN_BIN) clean test -P test)
 
 CUR_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
-GOMODULE_DIR:=$(CUR_DIR)/src/go/
+GOMODULE_DIR:=$(CUR_DIR)/gojmx/
 
 go-test: godeps build
 	@echo $(GOMODULE_DIR)
@@ -28,8 +28,8 @@ code-gen:
 	@($(DOCKER_THRIFT) thrift -r --out src/main/java/ --gen java ./commons/nrjmx.thrift)
 	@($(DOCKER_THRIFT) thrift -r --out gojmx/ --gen go:package_prefix=github.com/newrelic/nrjmx/gojmx/,package=nrprotocol ./commons/nrjmx.thrift)
 
-TRACKED_GEN_DIR=src/main/java/prot \
-				src/go/prot
+TRACKED_GEN_DIR=src/main/java/nrprotocol \
+				gojmx/nrprotocol
 .PHONY : check-gen-code
 check-gen-code: code-gen
 	@echo "Checking the generated code..." ; \
