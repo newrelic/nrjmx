@@ -36,11 +36,13 @@
             <version>1.16.0</version>
             <scope>test</scope>
         </dependency>
+        <!-- This dependency is required to fix a security issue in a dependency -->
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
             <version>1.13</version>
         </dependency>
+        <!-- This dependency is required to fix a security issue in a dependency -->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
