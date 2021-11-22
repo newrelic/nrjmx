@@ -12,5 +12,9 @@ EXPOSE 7199
 COPY --from=builder target/test-server.jar /
 COPY --from=builder truststore /
 COPY --from=builder keystore /
+COPY --from=builder jmxremote.password /usr/local/openjdk-8/lib/management/jmxremote.password
+COPY --from=builder jmxremote.access /usr/local/openjdk-8/lib/management/jmxremote.access
+
+RUN chmod 400 /usr/local/openjdk-8/lib/management/jmxremote.password
 
 ENTRYPOINT exec java $JAVA_OPTS -jar /test-server.jar

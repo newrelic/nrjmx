@@ -13,7 +13,12 @@ DOCKER_CMD 		?= $(DOCKER_BIN) run --rm -t \
 
 .PHONY : deps
 deps:
-	@docker build -t nrjmx_builder ./build/.
+	@($(DOCKER_BIN) build -t nrjmx_builder ./build/.)
+
+.PHONY : godeps
+godeps:
+	@($(DOCKER_BIN) build -t test-server $(CUR_DIR)/test-server/.)
+	@($(DOCKER_BIN) build -t test_jboss -f $(CUR_DIR)/jboss.dockerfile $(CUR_DIR))
 
 .PHONY : ci/build
 ci/build: deps
@@ -30,5 +35,3 @@ ci/test: deps
 .PHONY : ci/release
 ci/release: deps
 	@($(DOCKER_CMD) make release)
-
-
