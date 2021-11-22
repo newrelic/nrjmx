@@ -1,4 +1,4 @@
-package nrjmx
+package gojmx
 
 import (
 	"bytes"

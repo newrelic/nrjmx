@@ -1,4 +1,4 @@
-package nrjmx
+package gojmx
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/newrelic/nrjmx/nrprotocol"
+	"github.com/newrelic/nrjmx/gojmx/nrprotocol"
 	"github.com/testcontainers/testcontainers-go"
 )
 

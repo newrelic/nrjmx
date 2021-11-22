@@ -1,4 +1,4 @@
-package nrjmx
+package gojmx
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/apache/thrift/lib/go/thrift"
-	"github.com/newrelic/nrjmx/nrprotocol"
+	"github.com/newrelic/nrjmx/gojmx/nrprotocol"
 )
 
 func NewJMXServiceClient(ctx context.Context) (client *JMXClient, err error) {
