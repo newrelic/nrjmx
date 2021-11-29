@@ -187,6 +187,40 @@ func Test_Query_Success(t *testing.T) {
 	assert.Equal(t, expected, actual)
 }
 
+func Test_Query_Timeout(t *testing.T) {
+	ctx := context.Background()
+
+	// GIVEN a JMX Server running inside a container
+	container, err := runJMXServiceContainer(ctx)
+	require.NoError(t, err)
+	defer container.Terminate(ctx)
+
+	jmxPort, err := container.MappedPort(ctx, testServerJMXPort)
+	require.NoError(t, err)
+	jmxHost, err := container.Host(ctx)
+	require.NoError(t, err)
+
+	// THEN JMX connection can be oppened
+	client, err := NewJMXServiceClient(ctx)
+	assert.NoError(t, err)
+
+	config := &nrprotocol.JMXConfig{
+		Hostname: jmxHost,
+		Port:     int32(jmxPort.Int()),
+		UriPath:  "jmxrmi",
+	}
+
+	err = client.Connect(ctx, config)
+	defer client.Disconnect(ctx)
+	assert.NoError(t, err)
+
+	// AND Query returns expected data
+	actual, err := client.Query(time.Nanosecond*1, "*:*")
+	assert.Nil(t, actual)
+
+	assert.Error(t, err)
+}
+
 func Test_URL_Success(t *testing.T) {
 	ctx := context.Background()
 
