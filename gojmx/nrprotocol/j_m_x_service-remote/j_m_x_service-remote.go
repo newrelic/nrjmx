@@ -23,6 +23,7 @@ func Usage() {
   fmt.Fprintln(os.Stderr, "Usage of ", os.Args[0], " [-h host:port] [-u url] [-f[ramed]] function [arg1 [arg2...]]:")
   flag.PrintDefaults()
   fmt.Fprintln(os.Stderr, "\nFunctions:")
+  fmt.Fprintln(os.Stderr, "  void ping()")
   fmt.Fprintln(os.Stderr, "  void connect(JMXConfig config)")
   fmt.Fprintln(os.Stderr, "  void disconnect()")
   fmt.Fprintln(os.Stderr, "   queryMbean(string beanName)")
@@ -148,24 +149,32 @@ func main() {
   }
   
   switch cmd {
+  case "ping":
+    if flag.NArg() - 1 != 0 {
+      fmt.Fprintln(os.Stderr, "Ping requires 0 args")
+      flag.Usage()
+    }
+    fmt.Print(client.Ping(context.Background()))
+    fmt.Print("\n")
+    break
   case "connect":
     if flag.NArg() - 1 != 1 {
       fmt.Fprintln(os.Stderr, "Connect requires 1 args")
       flag.Usage()
     }
-    arg12 := flag.Arg(1)
-    mbTrans13 := thrift.NewTMemoryBufferLen(len(arg12))
-    defer mbTrans13.Close()
-    _, err14 := mbTrans13.WriteString(arg12)
-    if err14 != nil {
+    arg14 := flag.Arg(1)
+    mbTrans15 := thrift.NewTMemoryBufferLen(len(arg14))
+    defer mbTrans15.Close()
+    _, err16 := mbTrans15.WriteString(arg14)
+    if err16 != nil {
       Usage()
       return
     }
-    factory15 := thrift.NewTJSONProtocolFactory()
-    jsProt16 := factory15.GetProtocol(mbTrans13)
+    factory17 := thrift.NewTJSONProtocolFactory()
+    jsProt18 := factory17.GetProtocol(mbTrans15)
     argvalue0 := nrprotocol.NewJMXConfig()
-    err17 := argvalue0.Read(jsProt16)
-    if err17 != nil {
+    err19 := argvalue0.Read(jsProt18)
+    if err19 != nil {
       Usage()
       return
     }

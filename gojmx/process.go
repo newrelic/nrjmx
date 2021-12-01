@@ -30,6 +30,7 @@ type jmxProcess struct {
 	Stdout io.ReadCloser
 	Stdin  io.WriteCloser
 	Stderr io.ReadCloser
+	errCh chan error
 }
 
 func startJMXProcess(ctx context.Context) (*jmxProcess, error) {
@@ -80,6 +81,14 @@ func startJMXProcess(ctx context.Context) (*jmxProcess, error) {
 		return nil, fmt.Errorf("failed to start %q: %v", cmd.Path, err)
 	}
 
+	errCh := make (chan error, 1)
+	go func() {
+		err := cmd.Wait()
+		if err != nil {
+			errCh <- fmt.Errorf("command failed %q: %w", cmd.Path, err)
+		}
+	}()
+
 	return &jmxProcess{
 		Stdout: stdout,
 		Stdin:  stdin,
@@ -87,7 +96,17 @@ func startJMXProcess(ctx context.Context) (*jmxProcess, error) {
 		cmd:    cmd,
 		ctx:    ctx,
 		cancel: cancel,
+		errCh: errCh,
 	}, nil
+}
+
+func (p *jmxProcess) Error() error {
+	select {
+	case err := <- p.errCh:
+		return err
+	default:
+		return nil
+	}
 }
 
 func (p *jmxProcess) stop(timeout time.Duration) error {

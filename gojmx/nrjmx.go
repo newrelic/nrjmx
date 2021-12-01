@@ -35,20 +35,53 @@ func NewJMXServiceClient(ctx context.Context) (client *JMXClient, err error) {
 	iprot := protocolFactory.GetProtocol(transport)
 	oprot := protocolFactory.GetProtocol(transport)
 	client = &JMXClient{
-		JMXService: nrprotocol.NewJMXServiceClient(thrift.NewTStandardClient(iprot, oprot)),
+		jmxService: nrprotocol.NewJMXServiceClient(thrift.NewTStandardClient(iprot, oprot)),
 		jmxProcess: *jmxProcess,
 		ctx:        ctx,
 	}
+	err = client.jmxService.Ping(ctx)
 	return
 }
 
 type JMXClient struct {
-	nrprotocol.JMXService
+	jmxService nrprotocol.JMXService
 	jmxProcess jmxProcess
 	ctx        context.Context
 }
 
+
+//Connect(ctx context.Context, config *JMXConfig) (err error)
+//Disconnect(ctx context.Context) (err error)
+// Parameters:
+//  - BeanName
+//QueryMbean(ctx context.Context, beanName string) (r []*JMXAttribute, err error)
+//GetLogs(ctx context.Context) (r []*LogMessage, err error)
+
+func (j *JMXClient) Connect(config *nrprotocol.JMXConfig) error {
+	err := j.jmxProcess.Error()
+	if err != nil {
+		return err
+	}
+	return j.jmxService.Connect(j.ctx, config)
+}
+
+func (j *JMXClient) QueryMbean(beanName string) ([]*nrprotocol.JMXAttribute, error) {
+	err := j.jmxProcess.Error()
+	if err != nil {
+		return nil, err
+	}
+	return j.jmxService.QueryMbean(j.ctx, beanName)
+}
+
 func (j *JMXClient) Close(timeout time.Duration) error {
-	j.Disconnect(j.ctx)
+	//j.Disconnect(j.ctx)
 	return j.jmxProcess.stop(timeout)
+}
+
+func (j *JMXClient) Disconnect() error {
+	err := j.jmxProcess.Error()
+	if err != nil {
+		return err
+	}
+	return nil
 }
