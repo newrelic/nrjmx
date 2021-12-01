@@ -25,8 +25,7 @@ func Usage() {
   fmt.Fprintln(os.Stderr, "\nFunctions:")
   fmt.Fprintln(os.Stderr, "  void connect(JMXConfig config)")
   fmt.Fprintln(os.Stderr, "  void disconnect()")
-  fmt.Fprintln(os.Stderr, "   queryMbean(string beanName)")
-  fmt.Fprintln(os.Stderr, "   getLogs()")
+  fmt.Fprintln(os.Stderr, "   queryMbean(string beanName, i32 timeoutMs)")
   fmt.Fprintln(os.Stderr)
   os.Exit(0)
 }
@@ -153,19 +152,19 @@ func main() {
       fmt.Fprintln(os.Stderr, "Connect requires 1 args")
       flag.Usage()
     }
-    arg12 := flag.Arg(1)
-    mbTrans13 := thrift.NewTMemoryBufferLen(len(arg12))
-    defer mbTrans13.Close()
-    _, err14 := mbTrans13.WriteString(arg12)
-    if err14 != nil {
+    arg9 := flag.Arg(1)
+    mbTrans10 := thrift.NewTMemoryBufferLen(len(arg9))
+    defer mbTrans10.Close()
+    _, err11 := mbTrans10.WriteString(arg9)
+    if err11 != nil {
       Usage()
       return
     }
-    factory15 := thrift.NewTJSONProtocolFactory()
-    jsProt16 := factory15.GetProtocol(mbTrans13)
+    factory12 := thrift.NewTJSONProtocolFactory()
+    jsProt13 := factory12.GetProtocol(mbTrans10)
     argvalue0 := nrprotocol.NewJMXConfig()
-    err17 := argvalue0.Read(jsProt16)
-    if err17 != nil {
+    err14 := argvalue0.Read(jsProt13)
+    if err14 != nil {
       Usage()
       return
     }
@@ -182,21 +181,20 @@ func main() {
     fmt.Print("\n")
     break
   case "queryMbean":
-    if flag.NArg() - 1 != 1 {
-      fmt.Fprintln(os.Stderr, "QueryMbean requires 1 args")
+    if flag.NArg() - 1 != 2 {
+      fmt.Fprintln(os.Stderr, "QueryMbean requires 2 args")
       flag.Usage()
     }
     argvalue0 := flag.Arg(1)
     value0 := argvalue0
-    fmt.Print(client.QueryMbean(context.Background(), value0))
-    fmt.Print("\n")
-    break
-  case "getLogs":
-    if flag.NArg() - 1 != 0 {
-      fmt.Fprintln(os.Stderr, "GetLogs requires 0 args")
-      flag.Usage()
+    tmp1, err16 := (strconv.Atoi(flag.Arg(2)))
+    if err16 != nil {
+      Usage()
+      return
     }
-    fmt.Print(client.GetLogs(context.Background()))
+    argvalue1 := int32(tmp1)
+    value1 := argvalue1
+    fmt.Print(client.QueryMbean(context.Background(), value0, value1))
     fmt.Print("\n")
     break
   case "":

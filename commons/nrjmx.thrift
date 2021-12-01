@@ -31,10 +31,6 @@ struct JMXAttribute {
   6: bool boolValue
 }
 
-struct LogMessage {
-  1: string message
-}
-
 exception JMXError {
   1: optional i32 code,
   2: string message
@@ -50,7 +46,5 @@ service JMXService {
 
     void disconnect() throws (1:JMXError err),
 
-    list<JMXAttribute> queryMbean(1:string beanName) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr),
-
-    list<LogMessage> getLogs()
+    list<JMXAttribute> queryMbean(1:string beanName, 2:i32 timeoutMs) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr),
 }

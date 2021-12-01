@@ -1,30 +1,21 @@
 package org.newrelic.nrjmx.v2;
 
 /*
-* Copyright 2020 New Relic Corporation. All rights reserved.
-* SPDX-License-Identifier: Apache-2.0
-*/
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.rmi.server.RMIClientSocketFactory;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
-import javax.management.Attribute;
-import javax.management.InstanceNotFoundException;
-import javax.management.IntrospectionException;
-import javax.management.MBeanAttributeInfo;
-import javax.management.MBeanInfo;
-import javax.management.MBeanServerConnection;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectInstance;
-import javax.management.ObjectName;
-import javax.management.ReflectionException;
+import javax.management.*;
 import javax.management.openmbean.CompositeData;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
@@ -48,10 +39,11 @@ public class JMXFetcher {
 
     private static final Logger logger = Logger.getLogger("nrjmx");
 
-    private List<LogMessage> logs = new ArrayList<>();
+    ExecutorService executor;
+
 
     private MBeanServerConnection connection;
-    private List<JMXAttribute> result = new ArrayList<>();
+
     private String connectionString;
     private Map<String, Object> connectionEnv = new HashMap<>();
 
@@ -67,7 +59,51 @@ public class JMXFetcher {
         }
     }
 
-    public void connect() throws JMXConnectionError {
+    public void connect(JMXConfig jmxConfig) throws JMXConnectionError {
+        if (jmxConfig.connectionURL != null && !jmxConfig.connectionURL.equals("")) {
+            connectionString = jmxConfig.connectionURL;
+        } else {
+            // Official doc for remoting v3 is not available, see:
+            // - https://developer.jboss.org/thread/196619
+            // - http://jbossremoting.jboss.org/documentation/v3.html
+            // Some doc on URIS at:
+            // -
+            // https://github.com/jboss-remoting/jboss-remoting/blob/master/src/main/java/org/jboss/remoting3/EndpointImpl.java#L292-L304
+            // - https://stackoverflow.com/questions/42970921/what-is-http-remoting-protocol
+            // -
+            // http://www.mastertheboss.com/jboss-server/jboss-monitoring/using-jconsole-to-monitor-a-remote-wildfly-server
+            String uriPath = jmxConfig.uriPath;
+            if (jmxConfig.isRemote) {
+                if (defaultURIPath.equals(uriPath)) {
+                    uriPath = "";
+                } else {
+                    uriPath = uriPath.concat("/");
+                }
+                String remoteProtocol = "remote";
+                if (jmxConfig.isJBossStandaloneMode) {
+                    remoteProtocol = "remote+http";
+                }
+                connectionString =
+                        String.format("service:jmx:%s://%s:%s%s", remoteProtocol, jmxConfig.hostname, jmxConfig.port, uriPath);
+            } else {
+                connectionString =
+                        String.format("service:jmx:rmi:///jndi/rmi://%s:%s/%s", jmxConfig.hostname, jmxConfig.port, uriPath);
+            }
+        }
+
+        if (!"".equals(jmxConfig.username)) {
+            connectionEnv.put(JMXConnector.CREDENTIALS, new String[]{jmxConfig.username, jmxConfig.password});
+        }
+
+        if (!"".equals(jmxConfig.keyStore) && !"".equals(jmxConfig.trustStore)) {
+            Properties p = System.getProperties();
+            p.put("javax.net.ssl.keyStore", jmxConfig.keyStore);
+            p.put("javax.net.ssl.keyStorePassword", jmxConfig.keyStorePassword);
+            p.put("javax.net.ssl.trustStore", jmxConfig.trustStore);
+            p.put("javax.net.ssl.trustStorePassword", jmxConfig.trustStorePassword);
+            connectionEnv.put("com.sun.jndi.rmi.factory.socket", new SslRMIClientSocketFactory());
+        }
+
         try {
             JMXServiceURL address = new JMXServiceURL(connectionString);
 
@@ -85,166 +121,99 @@ public class JMXFetcher {
         return value == null || value.equals("");
     }
 
-    public JMXFetcher(JMXConfig jmxConfig) {
-        if (jmxConfig.connectionURL != null && !jmxConfig.connectionURL.equals("")) {
-            connectionString = jmxConfig.connectionURL;
-          } else {
-            // Official doc for remoting v3 is not available, see:
-            // - https://developer.jboss.org/thread/196619
-            // - http://jbossremoting.jboss.org/documentation/v3.html
-            // Some doc on URIS at:
-            // -
-            // https://github.com/jboss-remoting/jboss-remoting/blob/master/src/main/java/org/jboss/remoting3/EndpointImpl.java#L292-L304
-            // - https://stackoverflow.com/questions/42970921/what-is-http-remoting-protocol
-            // -
-            // http://www.mastertheboss.com/jboss-server/jboss-monitoring/using-jconsole-to-monitor-a-remote-wildfly-server
-            String uriPath = jmxConfig.uriPath;
-            if (jmxConfig.isRemote) {
-              if (defaultURIPath.equals(uriPath)) {
-                uriPath = "";
-              } else {
-                uriPath = uriPath.concat("/");
-              }
-              String remoteProtocol = "remote";
-              if (jmxConfig.isJBossStandaloneMode) {
-                remoteProtocol = "remote+http";
-              }
-              connectionString =
-                  String.format("service:jmx:%s://%s:%s%s", remoteProtocol, jmxConfig.hostname, jmxConfig.port, uriPath);
-            } else {
-              connectionString =
-                  String.format("service:jmx:rmi:///jndi/rmi://%s:%s/%s", jmxConfig.hostname, jmxConfig.port, uriPath);
-            }
-          }
-      
-          if (!"".equals(jmxConfig.username)) {
-            connectionEnv.put(JMXConnector.CREDENTIALS, new String[] {jmxConfig.username, jmxConfig.password});
-          }
-      
-          if (!"".equals(jmxConfig.keyStore) && !"".equals(jmxConfig.trustStore)) {
-            Properties p = System.getProperties();
-            p.put("javax.net.ssl.keyStore", jmxConfig.keyStore);
-            p.put("javax.net.ssl.keyStorePassword", jmxConfig.keyStorePassword);
-            p.put("javax.net.ssl.trustStore", jmxConfig.trustStore);
-            p.put("javax.net.ssl.trustStorePassword", jmxConfig.trustStorePassword);
-            connectionEnv.put("com.sun.jndi.rmi.factory.socket", new SslRMIClientSocketFactory());
-          }
-        }
-
-    public List<LogMessage> getLogs() {
-        List<LogMessage> result = this.logs;
-        this.logs = new ArrayList<LogMessage>();
-        return result;
+    public JMXFetcher(ExecutorService executor) {
+        this.executor = executor;
     }
 
-    public List<JMXAttribute> queryMbean(String beanName) throws JMXError {
-
+    public List<JMXAttribute> queryMbean(String beanName, Integer timeoutMs) throws JMXError {
+//        return this.queryMbean2(beanName);
+        JMXFetcher j = this;
+        Future<List<JMXAttribute>> future = executor.submit(new Callable<List<JMXAttribute>>() {
+            public List<JMXAttribute> call() throws JMXError {
+                try {
+                    return j.queryMbean(beanName);
+                } finally {
+                    logger.info("exiting");
+                }
+            }
+        });
         try {
-            Set<ObjectInstance> beanInstances;
-            // try {
-
-
-
-            beanInstances = query(beanName);
-
-            // } catch (JMXFetcher.QueryError e) {
-            // // logger.warning(e.getMessage());
-            // // logger.log(Level.FINE, e.getMessage(), e);
-            // return null;
-            // }
-
-            for (ObjectInstance instance : beanInstances) {
-                // try {
-                queryAttributes(instance);
-
-                // } catch (JMXFetcher.QueryError e) {
-                // // logger.warning(e.getMessage());
-                // // logger.log(Level.FINE, e.getMessage(), e);
-                // }
-            }
-            try {
-
-            return popResults();
-            } catch (IllegalArgumentException e) {
-
-            }
-            return result;
-        } catch (Exception ex) {
-            throw new JMXError(ex.getMessage());
+            return future.get(timeoutMs, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            //Thread.currentThread().interrupt();
+            //https://www.baeldung.com/java-interrupted-exception
+            throw new JMXError("timeout");
         }
-        
+//        Runtime.getRuntime().addShutdownHook(new Thread() {
+//            @Override
+//            public void run() {
+//                logger.info("called the shutdown hook");
+//            }
+//        };
+//        finally {
+//            executor.shutdownNow();
+//        }
     }
 
-    private Set<ObjectInstance> query(String beanName) throws QueryError {
-        ObjectName queryObject;
 
+    public Set<String> queryMBeans(String objectName) throws QueryError {
         try {
-            queryObject = new ObjectName(beanName);
-        } catch (MalformedObjectNameException e) {
-            throw new QueryError("Can't parse bean name " + beanName, e);
+            return connection.queryMBeans(new ObjectName(objectName), null)
+                    .stream()
+                    .map(ObjectInstance::getObjectName)
+                    .map(ObjectName::getCanonicalName)
+                    .collect(Collectors.toSet());
+        } catch (MalformedObjectNameException me) {
+            throw new QueryError("Can't parse bean name " + objectName, me);
+        } catch (IOException ioe) {
+            throw new QueryError("Can't get beans for query " + objectName, ioe);
         }
-
-        Set<ObjectInstance> beanInstances;
-        try {
-            beanInstances = connection.queryMBeans(queryObject, null);
-        } catch (IOException e) {
-            throw new QueryError("Can't get beans for query " + beanName, e);
-        }
-
-        return beanInstances;
     }
 
-    private void queryAttributes(ObjectInstance instance) throws QueryError, JMXError {
-        ObjectName objectName = instance.getObjectName();
+    public JMXAttribute getAttribute(String mBeanName, String attrName) throws QueryError, ValueError {
+        Object value;
+        ObjectName objectName = this.getObjectName(mBeanName);
+        try {
+            value = connection.getAttribute(objectName, attrName);
+            if (value instanceof Attribute) {
+                Attribute jmxAttr = (Attribute) value;
+                value = jmxAttr.getValue();
+            }
+        } catch (Exception e) {
+            throw new QueryError("Can't get attribute " + attrName + " for bean " +
+                    mBeanName + ": "
+                    + e.getMessage(), e);
+        }
+
+        String name = String.format("%s,attr=%s", mBeanName, attrName);
+        return parseValue(name, value);
+    }
+
+    private ObjectName getObjectName(String mBeanName) throws QueryError {
+        try {
+            return new ObjectName(mBeanName);
+        } catch (MalformedObjectNameException me) {
+            throw new QueryError("Can't parse bean name " + mBeanName, me);
+        }
+    }
+
+    public List<String> getAttributes(String mBeanName) throws QueryError {
+        ObjectName objectName = this.getObjectName(mBeanName);
         MBeanInfo info;
 
         try {
             info = connection.getMBeanInfo(objectName);
         } catch (InstanceNotFoundException | IntrospectionException | ReflectionException | IOException e) {
-            throw new QueryError("Can't find bean " + objectName.toString(), e);
+            throw new QueryError("Can't find bean " + mBeanName, e);
         }
 
-        MBeanAttributeInfo[] attrInfo = info.getAttributes();
-
-        for (MBeanAttributeInfo attr : attrInfo) {
-            if (!attr.isReadable()) {
-                continue;
-            }
-
-            String attrName = attr.getName();
-            Object value;
-
-        
-            try {
-                value = connection.getAttribute(objectName, attrName);
-                if (value instanceof Attribute) {
-                    Attribute jmxAttr = (Attribute) value;
-                    value = jmxAttr.getValue();
-                }
-            } catch (Exception e) {
-                // logger.warning("Can't get attribute " + attrName + " for bean " +
-                // objectName.toString() + ": "
-                // + e.getMessage());
-                continue;
-            }
-
-            String name = String.format("%s,attr=%s", objectName.toString(), attrName);
-            try {
-                parseValue(name, value);
-            } catch (ValueError e) {
-                this.logs.add(new LogMessage(e.getMessage()));
-                // logger.fine(e.getMessage());
-            }
-        }
+        return Arrays.stream(info.getAttributes())
+                .filter(MBeanAttributeInfo::isReadable)
+                .map(MBeanAttributeInfo::getName)
+                .collect(Collectors.toList());
     }
 
-    private List<JMXAttribute> popResults() {
-        List<JMXAttribute> out = result;
-        result = new ArrayList<>();
-        return out;
-    }
-
-    private void parseValue(String name, Object value) throws ValueError {
+    private JMXAttribute parseValue(String name, Object value) throws ValueError {
         JMXAttribute attr = new JMXAttribute();
         attr.attribute = name;
 
@@ -253,23 +222,23 @@ public class JMXFetcher {
         } else if (value instanceof java.lang.Double) {
             attr.doubleValue = parseDouble((Double) value);
             attr.valueType = ValueType.DOUBLE;
-            result.add(attr);
+            return attr;
         } else if (value instanceof java.lang.Float) {
             attr.doubleValue = parseFloatToDouble((Float) value);
             attr.valueType = ValueType.DOUBLE;
-            result.add(attr);
+            return attr;
         } else if (value instanceof Number) {
             attr.intValue = ((Number) value).longValue();
             attr.valueType = ValueType.INT;
-            result.add(attr);
+            return attr;
         } else if (value instanceof String) {
             attr.stringValue = (String) value;
             attr.valueType = ValueType.STRING;
-            result.add(attr);
+            return attr;
         } else if (value instanceof Boolean) {
             attr.boolValue = (Boolean) value;
             attr.valueType = ValueType.BOOL;
-            result.add(attr);
+            return attr;
         } else if (value instanceof CompositeData) {
             CompositeData cdata = (CompositeData) value;
             Set<String> fieldKeys = cdata.getCompositeType().keySet();
@@ -284,12 +253,15 @@ public class JMXFetcher {
         } else if (value instanceof HashMap) {
             // TODO: Process hashmaps
             // logger.fine("HashMaps are not supported yet: " + name);
+            return null;
         } else if (value instanceof ArrayList || value.getClass().isArray()) {
             // TODO: Process arrays
             // logger.fine("Arrays are not supported yet: " + name);
+            return null;
         } else {
             throw new ValueError("Unsuported data type (" + value.getClass() + ") for bean " + name);
         }
+        return null;
     }
 
     /**

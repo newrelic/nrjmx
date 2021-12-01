@@ -1,28 +1,25 @@
 package org.newrelic.nrjmx.v2;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 import org.apache.thrift.TException;
 import org.apache.thrift.server.TServer;
-import org.newrelic.nrjmx.v2.nrprotocol.JMXAttribute;
-import org.newrelic.nrjmx.v2.nrprotocol.JMXConfig;
-import org.newrelic.nrjmx.v2.nrprotocol.JMXService;
-import org.newrelic.nrjmx.v2.nrprotocol.LogMessage;
+import org.newrelic.nrjmx.v2.nrprotocol.*;
 
 public class JMXServiceHandler implements JMXService.Iface {
 
     private JMXFetcher jmxFetcher;
     private TServer server;
 
-    @Override
-    public void connect(JMXConfig config) throws TException {
-        this.jmxFetcher = new JMXFetcher(config);
-        jmxFetcher.connect();
+    public JMXServiceHandler(JMXFetcher jmxFetcher) {
+        this.jmxFetcher = jmxFetcher;
     }
 
     @Override
-    public List<JMXAttribute> queryMbean(String beanName) throws TException {
-        return jmxFetcher.queryMbean(beanName);
+    public void connect(JMXConfig config) throws TException {
+        jmxFetcher.connect(config);
     }
 
     @Override
@@ -34,8 +31,8 @@ public class JMXServiceHandler implements JMXService.Iface {
     }
 
     @Override
-    public List<LogMessage> getLogs() throws TException {
-        return jmxFetcher.getLogs();
+    public List<JMXAttribute> queryMbean(String beanName, int timeoutMs) throws JMXConnectionError, JMXError, TException {
+        return this.jmxFetcher.queryMbean(beanName, timeoutMs);
     }
 
     public void addServer(TServer server) {
