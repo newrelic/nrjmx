@@ -4,15 +4,17 @@ import java.util.List;
 
 import org.apache.thrift.TException;
 import org.apache.thrift.server.TServer;
-import org.newrelic.nrjmx.v2.nrprotocol.JMXAttribute;
-import org.newrelic.nrjmx.v2.nrprotocol.JMXConfig;
-import org.newrelic.nrjmx.v2.nrprotocol.JMXService;
-import org.newrelic.nrjmx.v2.nrprotocol.LogMessage;
+import org.newrelic.nrjmx.v2.nrprotocol.*;
 
 public class JMXServiceHandler implements JMXService.Iface {
 
     private JMXFetcher jmxFetcher;
     private TServer server;
+
+    @Override
+    public void ping() throws JMXError, TException {
+        return;
+    }
 
     @Override
     public void connect(JMXConfig config) throws TException {
