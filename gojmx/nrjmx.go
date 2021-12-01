@@ -2,12 +2,14 @@ package gojmx
 
 import (
 	"context"
-
+	"fmt"
 	"time"
 
 	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/newrelic/nrjmx/gojmx/nrprotocol"
 )
+
+const pingTimeout = 500 * time.Millisecond
 
 func NewJMXServiceClient(ctx context.Context) (client *JMXClient, err error) {
 	jmxProcess, err := startJMXProcess(ctx)
@@ -39,7 +41,7 @@ func NewJMXServiceClient(ctx context.Context) (client *JMXClient, err error) {
 		jmxProcess: *jmxProcess,
 		ctx:        ctx,
 	}
-	err = client.jmxService.Ping(ctx)
+	err = client.Ping(pingTimeout)
 	return
 }
 
@@ -49,13 +51,38 @@ type JMXClient struct {
 	ctx        context.Context
 }
 
-
 //Connect(ctx context.Context, config *JMXConfig) (err error)
 //Disconnect(ctx context.Context) (err error)
 // Parameters:
 //  - BeanName
 //QueryMbean(ctx context.Context, beanName string) (r []*JMXAttribute, err error)
 //GetLogs(ctx context.Context) (r []*LogMessage, err error)
+
+func (j *JMXClient) Ping(timeout time.Duration) error {
+	ctx, cancel := context.WithCancel(j.ctx)
+	defer cancel()
+	done := make(chan struct{}, 1)
+	go func() {
+		for ctx.Err() == nil {
+			err := j.jmxService.Ping(ctx)
+			if err != nil {
+				continue
+			}
+			done <- struct{}{}
+			break
+		}
+	}()
+	select {
+	case <-time.After(timeout):
+		return fmt.Errorf("ping timeout")
+	case err := <-j.jmxProcess.errCh:
+		return err
+	case <-done:
+		return nil
+	}
+
+	return nil
+}
 
 func (j *JMXClient) Connect(config *nrprotocol.JMXConfig) error {
 	err := j.jmxProcess.Error()

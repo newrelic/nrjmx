@@ -80,7 +80,8 @@ func startJMXProcess(ctx context.Context) (*jmxProcess, error) {
 	if err := cmd.Start(); err != nil {
 		return nil, fmt.Errorf("failed to start %q: %v", cmd.Path, err)
 	}
-
+	fmt.Println(cmd.ProcessState)
+	time.Sleep(time.Second*1)
 	errCh := make (chan error, 1)
 	go func() {
 		err := cmd.Wait()
