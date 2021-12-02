@@ -24,6 +24,7 @@ class Arguments {
   private String keyStorePassword;
   private String trustStore;
   private String trustStorePassword;
+  private boolean protocolV2;
   private boolean verbose;
   private boolean debug;
   private boolean isRemoteJMX;
@@ -35,6 +36,10 @@ class Arguments {
   static Options options() {
     if (options == null) {
       options = new Options();
+      Option v2 =
+      Option.builder("v2").longOpt("protocolV2").desc("Use nrjmx protocol v2").hasArg(false).build();
+      options.addOption(v2);
+
       Option connectionURL =
           Option.builder("C")
               .longOpt("connURL")
@@ -116,6 +121,7 @@ class Arguments {
     CommandLine cmd = new DefaultParser().parse(options(), args);
 
     Arguments argsObj = new Arguments();
+    argsObj.protocolV2 = cmd.hasOption("protocolV2");
     argsObj.connectionURL = cmd.getOptionValue("connURL", "");
     argsObj.hostname = cmd.getOptionValue("hostname", "localhost");
     argsObj.port = Integer.parseInt(cmd.getOptionValue("port", "7199"));
@@ -132,6 +138,10 @@ class Arguments {
     argsObj.isRemoteJMX = cmd.hasOption("remote");
     argsObj.isRemoteJBossStandalone = cmd.hasOption("remoteJBossStandalone");
     return argsObj;
+  }
+
+  Boolean isProtocolV2() {
+    return protocolV2;
   }
 
   String getConnectionURL() {

@@ -46,11 +46,11 @@ public class Service {
         // Removes all registered MBean cats
         put("/clear", (req, res) -> {
             server.queryNames(queryObject, null).forEach(cat -> {
-                log.info("unregistering {}", cat);
+                // log.info("unregistering {}", cat);
                 try {
                     server.unregisterMBean(cat);
                 } catch (Exception e) {
-                    log.error("unregistering", e);
+                    // log.error("unregistering", e);
                 }
             });
             return "ok!\n";
