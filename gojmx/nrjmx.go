@@ -9,7 +9,7 @@ import (
 	"github.com/newrelic/nrjmx/gojmx/nrprotocol"
 )
 
-const pingTimeout = 500 * time.Millisecond
+const pingTimeout = 1000 * time.Millisecond
 
 func NewJMXServiceClient(ctx context.Context) (client *JMXClient, err error) {
 	jmxProcess, err := startJMXProcess(ctx)
@@ -80,8 +80,6 @@ func (j *JMXClient) Ping(timeout time.Duration) error {
 	case <-done:
 		return nil
 	}
-
-	return nil
 }
 
 func (j *JMXClient) Connect(config *nrprotocol.JMXConfig) error {

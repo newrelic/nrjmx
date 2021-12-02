@@ -1,13 +1,13 @@
 package gojmx
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -29,7 +29,6 @@ type jmxProcess struct {
 	cancel context.CancelFunc
 	Stdout io.ReadCloser
 	Stdin  io.WriteCloser
-	Stderr io.ReadCloser
 	errCh chan error
 }
 
@@ -48,52 +47,50 @@ func startJMXProcess(ctx context.Context) (*jmxProcess, error) {
 		return nil, fmt.Errorf("failed to create stdin pipe to %q: %v", cmd.Path, err)
 	}
 
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		return nil, fmt.Errorf("failed to create stderr pipe to %q: %v", cmd.Path, err)
-	}
+	stderrbuf := new(strings.Builder)
+	cmd.Stderr = stderrbuf
 
-	go func() {
-		reader := bufio.NewReaderSize(stderr, bufferSize)
-
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			default:
-				break
-			}
-
-			line, err := reader.ReadString('\n')
-			// API needs re to allow stderr full read before closing
-			if err != nil {
-				if _, isAlreadyClosed := err.(*os.PathError); !isAlreadyClosed && err != io.EOF {
-					fmt.Fprintf(os.Stderr, "error while reading stderr: '%v'", err)
-					continue
-				}
-				return
-			}
-			fmt.Fprint(os.Stderr, line)
-		}
-	}()
+	//
+	//go func() {
+	//	reader := bufio.NewReaderSize(stderr, bufferSize)
+	//
+	//	for {
+	//		select {
+	//		case <-ctx.Done():
+	//			return
+	//		default:
+	//			break
+	//		}
+	//
+	//		line, err := reader.ReadString('\n')
+	//		// API needs re to allow stderr full read before closing
+	//		if err != nil {
+	//			if _, isAlreadyClosed := err.(*os.PathError); !isAlreadyClosed && err != io.EOF {
+	//				fmt.Fprintf(os.Stderr, "error while reading stderr: '%v'", err)
+	//				continue
+	//			}
+	//			return
+	//		}
+	//		fmt.Fprint(os.Stderr, line)
+	//	}
+	//}()
 
 	if err := cmd.Start(); err != nil {
 		return nil, fmt.Errorf("failed to start %q: %v", cmd.Path, err)
 	}
-	fmt.Println(cmd.ProcessState)
-	time.Sleep(time.Second*1)
+
 	errCh := make (chan error, 1)
 	go func() {
+		// stderr we must read before wait, not with strings builder
 		err := cmd.Wait()
 		if err != nil {
-			errCh <- fmt.Errorf("command failed %q: %w", cmd.Path, err)
+			errCh <- fmt.Errorf("%s: %w", stderrbuf.String(), err)
 		}
 	}()
 
 	return &jmxProcess{
 		Stdout: stdout,
 		Stdin:  stdin,
-		Stderr: stderr,
 		cmd:    cmd,
 		ctx:    ctx,
 		cancel: cancel,
@@ -118,9 +115,6 @@ func (p *jmxProcess) stop(timeout time.Duration) error {
 	}
 	if err := p.Stdin.Close(); err != nil {
 		errors = fmt.Errorf("failed to detach stdin from %q: %w", p.cmd.Path, err)
-	}
-	if err := p.Stderr.Close(); err != nil {
-		errors = fmt.Errorf("failed to detach stder from %q: %w", p.cmd.Path, err)
 	}
 	p.cancel()
 	err := p.cmd.Wait()
