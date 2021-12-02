@@ -74,6 +74,10 @@ public class JMXFetcher {
             return null;
         });
         try {
+            if (timeoutMs <= 0) {
+                 future.get();
+                 return;
+            }
             future.get(timeoutMs, TimeUnit.MILLISECONDS);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             //Thread.currentThread().interrupt();
@@ -150,6 +154,9 @@ public class JMXFetcher {
     public List<JMXAttribute> queryMbean(String beanName, long timeoutMs) throws JMXError {
         Future<List<JMXAttribute>> future = executor.submit(() -> this.queryMbean(beanName));
         try {
+            if (timeoutMs <= 0) {
+                return future.get();
+            }
             return future.get(timeoutMs, TimeUnit.MILLISECONDS);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             //Thread.currentThread().interrupt();

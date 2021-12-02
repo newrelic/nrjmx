@@ -48,10 +48,8 @@ type JMXClient struct {
 	ctx        context.Context
 }
 
-func (j *JMXClient) Query(timeout time.Duration, mbean string) ([]*nrprotocol.JMXAttribute, error) {
-	queryCtx, cancel := context.WithTimeout(j.ctx, timeout)
-	cancel()
-	return j.QueryMbean(queryCtx, mbean)
+func (j *JMXClient) Query(timeout int64, mbean string) ([]*nrprotocol.JMXAttribute, error) {
+	return j.QueryMbean(j.ctx, mbean, timeout)
 }
 
 func (j *JMXClient) Close(timeout time.Duration) error {

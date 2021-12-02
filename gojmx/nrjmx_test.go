@@ -36,6 +36,7 @@ const (
 	truststorePassword             = "password"
 	jmxUsername                    = "testuser"
 	jmxPassword                    = "testpassword"
+	defaultTimeoutMs 			   = 5000
 )
 
 var prjDir, keystorePath, truststorepath string
@@ -97,12 +98,12 @@ func Test_Query_Success_LargeAmountOfData(t *testing.T) {
 		UriPath:  "jmxrmi",
 	}
 
-	err = client.Connect(ctx, config)
+	err = client.Connect(ctx, config, -1)
 	assert.NoError(t, err)
 	defer client.Disconnect(ctx)
 
 	// AND query returns at least 5Mb of data.
-	result, err := client.QueryMbean(ctx, "test:type=Cat,*")
+	result, err := client.QueryMbean(ctx, "test:type=Cat,*", -1)
 	assert.NoError(t, err)
 	assert.GreaterOrEqual(t, len(fmt.Sprintf("%v", result)), 5*1024*1024)
 }
@@ -143,12 +144,12 @@ func Test_Query_Success(t *testing.T) {
 		UriPath:  "jmxrmi",
 	}
 
-	err = client.Connect(ctx, config)
+	err = client.Connect(ctx, config, defaultTimeoutMs)
 	defer client.Disconnect(ctx)
 	assert.NoError(t, err)
 
 	// AND Query returns expected data
-	actual, err := client.QueryMbean(ctx, "test:type=Cat,*")
+	actual, err := client.QueryMbean(ctx, "test:type=Cat,*", defaultTimeoutMs)
 	assert.NoError(t, err)
 
 	expected := []*nrprotocol.JMXAttribute{
@@ -210,12 +211,12 @@ func Test_Query_Timeout(t *testing.T) {
 		UriPath:  "jmxrmi",
 	}
 
-	err = client.Connect(ctx, config)
+	err = client.Connect(ctx, config, defaultTimeoutMs)
 	defer client.Disconnect(ctx)
 	assert.NoError(t, err)
 
 	// AND Query returns expected data
-	actual, err := client.Query(time.Nanosecond*1, "*:*")
+	actual, err := client.Query(1, "*:*")
 	assert.Nil(t, actual)
 
 	assert.Error(t, err)
@@ -254,12 +255,12 @@ func Test_URL_Success(t *testing.T) {
 		ConnectionURL: fmt.Sprintf("service:jmx:rmi:///jndi/rmi://%s:%s/jmxrmi", jmxHost, jmxPort.Port()),
 	}
 
-	err = client.Connect(ctx, config)
+	err = client.Connect(ctx, config, defaultTimeoutMs)
 	defer client.Disconnect(ctx)
 	assert.NoError(t, err)
 
 	// AND Query returns expected data
-	actual, err := client.QueryMbean(ctx, "test:type=Cat,*")
+	actual, err := client.QueryMbean(ctx, "test:type=Cat,*", defaultTimeoutMs)
 	assert.NoError(t, err)
 
 	expected := []*nrprotocol.JMXAttribute{
@@ -305,12 +306,12 @@ func Test_JavaNotInstalled(t *testing.T) {
 	config := &nrprotocol.JMXConfig{}
 
 	// THEN connect fails with expected error
-	err = client.Connect(ctx, config)
+	err = client.Connect(ctx, config, defaultTimeoutMs)
 	defer client.Disconnect(ctx)
 	assert.EqualError(t, err, "EOF") // TODO: this error message should be fixed
 
 	// AND Query fails with expected error
-	actual, err := client.QueryMbean(ctx, "test:type=Cat,*")
+	actual, err := client.QueryMbean(ctx, "test:type=Cat,*", defaultTimeoutMs)
 	assert.Nil(t, actual)
 	assert.EqualError(t, err, "write |1: broken pipe") // TODO: this error message should be fixed
 }
@@ -336,12 +337,12 @@ func Test_WrongMbeanFormat(t *testing.T) {
 		ConnectionURL: fmt.Sprintf("service:jmx:rmi:///jndi/rmi://%s:%s/jmxrmi", jmxHost, jmxPort.Port()),
 	}
 
-	err = client.Connect(ctx, config)
+	err = client.Connect(ctx, config, defaultTimeoutMs)
 	defer client.Disconnect(ctx)
 	assert.NoError(t, err)
 
 	// AND Query returns expected error
-	actual, err := client.QueryMbean(ctx, "wrong_format")
+	actual, err := client.QueryMbean(ctx, "wrong_format", defaultTimeoutMs)
 	assert.Nil(t, actual)
 
 	assert.EqualError(t, err, "cannot parse MBean glob pattern, valid: 'DOMAIN:BEAN'") //TODO: return the correct error from java to match this message.
@@ -361,12 +362,12 @@ func Test_Wrong_Connection(t *testing.T) {
 	}
 
 	// WHEN connecting expected error is returned
-	err = client.Connect(ctx, config)
+	err = client.Connect(ctx, config, defaultTimeoutMs)
 	defer client.Disconnect(ctx)
 	assert.Contains(t, err.Error(), "Connection refused to host: localhost;")
 
 	// AND query returns expected error
-	actual, err := client.QueryMbean(ctx, "test:type=Cat,*")
+	actual, err := client.QueryMbean(ctx, "test:type=Cat,*", defaultTimeoutMs)
 	assert.Nil(t, actual)
 	assert.Contains(t, err.Error(), "Connection refused to host: localhost;") // TODO: fix this, doesn't return the correct error
 }
@@ -412,12 +413,12 @@ func Test_SSLQuery_Success(t *testing.T) {
 		TrustStorePassword: truststorePassword,
 	}
 
-	err = client.Connect(ctx, config)
+	err = client.Connect(ctx, config, defaultTimeoutMs)
 	defer client.Disconnect(ctx)
 	assert.NoError(t, err)
 
 	// AND Query returns expected data
-	actual, err := client.QueryMbean(ctx, "test:type=Cat,*")
+	actual, err := client.QueryMbean(ctx, "test:type=Cat,*", defaultTimeoutMs)
 	assert.NoError(t, err)
 
 	expected := []*nrprotocol.JMXAttribute{
@@ -486,12 +487,12 @@ func Test_Wrong_Credentials(t *testing.T) {
 	}
 
 	// THEN connect fails with expected error
-	err = client.Connect(ctx, config)
+	err = client.Connect(ctx, config, defaultTimeoutMs)
 	defer client.Disconnect(ctx)
 	assert.Contains(t, err.Error(), "Authentication failed! Invalid username or password")
 
 	// AND Query returns expected error
-	actual, err := client.QueryMbean(ctx, "test:type=Cat,*")
+	actual, err := client.QueryMbean(ctx, "test:type=Cat,*", defaultTimeoutMs)
 	assert.Nil(t, actual)
 	assert.Contains(t, err.Error(), "Authentication failed! Invalid username or password") // TODO: fix this in java tool, as it doesn't return the correct error
 }
@@ -526,12 +527,12 @@ func Test_Wrong_Certificate_password(t *testing.T) {
 	}
 
 	// THEN Connect returns expected error
-	err = client.Connect(ctx, config)
+	err = client.Connect(ctx, config, defaultTimeoutMs)
 	defer client.Disconnect(ctx)
 	assert.Contains(t, err.Error(), "SSLContext") // TODO: improve this error from java
 
 	// AND Query returns expected error
-	actual, err := client.QueryMbean(ctx, "test:type=Cat,*")
+	actual, err := client.QueryMbean(ctx, "test:type=Cat,*", defaultTimeoutMs)
 	assert.Nil(t, actual)
 	assert.Contains(t, err.Error(), "SSLContext") // TODO: improve this error from java
 }
@@ -569,12 +570,12 @@ func Test_Connector_Success(t *testing.T) {
 		IsRemote:              true,
 	}
 
-	err = client.Connect(ctx, config)
+	err = client.Connect(ctx, config, defaultTimeoutMs)
 	defer client.Disconnect(ctx)
 	assert.NoError(t, err)
 
 	// AND Query returns expected data
-	actual, err := client.QueryMbean(ctx, "jboss.as:subsystem=remoting,configuration=endpoint")
+	actual, err := client.QueryMbean(ctx, "jboss.as:subsystem=remoting,configuration=endpoint", defaultTimeoutMs)
 	assert.NoError(t, err)
 
 	expected := []*nrprotocol.JMXAttribute{
