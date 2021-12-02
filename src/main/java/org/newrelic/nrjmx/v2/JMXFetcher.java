@@ -143,8 +143,6 @@ public class JMXFetcher {
             Set<ObjectInstance> beanInstances;
             // try {
 
-
-
             beanInstances = query(beanName);
 
             // } catch (JMXFetcher.QueryError e) {

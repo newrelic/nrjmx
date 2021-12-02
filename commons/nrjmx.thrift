@@ -51,6 +51,4 @@ service JMXService {
     void disconnect() throws (1:JMXError err),
 
     list<JMXAttribute> queryMbean(1:string beanName) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr),
-
-    list<LogMessage> getLogs()
 }
