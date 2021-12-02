@@ -2,53 +2,83 @@ package gojmx
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/apache/thrift/lib/go/thrift"
 	"time"
 
-	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/newrelic/nrjmx/gojmx/nrprotocol"
 )
 
 const pingTimeout = 1000 * time.Millisecond
 
-func NewJMXServiceClient(ctx context.Context) (client *JMXClient, err error) {
-	jmxProcess, err := startJMXProcess(ctx)
-	if err != nil {
-		return
+var (
+	ErrAlreadyStarted = errors.New("nrjmx subprocess already started")
+	ErrNotRunning     = errors.New("nrjmx subprocess is not running")
+)
+
+type JMXClient struct {
+	jmxService nrprotocol.JMXService
+	jmxProcess *jmxProcess
+	isRunning  bool
+	ctx        context.Context
+}
+
+func NewJMXClient(ctx context.Context) *JMXClient {
+	return &JMXClient{
+		ctx: ctx,
+	}
+}
+
+func (j *JMXClient) Init() (*JMXClient, error) {
+	if j.isRunning {
+		return j, ErrAlreadyStarted
 	}
 
+	jmxProcess, err := startJMXProcess(j.ctx)
+	if err != nil {
+		jmxProcess.stop() // TODO: Handle err
+		return j, err
+	}
+
+	jmxServiceClient, err := j.configureJMXServiceClient(jmxProcess)
+	if err != nil {
+		jmxProcess.stop() // TODO: Handle err
+		return j, err
+	}
+
+	j.jmxProcess = jmxProcess
+	j.jmxService = jmxServiceClient
+
+	err = j.ping(pingTimeout)
+	if err != nil {
+		jmxProcess.stop() // TODO: Handle err
+		return j, err
+	}
+	j.isRunning = true
+
+	return j, nil
+}
+
+func (j *JMXClient) configureJMXServiceClient(nrjmxProcess *jmxProcess) (*nrprotocol.JMXServiceClient, error) {
 	var protocolFactory thrift.TProtocolFactory
 	protocolFactory = thrift.NewTCompactProtocolFactory()
 
 	var transportFactory thrift.TTransportFactory
-
 	transportFactory = thrift.NewTBufferedTransportFactory(8192)
-
 	transportFactory = thrift.NewTFramedTransportFactory(transportFactory)
 
 	var transport thrift.TTransport
-
-	transport = thrift.NewStreamTransport(jmxProcess.Stdout, jmxProcess.Stdin)
-	transport, err = transportFactory.GetTransport(transport)
+	transport = thrift.NewStreamTransport(nrjmxProcess.Stdout, nrjmxProcess.Stdin)
+	transport, err := transportFactory.GetTransport(transport)
 	if err != nil {
 		return nil, err
 	}
 
 	iprot := protocolFactory.GetProtocol(transport)
 	oprot := protocolFactory.GetProtocol(transport)
-	client = &JMXClient{
-		jmxService: nrprotocol.NewJMXServiceClient(thrift.NewTStandardClient(iprot, oprot)),
-		jmxProcess: *jmxProcess,
-		ctx:        ctx,
-	}
-	err = client.Ping(pingTimeout)
-	return
-}
-
-type JMXClient struct {
-	jmxService nrprotocol.JMXService
-	jmxProcess jmxProcess
-	ctx        context.Context
+	jmxServiceClient := nrprotocol.NewJMXServiceClient(thrift.NewTStandardClient(iprot, oprot))
+	return jmxServiceClient, err
 }
 
 //Connect(ctx context.Context, config *JMXConfig) (err error)
@@ -58,7 +88,7 @@ type JMXClient struct {
 //QueryMbean(ctx context.Context, beanName string) (r []*JMXAttribute, err error)
 //GetLogs(ctx context.Context) (r []*LogMessage, err error)
 
-func (j *JMXClient) Ping(timeout time.Duration) error {
+func (j *JMXClient) ping(timeout time.Duration) error {
 	ctx, cancel := context.WithCancel(j.ctx)
 	defer cancel()
 	done := make(chan struct{}, 1)
@@ -82,31 +112,38 @@ func (j *JMXClient) Ping(timeout time.Duration) error {
 	}
 }
 
-func (j *JMXClient) Connect(config *nrprotocol.JMXConfig, timeout int64) error {
+func (j *JMXClient) checkState() error {
+	if !j.isRunning {
+		return ErrNotRunning
+	}
 	err := j.jmxProcess.Error()
 	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (j *JMXClient) Connect(config *nrprotocol.JMXConfig, timeout int64) error {
+	if err := j.checkState(); err != nil {
 		return err
 	}
 	return j.jmxService.Connect(j.ctx, config, timeout)
 }
 
 func (j *JMXClient) Query(mbean string, timeout int64) ([]*nrprotocol.JMXAttribute, error) {
-	err := j.jmxProcess.Error()
-	if err != nil {
+	if err := j.checkState(); err != nil {
 		return nil, err
 	}
 	return j.jmxService.QueryMbean(j.ctx, mbean, timeout)
 }
 
-func (j *JMXClient) Close(timeout time.Duration) error {
-	//j.Disconnect(j.ctx)
-	return j.jmxProcess.stop(timeout)
-}
-
 func (j *JMXClient) Disconnect() error {
-	err := j.jmxProcess.Error()
-	if err != nil {
+	if err := j.checkState(); err != nil {
 		return err
 	}
-	return nil
+	defer func() {
+		j.jmxProcess.stop()
+		j = NewJMXClient(j.ctx)
+	}()
+	return j.jmxService.Disconnect(j.ctx)
 }

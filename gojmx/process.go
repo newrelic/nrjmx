@@ -8,7 +8,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"time"
 )
 
 var bufferSize = 4 * 1024 // initial 4KB per line.
@@ -107,7 +106,7 @@ func (p *jmxProcess) Error() error {
 	}
 }
 
-func (p *jmxProcess) stop(timeout time.Duration) error {
+func (p *jmxProcess) stop() error {
 	var errors error
 
 	if err := p.Stdout.Close(); err != nil {
@@ -117,9 +116,9 @@ func (p *jmxProcess) stop(timeout time.Duration) error {
 		errors = fmt.Errorf("failed to detach stdin from %q: %w", p.cmd.Path, err)
 	}
 	p.cancel()
-	err := p.cmd.Wait()
-	if err != nil {
-		errors = fmt.Errorf("command failed %q: %w", p.cmd.Path, err)
-	}
+	//err := p.cmd.Wait()
+	//if err != nil {
+	//	errors = fmt.Errorf("command failed %q: %w", p.cmd.Path, err)
+	//}
 	return errors
 }

@@ -89,7 +89,7 @@ func Test_Query_Success_LargeAmountOfData(t *testing.T) {
 	require.NoError(t, err)
 
 	// THEN JMX connection can be oppened
-	client, err := NewJMXServiceClient(ctx)
+	client, err := NewJMXClient(ctx).Init()
 	assert.NoError(t, err)
 
 	config := &nrprotocol.JMXConfig{
@@ -136,7 +136,7 @@ func Test_Query_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	// THEN JMX connection can be oppened
-	client, err := NewJMXServiceClient(ctx)
+	client, err := NewJMXClient(ctx).Init()
 	assert.NoError(t, err)
 
 	config := &nrprotocol.JMXConfig{
@@ -204,7 +204,7 @@ func Test_Query_Timeout(t *testing.T) {
 	require.NoError(t, err)
 
 	// THEN JMX connection can be oppened
-	client, err := NewJMXServiceClient(ctx)
+	client, err := NewJMXClient(ctx).Init()
 	assert.NoError(t, err)
 
 	config := &nrprotocol.JMXConfig{
@@ -250,7 +250,7 @@ func Test_URL_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	// THEN JMX connection can be oppened
-	client, err := NewJMXServiceClient(ctx)
+	client, err := NewJMXClient(ctx).Init()
 	assert.NoError(t, err)
 
 	config := &nrprotocol.JMXConfig{
@@ -302,7 +302,7 @@ func Test_JavaNotInstalled(t *testing.T) {
 	defer os.Unsetenv("NRIA_JAVA_HOME")
 
 	ctx := context.Background()
-	client, err := NewJMXServiceClient(ctx)
+	client, err := NewJMXClient(ctx).Init()
 	assert.Contains(t, err.Error(), "/wrong/path/bin/java: No such file or directory")
 
 	config := &nrprotocol.JMXConfig{}
@@ -310,12 +310,12 @@ func Test_JavaNotInstalled(t *testing.T) {
 	// THEN connect fails with expected error
 	err = client.Connect(config, defaultTimeoutMs)
 	defer client.Disconnect()
-	assert.EqualError(t, err, "EOF") // TODO: this error message should be fixed
+	assert.ErrorIs(t, err, ErrNotRunning)
 
 	// AND Query fails with expected error
 	actual, err := client.Query("test:type=Cat,*", defaultTimeoutMs)
 	assert.Nil(t, actual)
-	assert.EqualError(t, err, "write |1: broken pipe") // TODO: this error message should be fixed
+	assert.ErrorIs(t, err, ErrNotRunning)
 }
 
 func Test_WrongMbeanFormat(t *testing.T) {
@@ -332,7 +332,7 @@ func Test_WrongMbeanFormat(t *testing.T) {
 	require.NoError(t, err)
 
 	// THEN JMX connection can be oppened
-	client, err := NewJMXServiceClient(ctx)
+	client, err := NewJMXClient(ctx).Init()
 	assert.NoError(t, err)
 
 	config := &nrprotocol.JMXConfig{
@@ -353,7 +353,7 @@ func Test_WrongMbeanFormat(t *testing.T) {
 func Test_Wrong_Connection(t *testing.T) {
 	ctx := context.Background()
 
-	client, err := NewJMXServiceClient(ctx)
+	client, err := NewJMXClient(ctx).Init()
 	assert.NoError(t, err)
 
 	// GIVEN a wrong hostname and port
@@ -370,7 +370,7 @@ func Test_Wrong_Connection(t *testing.T) {
 	// AND query returns expected error
 	actual, err := client.Query("test:type=Cat,*", defaultTimeoutMs)
 	assert.Nil(t, actual)
-	assert.Contains(t, err.Error(), "Connection refused to host: localhost;") // TODO: fix this, doesn't return the correct error
+	assert.Contains(t, err, "Connection refused to host: localhost;") // TODO: fix this, doesn't return the correct error
 }
 
 func Test_SSLQuery_Success(t *testing.T) {
@@ -399,7 +399,7 @@ func Test_SSLQuery_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	// THEN SSL JMX connection can be oppened
-	client, err := NewJMXServiceClient(ctx)
+	client, err := NewJMXClient(ctx).Init()
 	assert.NoError(t, err)
 
 	config := &nrprotocol.JMXConfig{
@@ -472,7 +472,7 @@ func Test_Wrong_Credentials(t *testing.T) {
 	require.NoError(t, err)
 
 	// WHEN wrong jmx username and password is provided
-	client, err := NewJMXServiceClient(ctx)
+	client, err := NewJMXClient(ctx).Init()
 	assert.NoError(t, err)
 
 	config := &nrprotocol.JMXConfig{
@@ -512,7 +512,7 @@ func Test_Wrong_Certificate_password(t *testing.T) {
 	require.NoError(t, err)
 
 	// WHEN wrong jmx username and password is provided
-	client, err := NewJMXServiceClient(ctx)
+	client, err := NewJMXClient(ctx).Init()
 	assert.NoError(t, err)
 
 	config := &nrprotocol.JMXConfig{
@@ -559,7 +559,7 @@ func Test_Connector_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	// THEN JMX connection can be oppened
-	client, err := NewJMXServiceClient(ctx)
+	client, err := NewJMXClient(ctx).Init()
 	assert.NoError(t, err)
 
 	config := &nrprotocol.JMXConfig{
@@ -570,7 +570,6 @@ func Test_Connector_Success(t *testing.T) {
 		IsJBossStandaloneMode: true,
 		IsRemote:              true,
 	}
-
 
 	err = client.Connect(config, defaultTimeoutMs)
 	defer client.Disconnect()
