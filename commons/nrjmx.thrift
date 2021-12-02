@@ -42,9 +42,9 @@ exception JMXConnectionError {
 }
 
 service JMXService {
-    void connect(1:JMXConfig config) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr),
+    void connect(1:JMXConfig config,2:i64 timeoutMs) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr),
 
     void disconnect() throws (1:JMXError err),
 
-    list<JMXAttribute> queryMbean(1:string beanName, 2:i32 timeoutMs) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr),
+    list<JMXAttribute> queryMbean(1:string beanName, 2:i64 timeoutMs) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr),
 }

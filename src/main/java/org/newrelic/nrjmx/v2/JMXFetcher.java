@@ -7,12 +7,18 @@ package org.newrelic.nrjmx.v2;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.rmi.server.RMIClientSocketFactory;
+
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Function;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.*;
+
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -40,8 +46,7 @@ public class JMXFetcher {
 
     private static final Logger logger = Logger.getLogger("nrjmx");
 
-    ExecutorService executor;
-
+    private ExecutorService executor;
 
     private MBeanServerConnection connection;
 
@@ -60,7 +65,26 @@ public class JMXFetcher {
         }
     }
 
+    public void connect(JMXConfig jmxConfig, long timeoutMs) throws JMXError {
+        Future<Void> future = executor.submit(() -> {
+            this.connect(jmxConfig);
+            return null;
+        });
+        try {
+            if (timeoutMs <= 0) {
+                 future.get();
+                 return;
+            }
+            future.get(timeoutMs, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            //Thread.currentThread().interrupt();
+            //https://www.baeldung.com/java-interrupted-exception
+            throw new JMXError("timeout");
+        }
+    }
+
     public void connect(JMXConfig jmxConfig) throws JMXConnectionError {
+
         if (jmxConfig.connectionURL != null && !jmxConfig.connectionURL.equals("")) {
             connectionString = jmxConfig.connectionURL;
         } else {
@@ -118,56 +142,30 @@ public class JMXFetcher {
         }
     }
 
-    public boolean StringIsNullOrEmpty(String value) {
-        return value == null || value.equals("");
-    }
-
     public JMXFetcher(ExecutorService executor) {
         this.executor = executor;
     }
 
-    public <T, R> T myMethod(Function<T, R> func) throws Exception {
-        Future<T> future = executor.submit(new Callable<T>() {
-            @Override
-            public T call() throws Exception {
-                func.
-                return null;
-            }
-        }
-
-        return func.call();
-    }
-
-    public List<JMXAttribute> queryMbean(String beanName, Integer timeoutMs) throws JMXError {
-//        return this.queryMbean2(beanName);
-        JMXFetcher j = this;
-        Future<List<JMXAttribute>> future = executor.submit(() -> {
-            try {
-                return this.queryMbean(beanName);
-            } finally {
-                logger.info("exiting");
-            }
-        });
+    public Set<String> queryMbean(String beanName, long timeoutMs) throws JMXError {
+        Future<Set<String>> future = executor.submit(() -> this.queryMbean(beanName));
         try {
+            if (timeoutMs <= 0) {
+                return future.get();
+            }
             return future.get(timeoutMs, TimeUnit.MILLISECONDS);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             //Thread.currentThread().interrupt();
             //https://www.baeldung.com/java-interrupted-exception
             throw new JMXError("timeout");
         }
-//        Runtime.getRuntime().addShutdownHook(new Thread() {
-//            @Override
-//            public void run() {
-//                logger.info("called the shutdown hook");
-//            }
-//        };
-//        finally {
-//            executor.shutdownNow();
-//        }
+    }
+
+    public boolean StringIsNullOrEmpty(String value) {
+        return value == null || value.equals("");
     }
 
 
-    public Set<String> queryMBeans(String mBeanNamePattern) throws QueryError {
+    public Set<String> queryMbean(String mBeanNamePattern) throws QueryError {
         ObjectName objectName = this.getObjectName(mBeanNamePattern);
         try {
             return connection.queryMBeans(objectName, null)

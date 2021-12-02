@@ -1,8 +1,6 @@
 package org.newrelic.nrjmx.v2;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 import org.apache.thrift.TException;
 import org.apache.thrift.server.TServer;
@@ -17,13 +15,17 @@ public class JMXServiceHandler implements JMXService.Iface {
         this.jmxFetcher = jmxFetcher;
     }
 
-    @Override
-    public void connect(JMXConfig config) throws TException {
-        jmxFetcher.connect(config);
+    public void addServer(TServer server) {
+        this.server = server;
     }
 
     @Override
-    public void disconnect() throws TException {
+    public void connect(JMXConfig config, long timeoutMs) throws JMXConnectionError, JMXError, TException {
+        jmxFetcher.connect(config, timeoutMs);
+    }
+
+    @Override
+    public void disconnect() throws JMXError, TException {
         if (this.server == null) {
             throw new TException("cannot disconnect, server handler null");
         }
@@ -31,11 +33,9 @@ public class JMXServiceHandler implements JMXService.Iface {
     }
 
     @Override
-    public List<JMXAttribute> queryMbean(String beanName, int timeoutMs) throws JMXConnectionError, JMXError, TException {
-        return this.jmxFetcher.queryMbean(beanName, timeoutMs);
-    }
-
-    public void addServer(TServer server) {
-        this.server = server;
+    public List<JMXAttribute> queryMbean(String beanName, long timeoutMs) throws
+            JMXConnectionError, JMXError, TException {
+        //return jmxFetcher.queryMbean(beanName, timeoutMs);
+        return null;
     }
 }

@@ -101,6 +101,7 @@ public class Application {
         } catch (IOException e) {
             //exception handling left as an exercise for the reader
         }
+
     }
 
     private static void runV2(Arguments cliArgs) {
