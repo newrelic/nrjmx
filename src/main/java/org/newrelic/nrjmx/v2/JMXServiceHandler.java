@@ -1,6 +1,7 @@
 package org.newrelic.nrjmx.v2;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 import org.apache.thrift.TException;
 import org.apache.thrift.server.TServer;
@@ -11,20 +12,18 @@ public class JMXServiceHandler implements JMXService.Iface {
     private JMXFetcher jmxFetcher;
     private TServer server;
 
+    public JMXServiceHandler(JMXFetcher jmxFetcher) {
+        this.jmxFetcher = jmxFetcher;
+    }
+
     @Override
-    public void ping() throws JMXError, TException {
+    public void ping() throws TException {
         return;
     }
 
     @Override
-    public void connect(JMXConfig config) throws TException {
-        this.jmxFetcher = new JMXFetcher(config);
-        jmxFetcher.connect();
-    }
-
-    @Override
-    public List<JMXAttribute> queryMbean(String beanName) throws TException {
-        return jmxFetcher.queryMbean(beanName);
+    public void connect(JMXConfig config, long timeoutMs) throws TException {
+        jmxFetcher.connect(config, timeoutMs);
     }
 
     @Override
@@ -36,8 +35,8 @@ public class JMXServiceHandler implements JMXService.Iface {
     }
 
     @Override
-    public List<LogMessage> getLogs() throws TException {
-        return jmxFetcher.getLogs();
+    public List<JMXAttribute> queryMbean(String beanName, long timeoutMs) throws TException {
+        return jmxFetcher.queryMbean(beanName, timeoutMs);
     }
 
     public void addServer(TServer server) {

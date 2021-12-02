@@ -82,20 +82,20 @@ func (j *JMXClient) Ping(timeout time.Duration) error {
 	}
 }
 
-func (j *JMXClient) Connect(config *nrprotocol.JMXConfig) error {
+func (j *JMXClient) Connect(config *nrprotocol.JMXConfig, timeout int64) error {
 	err := j.jmxProcess.Error()
 	if err != nil {
 		return err
 	}
-	return j.jmxService.Connect(j.ctx, config)
+	return j.jmxService.Connect(j.ctx, config, timeout)
 }
 
-func (j *JMXClient) QueryMbean(beanName string) ([]*nrprotocol.JMXAttribute, error) {
+func (j *JMXClient) Query(mbean string, timeout int64) ([]*nrprotocol.JMXAttribute, error) {
 	err := j.jmxProcess.Error()
 	if err != nil {
 		return nil, err
 	}
-	return j.jmxService.QueryMbean(j.ctx, beanName)
+	return j.jmxService.QueryMbean(j.ctx, mbean, timeout)
 }
 
 func (j *JMXClient) Close(timeout time.Duration) error {

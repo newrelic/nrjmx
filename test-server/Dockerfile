@@ -17,4 +17,11 @@ COPY --from=builder jmxremote.access /usr/local/openjdk-8/lib/management/jmxremo
 
 RUN chmod 400 /usr/local/openjdk-8/lib/management/jmxremote.password
 
-ENTRYPOINT exec java $JAVA_OPTS -jar /test-server.jar
+ENV JAVA_OPTS -Dcom.sun.management.jmxremote.port=7199 \
+      -Dcom.sun.management.jmxremote.authenticate=false \
+      -Dcom.sun.management.jmxremote.ssl=false \
+      -Dcom.sun.management.jmxremote=true \
+      -Dcom.sun.management.jmxremote.rmi.port=7199 \
+      -Djava.rmi.server.hostname=localhost
+
+CMD ["/bin/bash", "-c", "java ${JAVA_OPTS} -jar /test-server.jar"]

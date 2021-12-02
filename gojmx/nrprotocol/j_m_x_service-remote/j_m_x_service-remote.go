@@ -24,10 +24,9 @@ func Usage() {
   flag.PrintDefaults()
   fmt.Fprintln(os.Stderr, "\nFunctions:")
   fmt.Fprintln(os.Stderr, "  void ping()")
-  fmt.Fprintln(os.Stderr, "  void connect(JMXConfig config)")
+  fmt.Fprintln(os.Stderr, "  void connect(JMXConfig config, i64 timeoutMs)")
   fmt.Fprintln(os.Stderr, "  void disconnect()")
-  fmt.Fprintln(os.Stderr, "   queryMbean(string beanName)")
-  fmt.Fprintln(os.Stderr, "   getLogs()")
+  fmt.Fprintln(os.Stderr, "   queryMbean(string beanName, i64 timeoutMs)")
   fmt.Fprintln(os.Stderr)
   os.Exit(0)
 }
@@ -158,28 +157,34 @@ func main() {
     fmt.Print("\n")
     break
   case "connect":
-    if flag.NArg() - 1 != 1 {
-      fmt.Fprintln(os.Stderr, "Connect requires 1 args")
+    if flag.NArg() - 1 != 2 {
+      fmt.Fprintln(os.Stderr, "Connect requires 2 args")
       flag.Usage()
     }
-    arg14 := flag.Arg(1)
-    mbTrans15 := thrift.NewTMemoryBufferLen(len(arg14))
-    defer mbTrans15.Close()
-    _, err16 := mbTrans15.WriteString(arg14)
+    arg11 := flag.Arg(1)
+    mbTrans12 := thrift.NewTMemoryBufferLen(len(arg11))
+    defer mbTrans12.Close()
+    _, err13 := mbTrans12.WriteString(arg11)
+    if err13 != nil {
+      Usage()
+      return
+    }
+    factory14 := thrift.NewTJSONProtocolFactory()
+    jsProt15 := factory14.GetProtocol(mbTrans12)
+    argvalue0 := nrprotocol.NewJMXConfig()
+    err16 := argvalue0.Read(jsProt15)
     if err16 != nil {
       Usage()
       return
     }
-    factory17 := thrift.NewTJSONProtocolFactory()
-    jsProt18 := factory17.GetProtocol(mbTrans15)
-    argvalue0 := nrprotocol.NewJMXConfig()
-    err19 := argvalue0.Read(jsProt18)
-    if err19 != nil {
+    value0 := argvalue0
+    argvalue1, err17 := (strconv.ParseInt(flag.Arg(2), 10, 64))
+    if err17 != nil {
       Usage()
       return
     }
-    value0 := argvalue0
-    fmt.Print(client.Connect(context.Background(), value0))
+    value1 := argvalue1
+    fmt.Print(client.Connect(context.Background(), value0, value1))
     fmt.Print("\n")
     break
   case "disconnect":
@@ -191,21 +196,19 @@ func main() {
     fmt.Print("\n")
     break
   case "queryMbean":
-    if flag.NArg() - 1 != 1 {
-      fmt.Fprintln(os.Stderr, "QueryMbean requires 1 args")
+    if flag.NArg() - 1 != 2 {
+      fmt.Fprintln(os.Stderr, "QueryMbean requires 2 args")
       flag.Usage()
     }
     argvalue0 := flag.Arg(1)
     value0 := argvalue0
-    fmt.Print(client.QueryMbean(context.Background(), value0))
-    fmt.Print("\n")
-    break
-  case "getLogs":
-    if flag.NArg() - 1 != 0 {
-      fmt.Fprintln(os.Stderr, "GetLogs requires 0 args")
-      flag.Usage()
+    argvalue1, err19 := (strconv.ParseInt(flag.Arg(2), 10, 64))
+    if err19 != nil {
+      Usage()
+      return
     }
-    fmt.Print(client.GetLogs(context.Background()))
+    value1 := argvalue1
+    fmt.Print(client.QueryMbean(context.Background(), value0, value1))
     fmt.Print("\n")
     break
   case "":
