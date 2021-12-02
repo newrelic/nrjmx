@@ -32,8 +32,8 @@ struct JMXAttribute {
 }
 
 exception JMXError {
-  1: optional i32 code,
-  2: string message
+  1: required string message,
+  2: string causeMessage
 }
 
 exception JMXConnectionError {
@@ -42,9 +42,13 @@ exception JMXConnectionError {
 }
 
 service JMXService {
-    void connect(1:JMXConfig config,2:i64 timeoutMs) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr),
+    void connect(1:JMXConfig config, 2:i64 timeoutMs) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr),
 
     void disconnect() throws (1:JMXError err),
 
-    list<JMXAttribute> queryMbean(1:string beanName, 2:i64 timeoutMs) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr),
+    list<string> getMBeanNames(1:string mBeanNamePattern, 2:i64 timeoutMs) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr),
+
+    list<string> getMBeanAttrNames(1:string mBeanName, 2:i64 timeoutMs) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr),
+
+    JMXAttribute getMBeanAttr(1:string mBeanName, 2:string attrName, 3:i64 timeoutMs) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr)
 }

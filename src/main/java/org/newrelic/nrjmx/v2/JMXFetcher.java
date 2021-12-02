@@ -5,22 +5,7 @@ package org.newrelic.nrjmx.v2;
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import java.io.IOException;
-import java.math.BigDecimal;
-
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.function.Function;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.concurrent.*;
-
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
+import org.newrelic.nrjmx.v2.nrprotocol.*;
 
 import javax.management.*;
 import javax.management.openmbean.CompositeData;
@@ -28,13 +13,12 @@ import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 import javax.rmi.ssl.SslRMIClientSocketFactory;
-
-import org.newrelic.nrjmx.v2.nrprotocol.JMXAttribute;
-import org.newrelic.nrjmx.v2.nrprotocol.JMXConfig;
-import org.newrelic.nrjmx.v2.nrprotocol.JMXConnectionError;
-import org.newrelic.nrjmx.v2.nrprotocol.JMXError;
-import org.newrelic.nrjmx.v2.nrprotocol.LogMessage;
-import org.newrelic.nrjmx.v2.nrprotocol.ValueType;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * JMXFetcher class reads queries from an InputStream (usually stdin) and sends
@@ -53,34 +37,15 @@ public class JMXFetcher {
     private String connectionString;
     private Map<String, Object> connectionEnv = new HashMap<>();
 
-    public class QueryError extends Exception {
-        public QueryError(String message, Exception cause) {
-            super(message, cause);
-        }
-    }
-
-    public class ValueError extends Exception {
-        public ValueError(String message) {
-            super(message);
-        }
+    public JMXFetcher(ExecutorService executor) {
+        this.executor = executor;
     }
 
     public void connect(JMXConfig jmxConfig, long timeoutMs) throws JMXError {
-        Future<Void> future = executor.submit(() -> {
+        withTimeout(executor.submit((Callable<Void>) () -> {
             this.connect(jmxConfig);
             return null;
-        });
-        try {
-            if (timeoutMs <= 0) {
-                 future.get();
-                 return;
-            }
-            future.get(timeoutMs, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
-            //Thread.currentThread().interrupt();
-            //https://www.baeldung.com/java-interrupted-exception
-            throw new JMXError("timeout");
-        }
+        }), timeoutMs);
     }
 
     public void connect(JMXConfig jmxConfig) throws JMXConnectionError {
@@ -142,43 +107,57 @@ public class JMXFetcher {
         }
     }
 
-    public JMXFetcher(ExecutorService executor) {
-        this.executor = executor;
+    public List<String> getMBeanNames(String beanName, long timeoutMs) throws JMXError {
+        return this.withTimeout(
+                executor.submit(() -> this.getMBeanNames(beanName)),
+                timeoutMs
+        );
     }
 
-    public Set<String> queryMbean(String beanName, long timeoutMs) throws JMXError {
-        Future<Set<String>> future = executor.submit(() -> this.queryMbean(beanName));
-        try {
-            if (timeoutMs <= 0) {
-                return future.get();
-            }
-            return future.get(timeoutMs, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
-            //Thread.currentThread().interrupt();
-            //https://www.baeldung.com/java-interrupted-exception
-            throw new JMXError("timeout");
-        }
-    }
-
-    public boolean StringIsNullOrEmpty(String value) {
-        return value == null || value.equals("");
-    }
-
-
-    public Set<String> queryMbean(String mBeanNamePattern) throws QueryError {
+    public List<String> getMBeanNames(String mBeanNamePattern) throws JMXError {
         ObjectName objectName = this.getObjectName(mBeanNamePattern);
         try {
             return connection.queryMBeans(objectName, null)
                     .stream()
                     .map(ObjectInstance::getObjectName)
                     .map(ObjectName::getCanonicalName)
-                    .collect(Collectors.toSet());
+                    .collect(Collectors.toList());
         } catch (IOException ioe) {
-            throw new QueryError("Can't get beans for query " + mBeanNamePattern, ioe);
+            throw new JMXError("can't get beans for query: " + mBeanNamePattern, ioe.getMessage());
         }
     }
 
-    public JMXAttribute getAttribute(String mBeanName, String attrName) throws QueryError, ValueError {
+    public List<String> getMBeanAttrNames(String mBeanName, long timeoutMs) throws JMXError {
+        return this.withTimeout(
+                executor.submit(() -> this.getMBeanAttrNames(mBeanName)),
+                timeoutMs
+        );
+    }
+
+    public List<String> getMBeanAttrNames(String mBeanName) throws JMXError {
+        ObjectName objectName = this.getObjectName(mBeanName);
+        MBeanInfo info;
+
+        try {
+            info = connection.getMBeanInfo(objectName);
+        } catch (InstanceNotFoundException | IntrospectionException | ReflectionException | IOException e) {
+            throw new JMXError("can't find mBean: " + mBeanName, e.getMessage());
+        }
+
+        return Arrays.stream(info.getAttributes())
+                .filter(MBeanAttributeInfo::isReadable)
+                .map(MBeanAttributeInfo::getName)
+                .collect(Collectors.toList());
+    }
+
+    public JMXAttribute getMBeanAttr(String mBeanName, String attrName, long timeoutMs) throws JMXError {
+        return this.withTimeout(
+                executor.submit(() -> this.getMBeanAttr(mBeanName, attrName)),
+                timeoutMs
+        );
+    }
+
+    public JMXAttribute getMBeanAttr(String mBeanName, String attrName) throws JMXError {
         Object value;
         ObjectName objectName = this.getObjectName(mBeanName);
         try {
@@ -188,45 +167,42 @@ public class JMXFetcher {
                 value = jmxAttr.getValue();
             }
         } catch (Exception e) {
-            throw new QueryError("Can't get attribute " + attrName + " for bean " +
-                    mBeanName + ": "
-                    + e.getMessage(), e);
+            throw new JMXError("can't get attribute: " + attrName + " for bean: " + mBeanName + ": ",
+                    e.getMessage());
         }
 
         String name = String.format("%s,attr=%s", mBeanName, attrName);
         return parseValue(name, value);
     }
 
-    private ObjectName getObjectName(String mBeanName) throws QueryError {
+    private ObjectName getObjectName(String mBeanName) throws JMXError {
         try {
             return new ObjectName(mBeanName);
         } catch (MalformedObjectNameException me) {
-            throw new QueryError("Can't parse bean name " + mBeanName, me);
+            throw new JMXError("can't parse bean name: " + mBeanName, me.getMessage());
         }
     }
 
-    public List<String> getAttributes(String mBeanName) throws QueryError {
-        ObjectName objectName = this.getObjectName(mBeanName);
-        MBeanInfo info;
-
+    private <T> T withTimeout(Future<T> future, long timeoutMs) throws JMXError {
         try {
-            info = connection.getMBeanInfo(objectName);
-        } catch (InstanceNotFoundException | IntrospectionException | ReflectionException | IOException e) {
-            throw new QueryError("Can't find bean " + mBeanName, e);
+            if (timeoutMs <= 0) {
+                return future.get();
+            }
+            return future.get(timeoutMs, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            //TODO: Thread.currentThread().interrupt();
+            // Set status again?!
+            //https://www.baeldung.com/java-interrupted-exception
+            throw new JMXError("error occurred: ", e.getMessage());
         }
-
-        return Arrays.stream(info.getAttributes())
-                .filter(MBeanAttributeInfo::isReadable)
-                .map(MBeanAttributeInfo::getName)
-                .collect(Collectors.toList());
     }
 
-    private JMXAttribute parseValue(String name, Object value) throws ValueError {
+    private JMXAttribute parseValue(String name, Object value) throws JMXError {
         JMXAttribute attr = new JMXAttribute();
         attr.attribute = name;
 
         if (value == null) {
-            throw new ValueError("Found a null value for bean " + name);
+            throw new JMXError("found a null value for bean: " + name, null);
         } else if (value instanceof java.lang.Double) {
             attr.doubleValue = parseDouble((Double) value);
             attr.valueType = ValueType.DOUBLE;
@@ -267,7 +243,7 @@ public class JMXFetcher {
             // logger.fine("Arrays are not supported yet: " + name);
             return null;
         } else {
-            throw new ValueError("Unsuported data type (" + value.getClass() + ") for bean " + name);
+            throw new JMXError("unsuported data type (" + value.getClass() + ") for bean " + name, null);
         }
         return null;
     }
@@ -302,5 +278,9 @@ public class JMXFetcher {
         }
 
         return new BigDecimal(value.toString()).doubleValue();
+    }
+
+    public boolean StringIsNullOrEmpty(String value) {
+        return value == null || value.equals("");
     }
 }

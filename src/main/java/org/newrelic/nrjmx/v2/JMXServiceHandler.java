@@ -20,22 +20,30 @@ public class JMXServiceHandler implements JMXService.Iface {
     }
 
     @Override
-    public void connect(JMXConfig config, long timeoutMs) throws JMXConnectionError, JMXError, TException {
+    public void connect(JMXConfig config, long timeoutMs) throws TException {
         jmxFetcher.connect(config, timeoutMs);
     }
 
     @Override
-    public void disconnect() throws JMXError, TException {
-        if (this.server == null) {
+    public void disconnect() throws TException {
+        if (server == null) {
             throw new TException("cannot disconnect, server handler null");
         }
-        this.server.stop();
+        server.stop();
     }
 
     @Override
-    public List<JMXAttribute> queryMbean(String beanName, long timeoutMs) throws
-            JMXConnectionError, JMXError, TException {
-        //return jmxFetcher.queryMbean(beanName, timeoutMs);
-        return null;
+    public List<String> getMBeanNames(String mBeanNamePattern, long timeoutMs) throws TException {
+        return jmxFetcher.getMBeanNames(mBeanNamePattern, timeoutMs);
+    }
+
+    @Override
+    public List<String> getMBeanAttrNames(String mBeanName, long timeoutMs) throws TException {
+        return jmxFetcher.getMBeanAttrNames(mBeanName, timeoutMs);
+    }
+
+    @Override
+    public JMXAttribute getMBeanAttr(String mBeanName, String attrName, long timeoutMs) throws TException {
+        return jmxFetcher.getMBeanAttr(mBeanName, attrName, timeoutMs);
     }
 }
