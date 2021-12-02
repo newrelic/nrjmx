@@ -14,7 +14,9 @@ import org.apache.thrift.TProcessor;
 import org.apache.thrift.protocol.TCompactProtocol;
 import org.apache.thrift.server.TServer;
 import org.apache.thrift.server.TServer.Args;
-import org.apache.thrift.transport.TServerTransport;
+import org.apache.thrift.server.TSimpleServer;
+import org.apache.thrift.transport.*;
+import org.apache.thrift.transport.layered.TFramedTransport;
 import org.newrelic.nrjmx.v2.JMXServiceHandler;
 import org.newrelic.nrjmx.v2.StandardIOServer;
 import org.newrelic.nrjmx.v2.StandardIOTransportServer;
@@ -26,7 +28,7 @@ public class Application {
         new HelpFormatter().printHelp("nrjmx", Arguments.options());
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws TTransportException {
         Arguments cliArgs = null;
         try {
             cliArgs = Arguments.from(args);
@@ -44,9 +46,8 @@ public class Application {
         if (!cliArgs.isProtocolV2()) {
             runV1(cliArgs);
         } else {
-            runV2(cliArgs);
+            runV3(cliArgs);
         }
-
     }
 
     private static void runV1(Arguments cliArgs) {
@@ -93,7 +94,7 @@ public class Application {
     private static void runV2(Arguments cliArgs) {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         org.newrelic.nrjmx.v2.JMXFetcher jmxFetcher = new org.newrelic.nrjmx.v2.JMXFetcher(executor);
-        
+
         JMXServiceHandler handler = new JMXServiceHandler(jmxFetcher);
         TProcessor processor = new JMXService.Processor<JMXServiceHandler>(handler);
 
@@ -106,6 +107,26 @@ public class Application {
 
         serverTransport.close();
         executor.shutdownNow();
+    }
+
+    private static void runV3(Arguments cliArgs) throws TTransportException {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        org.newrelic.nrjmx.v2.JMXFetcher jmxFetcher = new org.newrelic.nrjmx.v2.JMXFetcher(executor);
+
+        JMXServiceHandler handler = new JMXServiceHandler(jmxFetcher);
+        TProcessor processor = new JMXService.Processor<JMXServiceHandler>(handler);
+
+        TServerTransport serverTransport = new TServerSocket(9090);
+        TServer server = new TSimpleServer(
+                new Args(serverTransport).processor(processor)
+                        .inputTransportFactory(new TFramedTransport.Factory(8192))
+                        .outputTransportFactory(new TFramedTransport.Factory(8192))
+                        .protocolFactory(new TCompactProtocol.Factory()));
+
+        handler.addServer(server);
+        server.serve();
+
+        serverTransport.close();
     }
 
     private static void logTrace(Arguments cliArgs, Logger logger, Exception e) {
