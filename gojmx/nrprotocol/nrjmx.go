@@ -1205,9 +1205,7 @@ type JMXService interface {
   //  - Config
   //  - TimeoutMs
   Connect(ctx context.Context, config *JMXConfig, timeoutMs int64) (err error)
-  // Parameters:
-  //  - TimeoutMs
-  Disconnect(ctx context.Context, timeoutMs int64) (err error)
+  Disconnect(ctx context.Context) (err error)
   // Parameters:
   //  - BeanName
   //  - TimeoutMs
@@ -1260,11 +1258,8 @@ func (p *JMXServiceClient) Connect(ctx context.Context, config *JMXConfig, timeo
   return nil
 }
 
-// Parameters:
-//  - TimeoutMs
-func (p *JMXServiceClient) Disconnect(ctx context.Context, timeoutMs int64) (err error) {
+func (p *JMXServiceClient) Disconnect(ctx context.Context) (err error) {
   var _args2 JMXServiceDisconnectArgs
-  _args2.TimeoutMs = timeoutMs
   var _result3 JMXServiceDisconnectResult
   if err = p.Client_().Call(ctx, "disconnect", &_args2, &_result3); err != nil {
     return
@@ -1413,7 +1408,7 @@ func (p *jMXServiceProcessorDisconnect) Process(ctx context.Context, seqId int32
   iprot.ReadMessageEnd()
   result := JMXServiceDisconnectResult{}
   var err2 error
-  if err2 = p.handler.Disconnect(ctx, args.TimeoutMs); err2 != nil {
+  if err2 = p.handler.Disconnect(ctx); err2 != nil {
   switch v := err2.(type) {
     case *JMXError:
   result.Err = v
@@ -1781,21 +1776,13 @@ func (p *JMXServiceConnectResult) String() string {
   return fmt.Sprintf("JMXServiceConnectResult(%+v)", *p)
 }
 
-// Attributes:
-//  - TimeoutMs
 type JMXServiceDisconnectArgs struct {
-  // unused field # 1
-  TimeoutMs int64 `thrift:"timeoutMs,2" db:"timeoutMs" json:"timeoutMs"`
 }
 
 func NewJMXServiceDisconnectArgs() *JMXServiceDisconnectArgs {
   return &JMXServiceDisconnectArgs{}
 }
 
-
-func (p *JMXServiceDisconnectArgs) GetTimeoutMs() int64 {
-  return p.TimeoutMs
-}
 func (p *JMXServiceDisconnectArgs) Read(iprot thrift.TProtocol) error {
   if _, err := iprot.ReadStructBegin(); err != nil {
     return thrift.PrependError(fmt.Sprintf("%T read error: ", p), err)
@@ -1808,21 +1795,8 @@ func (p *JMXServiceDisconnectArgs) Read(iprot thrift.TProtocol) error {
       return thrift.PrependError(fmt.Sprintf("%T field %d read error: ", p, fieldId), err)
     }
     if fieldTypeId == thrift.STOP { break; }
-    switch fieldId {
-    case 2:
-      if fieldTypeId == thrift.I64 {
-        if err := p.ReadField2(iprot); err != nil {
-          return err
-        }
-      } else {
-        if err := iprot.Skip(fieldTypeId); err != nil {
-          return err
-        }
-      }
-    default:
-      if err := iprot.Skip(fieldTypeId); err != nil {
-        return err
-      }
+    if err := iprot.Skip(fieldTypeId); err != nil {
+      return err
     }
     if err := iprot.ReadFieldEnd(); err != nil {
       return err
@@ -1834,36 +1808,16 @@ func (p *JMXServiceDisconnectArgs) Read(iprot thrift.TProtocol) error {
   return nil
 }
 
-func (p *JMXServiceDisconnectArgs)  ReadField2(iprot thrift.TProtocol) error {
-  if v, err := iprot.ReadI64(); err != nil {
-  return thrift.PrependError("error reading field 2: ", err)
-} else {
-  p.TimeoutMs = v
-}
-  return nil
-}
-
 func (p *JMXServiceDisconnectArgs) Write(oprot thrift.TProtocol) error {
   if err := oprot.WriteStructBegin("disconnect_args"); err != nil {
     return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err) }
   if p != nil {
-    if err := p.writeField2(oprot); err != nil { return err }
   }
   if err := oprot.WriteFieldStop(); err != nil {
     return thrift.PrependError("write field stop error: ", err) }
   if err := oprot.WriteStructEnd(); err != nil {
     return thrift.PrependError("write struct stop error: ", err) }
   return nil
-}
-
-func (p *JMXServiceDisconnectArgs) writeField2(oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin("timeoutMs", thrift.I64, 2); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 2:timeoutMs: ", p), err) }
-  if err := oprot.WriteI64(int64(p.TimeoutMs)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.timeoutMs (2) field write error: ", p), err) }
-  if err := oprot.WriteFieldEnd(); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 2:timeoutMs: ", p), err) }
-  return err
 }
 
 func (p *JMXServiceDisconnectArgs) String() string {

@@ -24,7 +24,7 @@ func Usage() {
   flag.PrintDefaults()
   fmt.Fprintln(os.Stderr, "\nFunctions:")
   fmt.Fprintln(os.Stderr, "  void connect(JMXConfig config, i64 timeoutMs)")
-  fmt.Fprintln(os.Stderr, "  void disconnect(i64 timeoutMs)")
+  fmt.Fprintln(os.Stderr, "  void disconnect()")
   fmt.Fprintln(os.Stderr, "   queryMbean(string beanName, i64 timeoutMs)")
   fmt.Fprintln(os.Stderr)
   os.Exit(0)
@@ -179,17 +179,11 @@ func main() {
     fmt.Print("\n")
     break
   case "disconnect":
-    if flag.NArg() - 1 != 1 {
-      fmt.Fprintln(os.Stderr, "Disconnect requires 1 args")
+    if flag.NArg() - 1 != 0 {
+      fmt.Fprintln(os.Stderr, "Disconnect requires 0 args")
       flag.Usage()
     }
-    argvalue0, err16 := (strconv.ParseInt(flag.Arg(1), 10, 64))
-    if err16 != nil {
-      Usage()
-      return
-    }
-    value0 := argvalue0
-    fmt.Print(client.Disconnect(context.Background(), value0))
+    fmt.Print(client.Disconnect(context.Background()))
     fmt.Print("\n")
     break
   case "queryMbean":
@@ -199,8 +193,8 @@ func main() {
     }
     argvalue0 := flag.Arg(1)
     value0 := argvalue0
-    argvalue1, err18 := (strconv.ParseInt(flag.Arg(2), 10, 64))
-    if err18 != nil {
+    argvalue1, err17 := (strconv.ParseInt(flag.Arg(2), 10, 64))
+    if err17 != nil {
       Usage()
       return
     }

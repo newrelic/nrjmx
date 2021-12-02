@@ -14,7 +14,7 @@ public class JMXService {
 
     public void connect(JMXConfig config, long timeoutMs) throws JMXConnectionError, JMXError, org.apache.thrift.TException;
 
-    public void disconnect(long timeoutMs) throws JMXError, org.apache.thrift.TException;
+    public void disconnect() throws JMXError, org.apache.thrift.TException;
 
     public java.util.List<JMXAttribute> queryMbean(java.lang.String beanName, long timeoutMs) throws JMXConnectionError, JMXError, org.apache.thrift.TException;
 
@@ -24,7 +24,7 @@ public class JMXService {
 
     public void connect(JMXConfig config, long timeoutMs, org.apache.thrift.async.AsyncMethodCallback<Void> resultHandler) throws org.apache.thrift.TException;
 
-    public void disconnect(long timeoutMs, org.apache.thrift.async.AsyncMethodCallback<Void> resultHandler) throws org.apache.thrift.TException;
+    public void disconnect(org.apache.thrift.async.AsyncMethodCallback<Void> resultHandler) throws org.apache.thrift.TException;
 
     public void queryMbean(java.lang.String beanName, long timeoutMs, org.apache.thrift.async.AsyncMethodCallback<java.util.List<JMXAttribute>> resultHandler) throws org.apache.thrift.TException;
 
@@ -77,16 +77,15 @@ public class JMXService {
       return;
     }
 
-    public void disconnect(long timeoutMs) throws JMXError, org.apache.thrift.TException
+    public void disconnect() throws JMXError, org.apache.thrift.TException
     {
-      send_disconnect(timeoutMs);
+      send_disconnect();
       recv_disconnect();
     }
 
-    public void send_disconnect(long timeoutMs) throws org.apache.thrift.TException
+    public void send_disconnect() throws org.apache.thrift.TException
     {
       disconnect_args args = new disconnect_args();
-      args.setTimeoutMs(timeoutMs);
       sendBase("disconnect", args);
     }
 
@@ -183,24 +182,21 @@ public class JMXService {
       }
     }
 
-    public void disconnect(long timeoutMs, org.apache.thrift.async.AsyncMethodCallback<Void> resultHandler) throws org.apache.thrift.TException {
+    public void disconnect(org.apache.thrift.async.AsyncMethodCallback<Void> resultHandler) throws org.apache.thrift.TException {
       checkReady();
-      disconnect_call method_call = new disconnect_call(timeoutMs, resultHandler, this, ___protocolFactory, ___transport);
+      disconnect_call method_call = new disconnect_call(resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
       ___manager.call(method_call);
     }
 
     public static class disconnect_call extends org.apache.thrift.async.TAsyncMethodCall<Void> {
-      private long timeoutMs;
-      public disconnect_call(long timeoutMs, org.apache.thrift.async.AsyncMethodCallback<Void> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      public disconnect_call(org.apache.thrift.async.AsyncMethodCallback<Void> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
-        this.timeoutMs = timeoutMs;
       }
 
       public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
         prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("disconnect", org.apache.thrift.protocol.TMessageType.CALL, 0));
         disconnect_args args = new disconnect_args();
-        args.setTimeoutMs(timeoutMs);
         args.write(prot);
         prot.writeMessageEnd();
       }
@@ -321,7 +317,7 @@ public class JMXService {
       public disconnect_result getResult(I iface, disconnect_args args) throws org.apache.thrift.TException {
         disconnect_result result = new disconnect_result();
         try {
-          iface.disconnect(args.timeoutMs);
+          iface.disconnect();
         } catch (JMXError err) {
           result.err = err;
         }
@@ -507,7 +503,7 @@ public class JMXService {
       }
 
       public void start(I iface, disconnect_args args, org.apache.thrift.async.AsyncMethodCallback<Void> resultHandler) throws org.apache.thrift.TException {
-        iface.disconnect(args.timeoutMs,resultHandler);
+        iface.disconnect(resultHandler);
       }
     }
 
@@ -1533,16 +1529,14 @@ public class JMXService {
   public static class disconnect_args implements org.apache.thrift.TBase<disconnect_args, disconnect_args._Fields>, java.io.Serializable, Cloneable, Comparable<disconnect_args>   {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("disconnect_args");
 
-    private static final org.apache.thrift.protocol.TField TIMEOUT_MS_FIELD_DESC = new org.apache.thrift.protocol.TField("timeoutMs", org.apache.thrift.protocol.TType.I64, (short)2);
 
     private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new disconnect_argsStandardSchemeFactory();
     private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new disconnect_argsTupleSchemeFactory();
 
-    public long timeoutMs; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-      TIMEOUT_MS((short)2, "timeoutMs");
+;
 
       private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -1558,8 +1552,6 @@ public class JMXService {
       @org.apache.thrift.annotation.Nullable
       public static _Fields findByThriftId(int fieldId) {
         switch(fieldId) {
-          case 2: // TIMEOUT_MS
-            return TIMEOUT_MS;
           default:
             return null;
         }
@@ -1599,15 +1591,9 @@ public class JMXService {
         return _fieldName;
       }
     }
-
-    // isset id assignments
-    private static final int __TIMEOUTMS_ISSET_ID = 0;
-    private byte __isset_bitfield = 0;
     public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
     static {
       java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
-      tmpMap.put(_Fields.TIMEOUT_MS, new org.apache.thrift.meta_data.FieldMetaData("timeoutMs", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
       metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(disconnect_args.class, metaDataMap);
     }
@@ -1615,20 +1601,10 @@ public class JMXService {
     public disconnect_args() {
     }
 
-    public disconnect_args(
-      long timeoutMs)
-    {
-      this();
-      this.timeoutMs = timeoutMs;
-      setTimeoutMsIsSet(true);
-    }
-
     /**
      * Performs a deep copy on <i>other</i>.
      */
     public disconnect_args(disconnect_args other) {
-      __isset_bitfield = other.__isset_bitfield;
-      this.timeoutMs = other.timeoutMs;
     }
 
     public disconnect_args deepCopy() {
@@ -1637,52 +1613,16 @@ public class JMXService {
 
     @Override
     public void clear() {
-      setTimeoutMsIsSet(false);
-      this.timeoutMs = 0;
-    }
-
-    public long getTimeoutMs() {
-      return this.timeoutMs;
-    }
-
-    public disconnect_args setTimeoutMs(long timeoutMs) {
-      this.timeoutMs = timeoutMs;
-      setTimeoutMsIsSet(true);
-      return this;
-    }
-
-    public void unsetTimeoutMs() {
-      __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __TIMEOUTMS_ISSET_ID);
-    }
-
-    /** Returns true if field timeoutMs is set (has been assigned a value) and false otherwise */
-    public boolean isSetTimeoutMs() {
-      return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __TIMEOUTMS_ISSET_ID);
-    }
-
-    public void setTimeoutMsIsSet(boolean value) {
-      __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __TIMEOUTMS_ISSET_ID, value);
     }
 
     public void setFieldValue(_Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
       switch (field) {
-      case TIMEOUT_MS:
-        if (value == null) {
-          unsetTimeoutMs();
-        } else {
-          setTimeoutMs((java.lang.Long)value);
-        }
-        break;
-
       }
     }
 
     @org.apache.thrift.annotation.Nullable
     public java.lang.Object getFieldValue(_Fields field) {
       switch (field) {
-      case TIMEOUT_MS:
-        return getTimeoutMs();
-
       }
       throw new java.lang.IllegalStateException();
     }
@@ -1694,8 +1634,6 @@ public class JMXService {
       }
 
       switch (field) {
-      case TIMEOUT_MS:
-        return isSetTimeoutMs();
       }
       throw new java.lang.IllegalStateException();
     }
@@ -1715,23 +1653,12 @@ public class JMXService {
       if (this == that)
         return true;
 
-      boolean this_present_timeoutMs = true;
-      boolean that_present_timeoutMs = true;
-      if (this_present_timeoutMs || that_present_timeoutMs) {
-        if (!(this_present_timeoutMs && that_present_timeoutMs))
-          return false;
-        if (this.timeoutMs != that.timeoutMs)
-          return false;
-      }
-
       return true;
     }
 
     @Override
     public int hashCode() {
       int hashCode = 1;
-
-      hashCode = hashCode * 8191 + org.apache.thrift.TBaseHelper.hashCode(timeoutMs);
 
       return hashCode;
     }
@@ -1744,16 +1671,6 @@ public class JMXService {
 
       int lastComparison = 0;
 
-      lastComparison = java.lang.Boolean.valueOf(isSetTimeoutMs()).compareTo(other.isSetTimeoutMs());
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-      if (isSetTimeoutMs()) {
-        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.timeoutMs, other.timeoutMs);
-        if (lastComparison != 0) {
-          return lastComparison;
-        }
-      }
       return 0;
     }
 
@@ -1775,9 +1692,6 @@ public class JMXService {
       java.lang.StringBuilder sb = new java.lang.StringBuilder("disconnect_args(");
       boolean first = true;
 
-      sb.append("timeoutMs:");
-      sb.append(this.timeoutMs);
-      first = false;
       sb.append(")");
       return sb.toString();
     }
@@ -1797,8 +1711,6 @@ public class JMXService {
 
     private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, java.lang.ClassNotFoundException {
       try {
-        // it doesn't seem like you should have to do this, but java serialization is wacky, and doesn't call the default constructor.
-        __isset_bitfield = 0;
         read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
       } catch (org.apache.thrift.TException te) {
         throw new java.io.IOException(te);
@@ -1823,14 +1735,6 @@ public class JMXService {
             break;
           }
           switch (schemeField.id) {
-            case 2: // TIMEOUT_MS
-              if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
-                struct.timeoutMs = iprot.readI64();
-                struct.setTimeoutMsIsSet(true);
-              } else { 
-                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
-              }
-              break;
             default:
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
           }
@@ -1846,9 +1750,6 @@ public class JMXService {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
-        oprot.writeFieldBegin(TIMEOUT_MS_FIELD_DESC);
-        oprot.writeI64(struct.timeoutMs);
-        oprot.writeFieldEnd();
         oprot.writeFieldStop();
         oprot.writeStructEnd();
       }
@@ -1866,24 +1767,11 @@ public class JMXService {
       @Override
       public void write(org.apache.thrift.protocol.TProtocol prot, disconnect_args struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol oprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-        java.util.BitSet optionals = new java.util.BitSet();
-        if (struct.isSetTimeoutMs()) {
-          optionals.set(0);
-        }
-        oprot.writeBitSet(optionals, 1);
-        if (struct.isSetTimeoutMs()) {
-          oprot.writeI64(struct.timeoutMs);
-        }
       }
 
       @Override
       public void read(org.apache.thrift.protocol.TProtocol prot, disconnect_args struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-        java.util.BitSet incoming = iprot.readBitSet(1);
-        if (incoming.get(0)) {
-          struct.timeoutMs = iprot.readI64();
-          struct.setTimeoutMsIsSet(true);
-        }
       }
     }
 
