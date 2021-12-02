@@ -12,6 +12,7 @@ import java.net.Socket;
 import java.rmi.server.RMIClientSocketFactory;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -125,16 +126,26 @@ public class JMXFetcher {
         this.executor = executor;
     }
 
+    public <T, R> T myMethod(Function<T, R> func) throws Exception {
+        Future<T> future = executor.submit(new Callable<T>() {
+            @Override
+            public T call() throws Exception {
+                func.
+                return null;
+            }
+        }
+
+        return func.call();
+    }
+
     public List<JMXAttribute> queryMbean(String beanName, Integer timeoutMs) throws JMXError {
 //        return this.queryMbean2(beanName);
         JMXFetcher j = this;
-        Future<List<JMXAttribute>> future = executor.submit(new Callable<List<JMXAttribute>>() {
-            public List<JMXAttribute> call() throws JMXError {
-                try {
-                    return j.queryMbean(beanName);
-                } finally {
-                    logger.info("exiting");
-                }
+        Future<List<JMXAttribute>> future = executor.submit(() -> {
+            try {
+                return this.queryMbean(beanName);
+            } finally {
+                logger.info("exiting");
             }
         });
         try {
@@ -156,17 +167,16 @@ public class JMXFetcher {
     }
 
 
-    public Set<String> queryMBeans(String objectName) throws QueryError {
+    public Set<String> queryMBeans(String mBeanNamePattern) throws QueryError {
+        ObjectName objectName = this.getObjectName(mBeanNamePattern);
         try {
-            return connection.queryMBeans(new ObjectName(objectName), null)
+            return connection.queryMBeans(objectName, null)
                     .stream()
                     .map(ObjectInstance::getObjectName)
                     .map(ObjectName::getCanonicalName)
                     .collect(Collectors.toSet());
-        } catch (MalformedObjectNameException me) {
-            throw new QueryError("Can't parse bean name " + objectName, me);
         } catch (IOException ioe) {
-            throw new QueryError("Can't get beans for query " + objectName, ioe);
+            throw new QueryError("Can't get beans for query " + mBeanNamePattern, ioe);
         }
     }
 
