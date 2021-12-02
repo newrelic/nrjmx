@@ -1,9 +1,9 @@
 package org.newrelic.nrjmx.v2;
 
 /*
-* Copyright 2020 New Relic Corporation. All rights reserved.
-* SPDX-License-Identifier: Apache-2.0
-*/
+ * Copyright 2020 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.*;
 import java.util.logging.Logger;
 
 import javax.management.Attribute;
@@ -48,7 +49,7 @@ public class JMXFetcher {
 
     private static final Logger logger = Logger.getLogger("nrjmx");
 
-    private List<LogMessage> logs = new ArrayList<>();
+    private ExecutorService executor;
 
     private MBeanServerConnection connection;
     private List<JMXAttribute> result = new ArrayList<>();
@@ -67,28 +68,28 @@ public class JMXFetcher {
         }
     }
 
-    public void connect() throws JMXConnectionError {
+    public void connect(JMXConfig jmxConfig, long timeoutMs) throws JMXError {
+        Future<Void> future = executor.submit(() -> {
+            this.connect(jmxConfig);
+            return null;
+        });
         try {
-            JMXServiceURL address = new JMXServiceURL(connectionString);
-
-            JMXConnector connector = JMXConnectorFactory.connect(address, connectionEnv);
-
-            this.connection = connector.getMBeanServerConnection();
-        } catch (Exception e) {
-            String message = String.format("Can't connect to JMX server: '%s', error: '%s'", connectionString,
-                    e.getMessage());
-            throw new JMXConnectionError(1, message);
+            if (timeoutMs <= 0) {
+                 future.get();
+                 return;
+            }
+            future.get(timeoutMs, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            //Thread.currentThread().interrupt();
+            //https://www.baeldung.com/java-interrupted-exception
+            throw new JMXError("timeout");
         }
     }
 
-    public boolean StringIsNullOrEmpty(String value) {
-        return value == null || value.equals("");
-    }
-
-    public JMXFetcher(JMXConfig jmxConfig) {
+    public void connect(JMXConfig jmxConfig) throws JMXError {
         if (jmxConfig.connectionURL != null && !jmxConfig.connectionURL.equals("")) {
             connectionString = jmxConfig.connectionURL;
-          } else {
+        } else {
             // Official doc for remoting v3 is not available, see:
             // - https://developer.jboss.org/thread/196619
             // - http://jbossremoting.jboss.org/documentation/v3.html
@@ -100,41 +101,68 @@ public class JMXFetcher {
             // http://www.mastertheboss.com/jboss-server/jboss-monitoring/using-jconsole-to-monitor-a-remote-wildfly-server
             String uriPath = jmxConfig.uriPath;
             if (jmxConfig.isRemote) {
-              if (defaultURIPath.equals(uriPath)) {
-                uriPath = "";
-              } else {
-                uriPath = uriPath.concat("/");
-              }
-              String remoteProtocol = "remote";
-              if (jmxConfig.isJBossStandaloneMode) {
-                remoteProtocol = "remote+http";
-              }
-              connectionString =
-                  String.format("service:jmx:%s://%s:%s%s", remoteProtocol, jmxConfig.hostname, jmxConfig.port, uriPath);
+                if (defaultURIPath.equals(uriPath)) {
+                    uriPath = "";
+                } else {
+                    uriPath = uriPath.concat("/");
+                }
+                String remoteProtocol = "remote";
+                if (jmxConfig.isJBossStandaloneMode) {
+                    remoteProtocol = "remote+http";
+                }
+                connectionString =
+                        String.format("service:jmx:%s://%s:%s%s", remoteProtocol, jmxConfig.hostname, jmxConfig.port, uriPath);
             } else {
-              connectionString =
-                  String.format("service:jmx:rmi:///jndi/rmi://%s:%s/%s", jmxConfig.hostname, jmxConfig.port, uriPath);
+                connectionString =
+                        String.format("service:jmx:rmi:///jndi/rmi://%s:%s/%s", jmxConfig.hostname, jmxConfig.port, uriPath);
             }
-          }
-      
-          if (!"".equals(jmxConfig.username)) {
-            connectionEnv.put(JMXConnector.CREDENTIALS, new String[] {jmxConfig.username, jmxConfig.password});
-          }
-      
-          if (!"".equals(jmxConfig.keyStore) && !"".equals(jmxConfig.trustStore)) {
+        }
+
+        if (!"".equals(jmxConfig.username)) {
+            connectionEnv.put(JMXConnector.CREDENTIALS, new String[]{jmxConfig.username, jmxConfig.password});
+        }
+
+        if (!"".equals(jmxConfig.keyStore) && !"".equals(jmxConfig.trustStore)) {
             Properties p = System.getProperties();
             p.put("javax.net.ssl.keyStore", jmxConfig.keyStore);
             p.put("javax.net.ssl.keyStorePassword", jmxConfig.keyStorePassword);
             p.put("javax.net.ssl.trustStore", jmxConfig.trustStore);
             p.put("javax.net.ssl.trustStorePassword", jmxConfig.trustStorePassword);
             connectionEnv.put("com.sun.jndi.rmi.factory.socket", new SslRMIClientSocketFactory());
-          }
         }
+        try {
+            JMXServiceURL address = new JMXServiceURL(connectionString);
 
-    public List<LogMessage> getLogs() {
-        List<LogMessage> result = this.logs;
-        this.logs = new ArrayList<LogMessage>();
-        return result;
+            JMXConnector connector = JMXConnectorFactory.connect(address, connectionEnv);
+
+            this.connection = connector.getMBeanServerConnection();
+        } catch (Exception e) {
+            String message = String.format("Can't connect to JMX server: '%s', error: '%s'", connectionString,
+                    e.getMessage());
+            throw new JMXError(message);
+        }
+    }
+
+    public boolean StringIsNullOrEmpty(String value) {
+        return value == null || value.equals("");
+    }
+
+    public JMXFetcher(ExecutorService executor) {
+        this.executor = executor;
+    }
+
+    public List<JMXAttribute> queryMbean(String beanName, long timeoutMs) throws JMXError {
+        Future<List<JMXAttribute>> future = executor.submit(() -> this.queryMbean(beanName));
+        try {
+            if (timeoutMs <= 0) {
+                return future.get();
+            }
+            return future.get(timeoutMs, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            //Thread.currentThread().interrupt();
+            //https://www.baeldung.com/java-interrupted-exception
+            throw new JMXError("timeout");
+        }
     }
 
     public List<JMXAttribute> queryMbean(String beanName) throws JMXError {
@@ -162,7 +190,7 @@ public class JMXFetcher {
             }
             try {
 
-            return popResults();
+                return popResults();
             } catch (IllegalArgumentException e) {
 
             }
@@ -170,7 +198,7 @@ public class JMXFetcher {
         } catch (Exception ex) {
             throw new JMXError(ex.getMessage());
         }
-        
+
     }
 
     private Set<ObjectInstance> query(String beanName) throws QueryError {
@@ -212,7 +240,7 @@ public class JMXFetcher {
             String attrName = attr.getName();
             Object value;
 
-        
+
             try {
                 value = connection.getAttribute(objectName, attrName);
                 if (value instanceof Attribute) {
@@ -230,7 +258,7 @@ public class JMXFetcher {
             try {
                 parseValue(name, value);
             } catch (ValueError e) {
-                this.logs.add(new LogMessage(e.getMessage()));
+//                this.logs.add(new LogMessage(e.getMessage()));
                 // logger.fine(e.getMessage());
             }
         }

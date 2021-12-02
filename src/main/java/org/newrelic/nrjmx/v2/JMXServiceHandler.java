@@ -1,32 +1,32 @@
 package org.newrelic.nrjmx.v2;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 import org.apache.thrift.TException;
 import org.apache.thrift.server.TServer;
-import org.newrelic.nrjmx.v2.nrprotocol.JMXAttribute;
-import org.newrelic.nrjmx.v2.nrprotocol.JMXConfig;
-import org.newrelic.nrjmx.v2.nrprotocol.JMXService;
-import org.newrelic.nrjmx.v2.nrprotocol.LogMessage;
+import org.newrelic.nrjmx.v2.nrprotocol.*;
 
 public class JMXServiceHandler implements JMXService.Iface {
 
     private JMXFetcher jmxFetcher;
     private TServer server;
 
-    @Override
-    public void connect(JMXConfig config) throws TException {
-        this.jmxFetcher = new JMXFetcher(config);
-        jmxFetcher.connect();
+    public JMXServiceHandler(JMXFetcher jmxFetcher) {
+        this.jmxFetcher = jmxFetcher;
+    }
+
+    public void addServer(TServer server) {
+        this.server = server;
     }
 
     @Override
-    public List<JMXAttribute> queryMbean(String beanName) throws TException {
-        return jmxFetcher.queryMbean(beanName);
+    public void connect(JMXConfig config, long timeoutMs) throws JMXConnectionError, JMXError, TException {
+        jmxFetcher.connect(config, timeoutMs);
     }
 
     @Override
-    public void disconnect() throws TException {
+    public void disconnect() throws JMXError, TException {
         if (this.server == null) {
             throw new TException("cannot disconnect, server handler null");
         }
@@ -34,11 +34,7 @@ public class JMXServiceHandler implements JMXService.Iface {
     }
 
     @Override
-    public List<LogMessage> getLogs() throws TException {
-        return jmxFetcher.getLogs();
-    }
-
-    public void addServer(TServer server) {
-        this.server = server;
+    public List<JMXAttribute> queryMbean(String beanName, long timeoutMs) throws JMXConnectionError, JMXError, TException {
+        return jmxFetcher.queryMbean(beanName, timeoutMs);
     }
 }
