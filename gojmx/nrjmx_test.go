@@ -5,9 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/newrelic/nrjmx/gojmx/nrprotocol"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -15,6 +12,10 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/newrelic/nrjmx/gojmx/nrprotocol"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
@@ -720,6 +721,60 @@ func Test_Connector_Success(t *testing.T) {
 	}
 
 	assert.ElementsMatch(t, expected, actual)
+}
+
+func TestJMXServiceDisconnect(t *testing.T) {
+	ctx := context.Background()
+
+	// GIVEN a JMX Server running inside a container
+	container, err := runJMXServiceContainer(ctx)
+	require.NoError(t, err)
+	defer container.Terminate(ctx)
+
+	// Populate the JMX Server with mbeans
+	resp, err := addMBeans(ctx, container, map[string]interface{}{
+		"name":        "tomas",
+		"doubleValue": 1.2,
+		"floatValue":  2.2222222,
+		"numberValue": 3,
+		"boolValue":   true,
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, "ok!\n", string(resp))
+
+	defer cleanMBeans(ctx, container)
+
+	jmxPort, err := container.MappedPort(ctx, testServerJMXPort)
+	require.NoError(t, err)
+	jmxHost, err := container.Host(ctx)
+	require.NoError(t, err)
+
+	// THEN JMX connection can be oppened
+	client, err := NewJMXServiceClient(ctx)
+	assert.NoError(t, err)
+
+	config := &nrprotocol.JMXConfig{
+		Hostname: jmxHost,
+		Port:     int32(jmxPort.Int()),
+		UriPath:  "jmxrmi",
+	}
+
+	err = client.Connect(ctx, config, defaultTimeoutMs)
+	assert.NoError(t, err)
+	err = client.Disconnect(ctx)
+	assert.NoError(t, err)
+
+	time.Sleep(2 * time.Second)
+	// AND Query returns expected error
+	actual, err := client.GetMBeanNames(ctx, "test:type=Cat,*", defaultTimeoutMs)
+	assert.Nil(t, actual)
+	assert.Error(t, err) // TODO: Get valid error message
+
+	err = client.jmxProcess.cmd.Wait()
+	assert.NoError(t, err)
+
+	assert.NotNil(t, client.jmxProcess.cmd.ProcessState)
+	assert.True(t, client.jmxProcess.cmd.ProcessState.Success())
 }
 
 // runJMXServiceContainer will start a container running test-server with JMX.
