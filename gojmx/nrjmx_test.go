@@ -316,7 +316,7 @@ func Test_JavaNotInstalled(t *testing.T) {
 
 	ctx := context.Background()
 	client, err := NewJMXClient(ctx).InitStandardIO()
-	assert.Contains(t, err.Error(), "/wrong/path/bin/java: No such file or directory")
+	assert.Contains(t, err.Error(), "/wrong/path/bin/java")
 
 	config := &nrprotocol.JMXConfig{}
 
