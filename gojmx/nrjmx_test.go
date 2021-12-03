@@ -98,7 +98,6 @@ func Test_Query_Success_LargeAmountOfData(t *testing.T) {
 	config := &nrprotocol.JMXConfig{
 		Hostname: jmxHost,
 		Port:     int32(jmxPort.Int()),
-		UriPath:  "jmxrmi",
 	}
 
 	err = client.Connect(config, -1)
@@ -159,7 +158,6 @@ func Test_Query_Success(t *testing.T) {
 	config := &nrprotocol.JMXConfig{
 		Hostname: jmxHost,
 		Port:     int32(jmxPort.Int()),
-		UriPath:  "jmxrmi",
 	}
 
 	err = client.Connect(config, defaultTimeoutMs)
@@ -245,7 +243,6 @@ func Test_Query_Timeout(t *testing.T) {
 	config := &nrprotocol.JMXConfig{
 		Hostname: jmxHost,
 		Port:     int32(jmxPort.Int()),
-		UriPath:  "jmxrmi",
 	}
 
 	err = client.Connect(config, defaultTimeoutMs)
@@ -375,7 +372,6 @@ func Test_Wrong_Connection(t *testing.T) {
 	config := &nrprotocol.JMXConfig{
 		Hostname: "localhost",
 		Port:     1234,
-		UriPath:  "jmxrmi",
 	}
 
 	err = client.Connect(config, defaultTimeoutMs)
@@ -422,7 +418,6 @@ func Test_SSLQuery_Success(t *testing.T) {
 	config := &nrprotocol.JMXConfig{
 		Hostname:           jmxHost,
 		Port:               int32(jmxPort.Int()),
-		UriPath:            "jmxrmi",
 		Username:           jmxUsername,
 		Password:           jmxPassword,
 		KeyStore:           keystorePath,
@@ -514,7 +509,6 @@ func Test_Wrong_Credentials(t *testing.T) {
 	config := &nrprotocol.JMXConfig{
 		Hostname:           jmxHost,
 		Port:               int32(jmxPort.Int()),
-		UriPath:            "jmxrmi",
 		Username:           "wrong_username",
 		Password:           "wrong_password",
 		KeyStore:           keystorePath,
@@ -554,7 +548,6 @@ func Test_Wrong_Certificate_password(t *testing.T) {
 	config := &nrprotocol.JMXConfig{
 		Hostname:           jmxHost,
 		Port:               int32(jmxPort.Int()),
-		UriPath:            "jmxrmi",
 		Username:           jmxUsername,
 		Password:           jmxPassword,
 		KeyStore:           keystorePath,
@@ -760,7 +753,6 @@ func TestJMXServiceDisconnect(t *testing.T) {
 	config := &nrprotocol.JMXConfig{
 		Hostname: jmxHost,
 		Port:     int32(jmxPort.Int()),
-		UriPath:  "jmxrmi",
 	}
 
 	err = client.Connect(config, defaultTimeoutMs)

@@ -92,11 +92,12 @@ return int64(*p), nil
 //  - TrustStorePassword
 //  - IsRemote
 //  - IsJBossStandaloneMode
+//  - UseSSL
 type JMXConfig struct {
   ConnectionURL string `thrift:"connectionURL,1" db:"connectionURL" json:"connectionURL"`
   Hostname string `thrift:"hostname,2" db:"hostname" json:"hostname"`
   Port int32 `thrift:"port,3" db:"port" json:"port"`
-  UriPath string `thrift:"uriPath,4" db:"uriPath" json:"uriPath"`
+  UriPath *string `thrift:"uriPath,4" db:"uriPath" json:"uriPath,omitempty"`
   Username string `thrift:"username,5" db:"username" json:"username"`
   Password string `thrift:"password,6" db:"password" json:"password"`
   KeyStore string `thrift:"keyStore,7" db:"keyStore" json:"keyStore"`
@@ -105,6 +106,7 @@ type JMXConfig struct {
   TrustStorePassword string `thrift:"trustStorePassword,10" db:"trustStorePassword" json:"trustStorePassword"`
   IsRemote bool `thrift:"isRemote,11" db:"isRemote" json:"isRemote"`
   IsJBossStandaloneMode bool `thrift:"isJBossStandaloneMode,12" db:"isJBossStandaloneMode" json:"isJBossStandaloneMode"`
+  UseSSL bool `thrift:"useSSL,13" db:"useSSL" json:"useSSL"`
 }
 
 func NewJMXConfig() *JMXConfig {
@@ -123,9 +125,12 @@ func (p *JMXConfig) GetHostname() string {
 func (p *JMXConfig) GetPort() int32 {
   return p.Port
 }
-
+var JMXConfig_UriPath_DEFAULT string
 func (p *JMXConfig) GetUriPath() string {
-  return p.UriPath
+  if !p.IsSetUriPath() {
+    return JMXConfig_UriPath_DEFAULT
+  }
+return *p.UriPath
 }
 
 func (p *JMXConfig) GetUsername() string {
@@ -159,6 +164,14 @@ func (p *JMXConfig) GetIsRemote() bool {
 func (p *JMXConfig) GetIsJBossStandaloneMode() bool {
   return p.IsJBossStandaloneMode
 }
+
+func (p *JMXConfig) GetUseSSL() bool {
+  return p.UseSSL
+}
+func (p *JMXConfig) IsSetUriPath() bool {
+  return p.UriPath != nil
+}
+
 func (p *JMXConfig) Read(iprot thrift.TProtocol) error {
   if _, err := iprot.ReadStructBegin(); err != nil {
     return thrift.PrependError(fmt.Sprintf("%T read error: ", p), err)
@@ -292,6 +305,16 @@ func (p *JMXConfig) Read(iprot thrift.TProtocol) error {
           return err
         }
       }
+    case 13:
+      if fieldTypeId == thrift.BOOL {
+        if err := p.ReadField13(iprot); err != nil {
+          return err
+        }
+      } else {
+        if err := iprot.Skip(fieldTypeId); err != nil {
+          return err
+        }
+      }
     default:
       if err := iprot.Skip(fieldTypeId); err != nil {
         return err
@@ -338,7 +361,7 @@ func (p *JMXConfig)  ReadField4(iprot thrift.TProtocol) error {
   if v, err := iprot.ReadString(); err != nil {
   return thrift.PrependError("error reading field 4: ", err)
 } else {
-  p.UriPath = v
+  p.UriPath = &v
 }
   return nil
 }
@@ -415,6 +438,15 @@ func (p *JMXConfig)  ReadField12(iprot thrift.TProtocol) error {
   return nil
 }
 
+func (p *JMXConfig)  ReadField13(iprot thrift.TProtocol) error {
+  if v, err := iprot.ReadBool(); err != nil {
+  return thrift.PrependError("error reading field 13: ", err)
+} else {
+  p.UseSSL = v
+}
+  return nil
+}
+
 func (p *JMXConfig) Write(oprot thrift.TProtocol) error {
   if err := oprot.WriteStructBegin("JMXConfig"); err != nil {
     return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err) }
@@ -431,6 +463,7 @@ func (p *JMXConfig) Write(oprot thrift.TProtocol) error {
     if err := p.writeField10(oprot); err != nil { return err }
     if err := p.writeField11(oprot); err != nil { return err }
     if err := p.writeField12(oprot); err != nil { return err }
+    if err := p.writeField13(oprot); err != nil { return err }
   }
   if err := oprot.WriteFieldStop(); err != nil {
     return thrift.PrependError("write field stop error: ", err) }
@@ -470,12 +503,14 @@ func (p *JMXConfig) writeField3(oprot thrift.TProtocol) (err error) {
 }
 
 func (p *JMXConfig) writeField4(oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin("uriPath", thrift.STRING, 4); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 4:uriPath: ", p), err) }
-  if err := oprot.WriteString(string(p.UriPath)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.uriPath (4) field write error: ", p), err) }
-  if err := oprot.WriteFieldEnd(); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 4:uriPath: ", p), err) }
+  if p.IsSetUriPath() {
+    if err := oprot.WriteFieldBegin("uriPath", thrift.STRING, 4); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field begin error 4:uriPath: ", p), err) }
+    if err := oprot.WriteString(string(*p.UriPath)); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T.uriPath (4) field write error: ", p), err) }
+    if err := oprot.WriteFieldEnd(); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field end error 4:uriPath: ", p), err) }
+  }
   return err
 }
 
@@ -556,6 +591,16 @@ func (p *JMXConfig) writeField12(oprot thrift.TProtocol) (err error) {
   return thrift.PrependError(fmt.Sprintf("%T.isJBossStandaloneMode (12) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(); err != nil {
     return thrift.PrependError(fmt.Sprintf("%T write field end error 12:isJBossStandaloneMode: ", p), err) }
+  return err
+}
+
+func (p *JMXConfig) writeField13(oprot thrift.TProtocol) (err error) {
+  if err := oprot.WriteFieldBegin("useSSL", thrift.BOOL, 13); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 13:useSSL: ", p), err) }
+  if err := oprot.WriteBool(bool(p.UseSSL)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.useSSL (13) field write error: ", p), err) }
+  if err := oprot.WriteFieldEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 13:useSSL: ", p), err) }
   return err
 }
 

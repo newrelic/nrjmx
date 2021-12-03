@@ -23,6 +23,7 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
   private static final org.apache.thrift.protocol.TField TRUST_STORE_PASSWORD_FIELD_DESC = new org.apache.thrift.protocol.TField("trustStorePassword", org.apache.thrift.protocol.TType.STRING, (short)10);
   private static final org.apache.thrift.protocol.TField IS_REMOTE_FIELD_DESC = new org.apache.thrift.protocol.TField("isRemote", org.apache.thrift.protocol.TType.BOOL, (short)11);
   private static final org.apache.thrift.protocol.TField IS_JBOSS_STANDALONE_MODE_FIELD_DESC = new org.apache.thrift.protocol.TField("isJBossStandaloneMode", org.apache.thrift.protocol.TType.BOOL, (short)12);
+  private static final org.apache.thrift.protocol.TField USE_SSL_FIELD_DESC = new org.apache.thrift.protocol.TField("useSSL", org.apache.thrift.protocol.TType.BOOL, (short)13);
 
   private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new JMXConfigStandardSchemeFactory();
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new JMXConfigTupleSchemeFactory();
@@ -30,7 +31,7 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
   public @org.apache.thrift.annotation.Nullable java.lang.String connectionURL; // required
   public @org.apache.thrift.annotation.Nullable java.lang.String hostname; // required
   public int port; // required
-  public @org.apache.thrift.annotation.Nullable java.lang.String uriPath; // required
+  public @org.apache.thrift.annotation.Nullable java.lang.String uriPath; // optional
   public @org.apache.thrift.annotation.Nullable java.lang.String username; // required
   public @org.apache.thrift.annotation.Nullable java.lang.String password; // required
   public @org.apache.thrift.annotation.Nullable java.lang.String keyStore; // required
@@ -39,6 +40,7 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
   public @org.apache.thrift.annotation.Nullable java.lang.String trustStorePassword; // required
   public boolean isRemote; // required
   public boolean isJBossStandaloneMode; // required
+  public boolean useSSL; // required
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -53,7 +55,8 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
     TRUST_STORE((short)9, "trustStore"),
     TRUST_STORE_PASSWORD((short)10, "trustStorePassword"),
     IS_REMOTE((short)11, "isRemote"),
-    IS_JBOSS_STANDALONE_MODE((short)12, "isJBossStandaloneMode");
+    IS_JBOSS_STANDALONE_MODE((short)12, "isJBossStandaloneMode"),
+    USE_SSL((short)13, "useSSL");
 
     private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -93,6 +96,8 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
           return IS_REMOTE;
         case 12: // IS_JBOSS_STANDALONE_MODE
           return IS_JBOSS_STANDALONE_MODE;
+        case 13: // USE_SSL
+          return USE_SSL;
         default:
           return null;
       }
@@ -137,7 +142,9 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
   private static final int __PORT_ISSET_ID = 0;
   private static final int __ISREMOTE_ISSET_ID = 1;
   private static final int __ISJBOSSSTANDALONEMODE_ISSET_ID = 2;
+  private static final int __USESSL_ISSET_ID = 3;
   private byte __isset_bitfield = 0;
+  private static final _Fields optionals[] = {_Fields.URI_PATH};
   public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -147,7 +154,7 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     tmpMap.put(_Fields.PORT, new org.apache.thrift.meta_data.FieldMetaData("port", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
-    tmpMap.put(_Fields.URI_PATH, new org.apache.thrift.meta_data.FieldMetaData("uriPath", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+    tmpMap.put(_Fields.URI_PATH, new org.apache.thrift.meta_data.FieldMetaData("uriPath", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     tmpMap.put(_Fields.USERNAME, new org.apache.thrift.meta_data.FieldMetaData("username", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
@@ -165,6 +172,8 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
     tmpMap.put(_Fields.IS_JBOSS_STANDALONE_MODE, new org.apache.thrift.meta_data.FieldMetaData("isJBossStandaloneMode", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
+    tmpMap.put(_Fields.USE_SSL, new org.apache.thrift.meta_data.FieldMetaData("useSSL", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
     metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(JMXConfig.class, metaDataMap);
   }
@@ -176,7 +185,6 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
     java.lang.String connectionURL,
     java.lang.String hostname,
     int port,
-    java.lang.String uriPath,
     java.lang.String username,
     java.lang.String password,
     java.lang.String keyStore,
@@ -184,14 +192,14 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
     java.lang.String trustStore,
     java.lang.String trustStorePassword,
     boolean isRemote,
-    boolean isJBossStandaloneMode)
+    boolean isJBossStandaloneMode,
+    boolean useSSL)
   {
     this();
     this.connectionURL = connectionURL;
     this.hostname = hostname;
     this.port = port;
     setPortIsSet(true);
-    this.uriPath = uriPath;
     this.username = username;
     this.password = password;
     this.keyStore = keyStore;
@@ -202,6 +210,8 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
     setIsRemoteIsSet(true);
     this.isJBossStandaloneMode = isJBossStandaloneMode;
     setIsJBossStandaloneModeIsSet(true);
+    this.useSSL = useSSL;
+    setUseSSLIsSet(true);
   }
 
   /**
@@ -239,6 +249,7 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
     }
     this.isRemote = other.isRemote;
     this.isJBossStandaloneMode = other.isJBossStandaloneMode;
+    this.useSSL = other.useSSL;
   }
 
   public JMXConfig deepCopy() {
@@ -262,6 +273,8 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
     this.isRemote = false;
     setIsJBossStandaloneModeIsSet(false);
     this.isJBossStandaloneMode = false;
+    setUseSSLIsSet(false);
+    this.useSSL = false;
   }
 
   @org.apache.thrift.annotation.Nullable
@@ -558,6 +571,29 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
     __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __ISJBOSSSTANDALONEMODE_ISSET_ID, value);
   }
 
+  public boolean isUseSSL() {
+    return this.useSSL;
+  }
+
+  public JMXConfig setUseSSL(boolean useSSL) {
+    this.useSSL = useSSL;
+    setUseSSLIsSet(true);
+    return this;
+  }
+
+  public void unsetUseSSL() {
+    __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __USESSL_ISSET_ID);
+  }
+
+  /** Returns true if field useSSL is set (has been assigned a value) and false otherwise */
+  public boolean isSetUseSSL() {
+    return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __USESSL_ISSET_ID);
+  }
+
+  public void setUseSSLIsSet(boolean value) {
+    __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __USESSL_ISSET_ID, value);
+  }
+
   public void setFieldValue(_Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
     switch (field) {
     case CONNECTION_URL:
@@ -656,6 +692,14 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
       }
       break;
 
+    case USE_SSL:
+      if (value == null) {
+        unsetUseSSL();
+      } else {
+        setUseSSL((java.lang.Boolean)value);
+      }
+      break;
+
     }
   }
 
@@ -698,6 +742,9 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
     case IS_JBOSS_STANDALONE_MODE:
       return isIsJBossStandaloneMode();
 
+    case USE_SSL:
+      return isUseSSL();
+
     }
     throw new java.lang.IllegalStateException();
   }
@@ -733,6 +780,8 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
       return isSetIsRemote();
     case IS_JBOSS_STANDALONE_MODE:
       return isSetIsJBossStandaloneMode();
+    case USE_SSL:
+      return isSetUseSSL();
     }
     throw new java.lang.IllegalStateException();
   }
@@ -860,6 +909,15 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
         return false;
     }
 
+    boolean this_present_useSSL = true;
+    boolean that_present_useSSL = true;
+    if (this_present_useSSL || that_present_useSSL) {
+      if (!(this_present_useSSL && that_present_useSSL))
+        return false;
+      if (this.useSSL != that.useSSL)
+        return false;
+    }
+
     return true;
   }
 
@@ -908,6 +966,8 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
     hashCode = hashCode * 8191 + ((isRemote) ? 131071 : 524287);
 
     hashCode = hashCode * 8191 + ((isJBossStandaloneMode) ? 131071 : 524287);
+
+    hashCode = hashCode * 8191 + ((useSSL) ? 131071 : 524287);
 
     return hashCode;
   }
@@ -1040,6 +1100,16 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
         return lastComparison;
       }
     }
+    lastComparison = java.lang.Boolean.valueOf(isSetUseSSL()).compareTo(other.isSetUseSSL());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetUseSSL()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.useSSL, other.useSSL);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
     return 0;
   }
 
@@ -1080,14 +1150,16 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
     sb.append("port:");
     sb.append(this.port);
     first = false;
-    if (!first) sb.append(", ");
-    sb.append("uriPath:");
-    if (this.uriPath == null) {
-      sb.append("null");
-    } else {
-      sb.append(this.uriPath);
+    if (isSetUriPath()) {
+      if (!first) sb.append(", ");
+      sb.append("uriPath:");
+      if (this.uriPath == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.uriPath);
+      }
+      first = false;
     }
-    first = false;
     if (!first) sb.append(", ");
     sb.append("username:");
     if (this.username == null) {
@@ -1143,6 +1215,10 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
     if (!first) sb.append(", ");
     sb.append("isJBossStandaloneMode:");
     sb.append(this.isJBossStandaloneMode);
+    first = false;
+    if (!first) sb.append(", ");
+    sb.append("useSSL:");
+    sb.append(this.useSSL);
     first = false;
     sb.append(")");
     return sb.toString();
@@ -1285,6 +1361,14 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 13: // USE_SSL
+            if (schemeField.type == org.apache.thrift.protocol.TType.BOOL) {
+              struct.useSSL = iprot.readBool();
+              struct.setUseSSLIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -1314,9 +1398,11 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
       oprot.writeI32(struct.port);
       oprot.writeFieldEnd();
       if (struct.uriPath != null) {
-        oprot.writeFieldBegin(URI_PATH_FIELD_DESC);
-        oprot.writeString(struct.uriPath);
-        oprot.writeFieldEnd();
+        if (struct.isSetUriPath()) {
+          oprot.writeFieldBegin(URI_PATH_FIELD_DESC);
+          oprot.writeString(struct.uriPath);
+          oprot.writeFieldEnd();
+        }
       }
       if (struct.username != null) {
         oprot.writeFieldBegin(USERNAME_FIELD_DESC);
@@ -1353,6 +1439,9 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
       oprot.writeFieldEnd();
       oprot.writeFieldBegin(IS_JBOSS_STANDALONE_MODE_FIELD_DESC);
       oprot.writeBool(struct.isJBossStandaloneMode);
+      oprot.writeFieldEnd();
+      oprot.writeFieldBegin(USE_SSL_FIELD_DESC);
+      oprot.writeBool(struct.useSSL);
       oprot.writeFieldEnd();
       oprot.writeFieldStop();
       oprot.writeStructEnd();
@@ -1408,7 +1497,10 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
       if (struct.isSetIsJBossStandaloneMode()) {
         optionals.set(11);
       }
-      oprot.writeBitSet(optionals, 12);
+      if (struct.isSetUseSSL()) {
+        optionals.set(12);
+      }
+      oprot.writeBitSet(optionals, 13);
       if (struct.isSetConnectionURL()) {
         oprot.writeString(struct.connectionURL);
       }
@@ -1445,12 +1537,15 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
       if (struct.isSetIsJBossStandaloneMode()) {
         oprot.writeBool(struct.isJBossStandaloneMode);
       }
+      if (struct.isSetUseSSL()) {
+        oprot.writeBool(struct.useSSL);
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, JMXConfig struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-      java.util.BitSet incoming = iprot.readBitSet(12);
+      java.util.BitSet incoming = iprot.readBitSet(13);
       if (incoming.get(0)) {
         struct.connectionURL = iprot.readString();
         struct.setConnectionURLIsSet(true);
@@ -1498,6 +1593,10 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
       if (incoming.get(11)) {
         struct.isJBossStandaloneMode = iprot.readBool();
         struct.setIsJBossStandaloneModeIsSet(true);
+      }
+      if (incoming.get(12)) {
+        struct.useSSL = iprot.readBool();
+        struct.setUseSSLIsSet(true);
       }
     }
   }
