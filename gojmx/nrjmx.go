@@ -132,11 +132,25 @@ func (j *JMXClient) Connect(config *nrprotocol.JMXConfig, timeout int64) error {
 	return j.jmxService.Connect(j.ctx, config, timeout)
 }
 
-func (j *JMXClient) Query(mbean string, timeout int64) ([]*nrprotocol.JMXAttribute, error) {
+func (j *JMXClient) GetMBeanNames(mbean string, timeout int64) ([]string, error) {
 	if err := j.checkState(); err != nil {
 		return nil, err
 	}
-	return j.jmxService.QueryMbean(j.ctx, mbean, timeout)
+	return j.jmxService.GetMBeanNames(j.ctx, mbean, timeout)
+}
+
+func (j *JMXClient) GetMBeanAttrNames(mbean string, timeout int64) ([]string, error) {
+	if err := j.checkState(); err != nil {
+		return nil, err
+	}
+	return j.jmxService.GetMBeanAttrNames(j.ctx, mbean, timeout)
+}
+
+func (j *JMXClient) GetMBeanAttr(mBeanName, mBeanAttrName string, timeout int64) (*nrprotocol.JMXAttribute, error) {
+	if err := j.checkState(); err != nil {
+		return nil, err
+	}
+	return j.jmxService.GetMBeanAttr(j.ctx, mBeanName, mBeanAttrName, timeout)
 }
 
 func (j *JMXClient) Disconnect() error {
@@ -144,8 +158,8 @@ func (j *JMXClient) Disconnect() error {
 		return err
 	}
 	defer func() {
-		j.jmxProcess.stop()
-		j = NewJMXClient(j.ctx)
+		//j.jmxProcess.stop()
+		//j = NewJMXClient(j.ctx)
 	}()
 	return j.jmxService.Disconnect(j.ctx)
 }
@@ -199,4 +213,9 @@ func (j *JMXClient) InitTCP(startSubprocess bool) (*JMXClient, error) {
 
 	j.isRunning = true
 	return j, nil
+}
+
+func (j *JMXClient) Close() error {
+	j.jmxService.Disconnect(j.ctx)
+	return j.jmxProcess.stop()
 }

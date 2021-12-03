@@ -5,6 +5,10 @@
 
 package org.newrelic.nrjmx;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
@@ -46,7 +50,7 @@ public class Application {
         if (!cliArgs.isProtocolV2()) {
             runV1(cliArgs);
         } else {
-            runV3(cliArgs);
+            runV2(cliArgs);
         }
     }
 
@@ -91,7 +95,24 @@ public class Application {
         }
     }
 
+    public static void write(String message) {
+
+        try {
+            message += "\n";
+            Files.write(Paths.get("/Users/cciutea/workspace/nr/int/nrjmx/gojmx/cmd/out2"), message.getBytes(), StandardOpenOption.APPEND);
+        } catch (IOException e) {
+            //exception handling left as an exercise for the reader
+        }
+
+    }
+
     private static void runV2(Arguments cliArgs) {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            public void run() {
+                write("Shutdown Hook is running !");
+            }
+        });
+
         ExecutorService executor = Executors.newSingleThreadExecutor();
         org.newrelic.nrjmx.v2.JMXFetcher jmxFetcher = new org.newrelic.nrjmx.v2.JMXFetcher(executor);
 

@@ -23,10 +23,12 @@ func Usage() {
   fmt.Fprintln(os.Stderr, "Usage of ", os.Args[0], " [-h host:port] [-u url] [-f[ramed]] function [arg1 [arg2...]]:")
   flag.PrintDefaults()
   fmt.Fprintln(os.Stderr, "\nFunctions:")
-  fmt.Fprintln(os.Stderr, "  void ping()")
   fmt.Fprintln(os.Stderr, "  void connect(JMXConfig config, i64 timeoutMs)")
   fmt.Fprintln(os.Stderr, "  void disconnect()")
-  fmt.Fprintln(os.Stderr, "   queryMbean(string beanName, i64 timeoutMs)")
+  fmt.Fprintln(os.Stderr, "  void ping()")
+  fmt.Fprintln(os.Stderr, "   getMBeanNames(string mBeanNamePattern, i64 timeoutMs)")
+  fmt.Fprintln(os.Stderr, "   getMBeanAttrNames(string mBeanName, i64 timeoutMs)")
+  fmt.Fprintln(os.Stderr, "  JMXAttribute getMBeanAttr(string mBeanName, string attrName, i64 timeoutMs)")
   fmt.Fprintln(os.Stderr)
   os.Exit(0)
 }
@@ -148,38 +150,30 @@ func main() {
   }
   
   switch cmd {
-  case "ping":
-    if flag.NArg() - 1 != 0 {
-      fmt.Fprintln(os.Stderr, "Ping requires 0 args")
-      flag.Usage()
-    }
-    fmt.Print(client.Ping(context.Background()))
-    fmt.Print("\n")
-    break
   case "connect":
     if flag.NArg() - 1 != 2 {
       fmt.Fprintln(os.Stderr, "Connect requires 2 args")
       flag.Usage()
     }
-    arg11 := flag.Arg(1)
-    mbTrans12 := thrift.NewTMemoryBufferLen(len(arg11))
-    defer mbTrans12.Close()
-    _, err13 := mbTrans12.WriteString(arg11)
-    if err13 != nil {
+    arg16 := flag.Arg(1)
+    mbTrans17 := thrift.NewTMemoryBufferLen(len(arg16))
+    defer mbTrans17.Close()
+    _, err18 := mbTrans17.WriteString(arg16)
+    if err18 != nil {
       Usage()
       return
     }
-    factory14 := thrift.NewTJSONProtocolFactory()
-    jsProt15 := factory14.GetProtocol(mbTrans12)
+    factory19 := thrift.NewTJSONProtocolFactory()
+    jsProt20 := factory19.GetProtocol(mbTrans17)
     argvalue0 := nrprotocol.NewJMXConfig()
-    err16 := argvalue0.Read(jsProt15)
-    if err16 != nil {
+    err21 := argvalue0.Read(jsProt20)
+    if err21 != nil {
       Usage()
       return
     }
     value0 := argvalue0
-    argvalue1, err17 := (strconv.ParseInt(flag.Arg(2), 10, 64))
-    if err17 != nil {
+    argvalue1, err22 := (strconv.ParseInt(flag.Arg(2), 10, 64))
+    if err22 != nil {
       Usage()
       return
     }
@@ -195,20 +189,62 @@ func main() {
     fmt.Print(client.Disconnect(context.Background()))
     fmt.Print("\n")
     break
-  case "queryMbean":
+  case "ping":
+    if flag.NArg() - 1 != 0 {
+      fmt.Fprintln(os.Stderr, "Ping requires 0 args")
+      flag.Usage()
+    }
+    fmt.Print(client.Ping(context.Background()))
+    fmt.Print("\n")
+    break
+  case "getMBeanNames":
     if flag.NArg() - 1 != 2 {
-      fmt.Fprintln(os.Stderr, "QueryMbean requires 2 args")
+      fmt.Fprintln(os.Stderr, "GetMBeanNames requires 2 args")
       flag.Usage()
     }
     argvalue0 := flag.Arg(1)
     value0 := argvalue0
-    argvalue1, err19 := (strconv.ParseInt(flag.Arg(2), 10, 64))
-    if err19 != nil {
+    argvalue1, err24 := (strconv.ParseInt(flag.Arg(2), 10, 64))
+    if err24 != nil {
       Usage()
       return
     }
     value1 := argvalue1
-    fmt.Print(client.QueryMbean(context.Background(), value0, value1))
+    fmt.Print(client.GetMBeanNames(context.Background(), value0, value1))
+    fmt.Print("\n")
+    break
+  case "getMBeanAttrNames":
+    if flag.NArg() - 1 != 2 {
+      fmt.Fprintln(os.Stderr, "GetMBeanAttrNames requires 2 args")
+      flag.Usage()
+    }
+    argvalue0 := flag.Arg(1)
+    value0 := argvalue0
+    argvalue1, err26 := (strconv.ParseInt(flag.Arg(2), 10, 64))
+    if err26 != nil {
+      Usage()
+      return
+    }
+    value1 := argvalue1
+    fmt.Print(client.GetMBeanAttrNames(context.Background(), value0, value1))
+    fmt.Print("\n")
+    break
+  case "getMBeanAttr":
+    if flag.NArg() - 1 != 3 {
+      fmt.Fprintln(os.Stderr, "GetMBeanAttr requires 3 args")
+      flag.Usage()
+    }
+    argvalue0 := flag.Arg(1)
+    value0 := argvalue0
+    argvalue1 := flag.Arg(2)
+    value1 := argvalue1
+    argvalue2, err29 := (strconv.ParseInt(flag.Arg(3), 10, 64))
+    if err29 != nil {
+      Usage()
+      return
+    }
+    value2 := argvalue2
+    fmt.Print(client.GetMBeanAttr(context.Background(), value0, value1, value2))
     fmt.Print("\n")
     break
   case "":

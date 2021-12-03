@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 )
 
 var bufferSize = 4 * 1024 // initial 4KB per line.
@@ -23,18 +24,22 @@ func getNrjmxExec() string {
 // var defaultNrjmxExec = "/home/cristi/workspace/cppc/java/nrjmx/bin/nrjmx"
 
 type jmxProcess struct {
-	cmd    *exec.Cmd
-	ctx    context.Context
-	cancel context.CancelFunc
-	Stdout io.ReadCloser
-	Stdin  io.WriteCloser
-	errCh chan error
+	sync.Mutex
+	cmd     *exec.Cmd
+	ctx     context.Context
+	cancel  context.CancelFunc
+	running bool
+	Stdout  io.ReadCloser
+	Stdin   io.WriteCloser
+	errCh   chan error
 }
 
 func startJMXProcess(ctx context.Context) (*jmxProcess, error) {
 	ctx, cancel := context.WithCancel(ctx)
 
 	cmd := exec.CommandContext(ctx, filepath.Clean(getNrjmxExec()), "-v2")
+
+	//cmd := exec.CommandContext(ctx, "java", "-cp", "/Users/cciutea/workspace/nr/int/nrjmx/bin/*", "org.newrelic.nrjmx.Application", "-v2")
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -77,31 +82,41 @@ func startJMXProcess(ctx context.Context) (*jmxProcess, error) {
 	if err := cmd.Start(); err != nil {
 		return nil, fmt.Errorf("failed to start %q: %v", cmd.Path, err)
 	}
+	errCh := make(chan error, 1)
 
-	errCh := make (chan error, 1)
+	jmxProcess := &jmxProcess{
+		Stdout:  stdout,
+		Stdin:   stdin,
+		running: true,
+		cmd:     cmd,
+		ctx:     ctx,
+		cancel:  cancel,
+		errCh:   errCh,
+	}
 	go func() {
 		// stderr we must read before wait, not with strings builder
 		err := cmd.Wait()
 		if err != nil {
 			errCh <- fmt.Errorf("%s: %w", stderrbuf.String(), err)
 		}
+		jmxProcess.Lock()
+		defer jmxProcess.Unlock()
+		jmxProcess.running = false
 	}()
 
-	return &jmxProcess{
-		Stdout: stdout,
-		Stdin:  stdin,
-		cmd:    cmd,
-		ctx:    ctx,
-		cancel: cancel,
-		errCh: errCh,
-	}, nil
+	return jmxProcess, nil
 }
 
 func (p *jmxProcess) Error() error {
 	select {
-	case err := <- p.errCh:
+	case err := <-p.errCh:
 		return err
 	default:
+		p.Lock()
+		defer p.Unlock()
+		if !p.running {
+			return ErrNotRunning
+		}
 		return nil
 	}
 }
