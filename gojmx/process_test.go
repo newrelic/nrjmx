@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"github.com/apache/thrift/lib/go/thrift"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -52,7 +53,7 @@ func TestJMXServiceSubprocessStops(t *testing.T) {
 		config := &nrprotocol.JMXConfig{
 			Hostname: jmxHost,
 			Port:     int32(jmxPort.Int()),
-			UriPath:  "jmxrmi",
+			UriPath:  thrift.StringPtr("jmxrmi"),
 		}
 
 		err = client.Connect(config, defaultTimeoutMs)

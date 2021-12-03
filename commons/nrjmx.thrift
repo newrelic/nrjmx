@@ -4,7 +4,7 @@ struct JMXConfig {
   1: string connectionURL
   2: string hostname,
   3: i32 port,
-  4: string uriPath,
+  4: optional string uriPath,
   5: string username,
   6: string password,
   7: string keyStore,
@@ -13,6 +13,7 @@ struct JMXConfig {
   10: string trustStorePassword,
   11: bool isRemote,
   12: bool isJBossStandaloneMode
+  13: bool useSSL
 }
 
 enum ValueType {

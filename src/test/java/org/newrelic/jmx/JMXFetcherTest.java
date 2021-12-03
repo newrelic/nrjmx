@@ -9,6 +9,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.newrelic.nrjmx.JMXFetcher;
 import org.newrelic.nrjmx.Logging;
+import org.newrelic.nrjmx.v2.nrprotocol.JMXConfig;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
@@ -154,6 +155,74 @@ public class JMXFetcherTest {
         assertEquals("{}", results.readLine());
 
         results.close();
+    }
+
+
+    @Test(timeout = 20_000)
+    public void testGetConnectionURL_Remote_DefaultURIPath() {
+        JMXConfig jmxConfig = new JMXConfig()
+                .setHostname("localhost")
+                .setPort(1234)
+                .setIsRemote(true)
+                .setIsJBossStandaloneMode(true)
+                .setUseSSL(true);
+        String actual = org.newrelic.nrjmx.v2.JMXFetcher.buildConnectionString(jmxConfig);
+
+        Assert.assertEquals("Connection URL should match","service:jmx:remote+https://localhost:1234",actual);
+    }
+
+    @Test(timeout = 20_000)
+    public void testGetConnectionURL_Remote_WithURIPath() {
+        JMXConfig jmxConfig = new JMXConfig()
+                .setHostname("localhost")
+                .setPort(1234)
+                .setIsRemote(true)
+                .setIsJBossStandaloneMode(true)
+                .setUseSSL(true)
+                .setUriPath("/something");
+
+        String actual = org.newrelic.nrjmx.v2.JMXFetcher.buildConnectionString(jmxConfig);
+
+        Assert.assertEquals("Connection URL should match","service:jmx:remote+https://localhost:1234/something/",actual);
+    }
+
+    @Test(timeout = 20_000)
+    public void testGetConnectionURL_Remote_ConnectionURL_Has_Precedence() {
+        JMXConfig jmxConfig = new JMXConfig()
+                .setConnectionURL("special_connection_URL")
+                .setHostname("localhost")
+                .setPort(1234)
+                .setIsRemote(true)
+                .setIsJBossStandaloneMode(true)
+                .setUseSSL(true)
+                .setUriPath("/something");
+
+        String actual = org.newrelic.nrjmx.v2.JMXFetcher.buildConnectionString(jmxConfig);
+
+        Assert.assertEquals("Connection URL should match","special_connection_URL", actual);
+    }
+
+    @Test(timeout = 20_000)
+    public void testGetConnectionURL_RMI() {
+        JMXConfig jmxConfig = new JMXConfig()
+                .setHostname("localhost")
+                .setPort(1234);
+
+        String actual = org.newrelic.nrjmx.v2.JMXFetcher.buildConnectionString(jmxConfig);
+
+        Assert.assertEquals("Connection URL should match","service:jmx:rmi:///jndi/rmi://localhost:1234/jmxrmi", actual);
+    }
+
+    @Test(timeout = 20_000)
+    public void testGetConnectionURL_RMI_With_URIPath() {
+        JMXConfig jmxConfig = new JMXConfig()
+                .setHostname("localhost")
+                .setPort(1234)
+                .setUriPath("something");
+
+        String actual = org.newrelic.nrjmx.v2.JMXFetcher.buildConnectionString(jmxConfig);
+
+        Assert.assertEquals("Connection URL should match","service:jmx:rmi:///jndi/rmi://localhost:1234/something", actual);
     }
 
     private static void eventually(long timeoutMs, Runnable r) throws Exception {

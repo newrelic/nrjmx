@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
  */
 public class JMXFetcher {
     public static final String defaultURIPath = "jmxrmi";
-    public static final Boolean defaultJBossModeIsStandalone = false;
 
     private static final Logger logger = Logger.getLogger("nrjmx");
 
@@ -35,7 +34,6 @@ public class JMXFetcher {
 
     private MBeanServerConnection connection;
 
-    private String connectionString;
     private Map<String, Object> connectionEnv = new HashMap<>();
 
     public JMXFetcher(ExecutorService executor) {
@@ -50,37 +48,7 @@ public class JMXFetcher {
     }
 
     public void connect(JMXConfig jmxConfig) throws JMXConnectionError {
-
-        if (jmxConfig.connectionURL != null && !jmxConfig.connectionURL.equals("")) {
-            connectionString = jmxConfig.connectionURL;
-        } else {
-            // Official doc for remoting v3 is not available, see:
-            // - https://developer.jboss.org/thread/196619
-            // - http://jbossremoting.jboss.org/documentation/v3.html
-            // Some doc on URIS at:
-            // -
-            // https://github.com/jboss-remoting/jboss-remoting/blob/master/src/main/java/org/jboss/remoting3/EndpointImpl.java#L292-L304
-            // - https://stackoverflow.com/questions/42970921/what-is-http-remoting-protocol
-            // -
-            // http://www.mastertheboss.com/jboss-server/jboss-monitoring/using-jconsole-to-monitor-a-remote-wildfly-server
-            String uriPath = jmxConfig.uriPath;
-            if (jmxConfig.isRemote) {
-                if (defaultURIPath.equals(uriPath)) {
-                    uriPath = "";
-                } else {
-                    uriPath = uriPath.concat("/");
-                }
-                String remoteProtocol = "remote";
-                if (jmxConfig.isJBossStandaloneMode) {
-                    remoteProtocol = "remote+http";
-                }
-                connectionString =
-                        String.format("service:jmx:%s://%s:%s%s", remoteProtocol, jmxConfig.hostname, jmxConfig.port, uriPath);
-            } else {
-                connectionString =
-                        String.format("service:jmx:rmi:///jndi/rmi://%s:%s/%s", jmxConfig.hostname, jmxConfig.port, uriPath);
-            }
-        }
+        String connectionString = buildConnectionString(jmxConfig);
 
         if (!"".equals(jmxConfig.username)) {
             connectionEnv.put(JMXConnector.CREDENTIALS, new String[]{jmxConfig.username, jmxConfig.password});
@@ -189,7 +157,7 @@ public class JMXFetcher {
             return new ObjectName(mBeanName);
         } catch (MalformedObjectNameException me) {
             throw new JMXError()
-                    .setMessage("cannot parse MBean glob pattern: '"+mBeanName+"', valid: 'DOMAIN:BEAN'")
+                    .setMessage("cannot parse MBean glob pattern: '" + mBeanName + "', valid: 'DOMAIN:BEAN'")
                     .setCauseMessage(me.getMessage())
                     .setStacktrace(ExceptionUtils.getStackTrace(me));
         }
@@ -318,5 +286,37 @@ public class JMXFetcher {
 
     public boolean StringIsNullOrEmpty(String value) {
         return value == null || value.equals("");
+    }
+
+    public static String buildConnectionString(JMXConfig jmxConfig) {
+        if (jmxConfig.connectionURL != null && !jmxConfig.connectionURL.equals("")) {
+            return jmxConfig.connectionURL;
+        }
+        // Official doc for remoting v3 is not available, see:
+        // - https://developer.jboss.org/thread/196619
+        // - http://jbossremoting.jboss.org/documentation/v3.html
+        // Some doc on URIS at:
+        // -
+        // https://github.com/jboss-remoting/jboss-remoting/blob/master/src/main/java/org/jboss/remoting3/EndpointImpl.java#L292-L304
+        // - https://stackoverflow.com/questions/42970921/what-is-http-remoting-protocol
+        // -
+        // http://www.mastertheboss.com/jboss-server/jboss-monitoring/using-jconsole-to-monitor-a-remote-wildfly-server
+        String uriPath = jmxConfig.uriPath;
+        if (uriPath == null) {
+            uriPath = defaultURIPath;
+        }
+        if (jmxConfig.isRemote) {
+            if (defaultURIPath.equals(uriPath)) {
+                uriPath = "";
+            } else {
+                uriPath = uriPath.concat("/");
+            }
+            String remoteProtocol = "remote";
+            if (jmxConfig.isJBossStandaloneMode) {
+                remoteProtocol += (jmxConfig.useSSL) ? "+https" : "+http";
+            }
+            return String.format("service:jmx:%s://%s:%s%s", remoteProtocol, jmxConfig.hostname, jmxConfig.port, uriPath);
+        }
+        return String.format("service:jmx:rmi:///jndi/rmi://%s:%s/%s", jmxConfig.hostname, jmxConfig.port, uriPath);
     }
 }
