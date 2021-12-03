@@ -11,19 +11,22 @@ package org.newrelic.nrjmx.v2.nrprotocol;
 public class JMXError extends org.apache.thrift.TException implements org.apache.thrift.TBase<JMXError, JMXError._Fields>, java.io.Serializable, Cloneable, Comparable<JMXError> {
   private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("JMXError");
 
-  private static final org.apache.thrift.protocol.TField CODE_FIELD_DESC = new org.apache.thrift.protocol.TField("code", org.apache.thrift.protocol.TType.I32, (short)1);
-  private static final org.apache.thrift.protocol.TField MESSAGE_FIELD_DESC = new org.apache.thrift.protocol.TField("message", org.apache.thrift.protocol.TType.STRING, (short)2);
+  private static final org.apache.thrift.protocol.TField MESSAGE_FIELD_DESC = new org.apache.thrift.protocol.TField("message", org.apache.thrift.protocol.TType.STRING, (short)1);
+  private static final org.apache.thrift.protocol.TField CAUSE_MESSAGE_FIELD_DESC = new org.apache.thrift.protocol.TField("causeMessage", org.apache.thrift.protocol.TType.STRING, (short)2);
+  private static final org.apache.thrift.protocol.TField STACKTRACE_FIELD_DESC = new org.apache.thrift.protocol.TField("stacktrace", org.apache.thrift.protocol.TType.STRING, (short)3);
 
   private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new JMXErrorStandardSchemeFactory();
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new JMXErrorTupleSchemeFactory();
 
-  public int code; // optional
   public @org.apache.thrift.annotation.Nullable java.lang.String message; // required
+  public @org.apache.thrift.annotation.Nullable java.lang.String causeMessage; // required
+  public @org.apache.thrift.annotation.Nullable java.lang.String stacktrace; // required
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-    CODE((short)1, "code"),
-    MESSAGE((short)2, "message");
+    MESSAGE((short)1, "message"),
+    CAUSE_MESSAGE((short)2, "causeMessage"),
+    STACKTRACE((short)3, "stacktrace");
 
     private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -39,10 +42,12 @@ public class JMXError extends org.apache.thrift.TException implements org.apache
     @org.apache.thrift.annotation.Nullable
     public static _Fields findByThriftId(int fieldId) {
       switch(fieldId) {
-        case 1: // CODE
-          return CODE;
-        case 2: // MESSAGE
+        case 1: // MESSAGE
           return MESSAGE;
+        case 2: // CAUSE_MESSAGE
+          return CAUSE_MESSAGE;
+        case 3: // STACKTRACE
+          return STACKTRACE;
         default:
           return null;
       }
@@ -84,15 +89,14 @@ public class JMXError extends org.apache.thrift.TException implements org.apache
   }
 
   // isset id assignments
-  private static final int __CODE_ISSET_ID = 0;
-  private byte __isset_bitfield = 0;
-  private static final _Fields optionals[] = {_Fields.CODE};
   public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
-    tmpMap.put(_Fields.CODE, new org.apache.thrift.meta_data.FieldMetaData("code", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
     tmpMap.put(_Fields.MESSAGE, new org.apache.thrift.meta_data.FieldMetaData("message", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+    tmpMap.put(_Fields.CAUSE_MESSAGE, new org.apache.thrift.meta_data.FieldMetaData("causeMessage", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+    tmpMap.put(_Fields.STACKTRACE, new org.apache.thrift.meta_data.FieldMetaData("stacktrace", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(JMXError.class, metaDataMap);
@@ -102,20 +106,28 @@ public class JMXError extends org.apache.thrift.TException implements org.apache
   }
 
   public JMXError(
-    java.lang.String message)
+    java.lang.String message,
+    java.lang.String causeMessage,
+    java.lang.String stacktrace)
   {
     this();
     this.message = message;
+    this.causeMessage = causeMessage;
+    this.stacktrace = stacktrace;
   }
 
   /**
    * Performs a deep copy on <i>other</i>.
    */
   public JMXError(JMXError other) {
-    __isset_bitfield = other.__isset_bitfield;
-    this.code = other.code;
     if (other.isSetMessage()) {
       this.message = other.message;
+    }
+    if (other.isSetCauseMessage()) {
+      this.causeMessage = other.causeMessage;
+    }
+    if (other.isSetStacktrace()) {
+      this.stacktrace = other.stacktrace;
     }
   }
 
@@ -125,32 +137,9 @@ public class JMXError extends org.apache.thrift.TException implements org.apache
 
   @Override
   public void clear() {
-    setCodeIsSet(false);
-    this.code = 0;
     this.message = null;
-  }
-
-  public int getCode() {
-    return this.code;
-  }
-
-  public JMXError setCode(int code) {
-    this.code = code;
-    setCodeIsSet(true);
-    return this;
-  }
-
-  public void unsetCode() {
-    __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __CODE_ISSET_ID);
-  }
-
-  /** Returns true if field code is set (has been assigned a value) and false otherwise */
-  public boolean isSetCode() {
-    return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __CODE_ISSET_ID);
-  }
-
-  public void setCodeIsSet(boolean value) {
-    __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __CODE_ISSET_ID, value);
+    this.causeMessage = null;
+    this.stacktrace = null;
   }
 
   @org.apache.thrift.annotation.Nullable
@@ -178,21 +167,79 @@ public class JMXError extends org.apache.thrift.TException implements org.apache
     }
   }
 
+  @org.apache.thrift.annotation.Nullable
+  public java.lang.String getCauseMessage() {
+    return this.causeMessage;
+  }
+
+  public JMXError setCauseMessage(@org.apache.thrift.annotation.Nullable java.lang.String causeMessage) {
+    this.causeMessage = causeMessage;
+    return this;
+  }
+
+  public void unsetCauseMessage() {
+    this.causeMessage = null;
+  }
+
+  /** Returns true if field causeMessage is set (has been assigned a value) and false otherwise */
+  public boolean isSetCauseMessage() {
+    return this.causeMessage != null;
+  }
+
+  public void setCauseMessageIsSet(boolean value) {
+    if (!value) {
+      this.causeMessage = null;
+    }
+  }
+
+  @org.apache.thrift.annotation.Nullable
+  public java.lang.String getStacktrace() {
+    return this.stacktrace;
+  }
+
+  public JMXError setStacktrace(@org.apache.thrift.annotation.Nullable java.lang.String stacktrace) {
+    this.stacktrace = stacktrace;
+    return this;
+  }
+
+  public void unsetStacktrace() {
+    this.stacktrace = null;
+  }
+
+  /** Returns true if field stacktrace is set (has been assigned a value) and false otherwise */
+  public boolean isSetStacktrace() {
+    return this.stacktrace != null;
+  }
+
+  public void setStacktraceIsSet(boolean value) {
+    if (!value) {
+      this.stacktrace = null;
+    }
+  }
+
   public void setFieldValue(_Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
     switch (field) {
-    case CODE:
-      if (value == null) {
-        unsetCode();
-      } else {
-        setCode((java.lang.Integer)value);
-      }
-      break;
-
     case MESSAGE:
       if (value == null) {
         unsetMessage();
       } else {
         setMessage((java.lang.String)value);
+      }
+      break;
+
+    case CAUSE_MESSAGE:
+      if (value == null) {
+        unsetCauseMessage();
+      } else {
+        setCauseMessage((java.lang.String)value);
+      }
+      break;
+
+    case STACKTRACE:
+      if (value == null) {
+        unsetStacktrace();
+      } else {
+        setStacktrace((java.lang.String)value);
       }
       break;
 
@@ -202,11 +249,14 @@ public class JMXError extends org.apache.thrift.TException implements org.apache
   @org.apache.thrift.annotation.Nullable
   public java.lang.Object getFieldValue(_Fields field) {
     switch (field) {
-    case CODE:
-      return getCode();
-
     case MESSAGE:
       return getMessage();
+
+    case CAUSE_MESSAGE:
+      return getCauseMessage();
+
+    case STACKTRACE:
+      return getStacktrace();
 
     }
     throw new java.lang.IllegalStateException();
@@ -219,10 +269,12 @@ public class JMXError extends org.apache.thrift.TException implements org.apache
     }
 
     switch (field) {
-    case CODE:
-      return isSetCode();
     case MESSAGE:
       return isSetMessage();
+    case CAUSE_MESSAGE:
+      return isSetCauseMessage();
+    case STACKTRACE:
+      return isSetStacktrace();
     }
     throw new java.lang.IllegalStateException();
   }
@@ -242,21 +294,30 @@ public class JMXError extends org.apache.thrift.TException implements org.apache
     if (this == that)
       return true;
 
-    boolean this_present_code = true && this.isSetCode();
-    boolean that_present_code = true && that.isSetCode();
-    if (this_present_code || that_present_code) {
-      if (!(this_present_code && that_present_code))
-        return false;
-      if (this.code != that.code)
-        return false;
-    }
-
     boolean this_present_message = true && this.isSetMessage();
     boolean that_present_message = true && that.isSetMessage();
     if (this_present_message || that_present_message) {
       if (!(this_present_message && that_present_message))
         return false;
       if (!this.message.equals(that.message))
+        return false;
+    }
+
+    boolean this_present_causeMessage = true && this.isSetCauseMessage();
+    boolean that_present_causeMessage = true && that.isSetCauseMessage();
+    if (this_present_causeMessage || that_present_causeMessage) {
+      if (!(this_present_causeMessage && that_present_causeMessage))
+        return false;
+      if (!this.causeMessage.equals(that.causeMessage))
+        return false;
+    }
+
+    boolean this_present_stacktrace = true && this.isSetStacktrace();
+    boolean that_present_stacktrace = true && that.isSetStacktrace();
+    if (this_present_stacktrace || that_present_stacktrace) {
+      if (!(this_present_stacktrace && that_present_stacktrace))
+        return false;
+      if (!this.stacktrace.equals(that.stacktrace))
         return false;
     }
 
@@ -267,13 +328,17 @@ public class JMXError extends org.apache.thrift.TException implements org.apache
   public int hashCode() {
     int hashCode = 1;
 
-    hashCode = hashCode * 8191 + ((isSetCode()) ? 131071 : 524287);
-    if (isSetCode())
-      hashCode = hashCode * 8191 + code;
-
     hashCode = hashCode * 8191 + ((isSetMessage()) ? 131071 : 524287);
     if (isSetMessage())
       hashCode = hashCode * 8191 + message.hashCode();
+
+    hashCode = hashCode * 8191 + ((isSetCauseMessage()) ? 131071 : 524287);
+    if (isSetCauseMessage())
+      hashCode = hashCode * 8191 + causeMessage.hashCode();
+
+    hashCode = hashCode * 8191 + ((isSetStacktrace()) ? 131071 : 524287);
+    if (isSetStacktrace())
+      hashCode = hashCode * 8191 + stacktrace.hashCode();
 
     return hashCode;
   }
@@ -286,22 +351,32 @@ public class JMXError extends org.apache.thrift.TException implements org.apache
 
     int lastComparison = 0;
 
-    lastComparison = java.lang.Boolean.valueOf(isSetCode()).compareTo(other.isSetCode());
-    if (lastComparison != 0) {
-      return lastComparison;
-    }
-    if (isSetCode()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.code, other.code);
-      if (lastComparison != 0) {
-        return lastComparison;
-      }
-    }
     lastComparison = java.lang.Boolean.valueOf(isSetMessage()).compareTo(other.isSetMessage());
     if (lastComparison != 0) {
       return lastComparison;
     }
     if (isSetMessage()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.message, other.message);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = java.lang.Boolean.valueOf(isSetCauseMessage()).compareTo(other.isSetCauseMessage());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetCauseMessage()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.causeMessage, other.causeMessage);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = java.lang.Boolean.valueOf(isSetStacktrace()).compareTo(other.isSetStacktrace());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetStacktrace()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.stacktrace, other.stacktrace);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -327,17 +402,27 @@ public class JMXError extends org.apache.thrift.TException implements org.apache
     java.lang.StringBuilder sb = new java.lang.StringBuilder("JMXError(");
     boolean first = true;
 
-    if (isSetCode()) {
-      sb.append("code:");
-      sb.append(this.code);
-      first = false;
-    }
-    if (!first) sb.append(", ");
     sb.append("message:");
     if (this.message == null) {
       sb.append("null");
     } else {
       sb.append(this.message);
+    }
+    first = false;
+    if (!first) sb.append(", ");
+    sb.append("causeMessage:");
+    if (this.causeMessage == null) {
+      sb.append("null");
+    } else {
+      sb.append(this.causeMessage);
+    }
+    first = false;
+    if (!first) sb.append(", ");
+    sb.append("stacktrace:");
+    if (this.stacktrace == null) {
+      sb.append("null");
+    } else {
+      sb.append(this.stacktrace);
     }
     first = false;
     sb.append(")");
@@ -359,8 +444,6 @@ public class JMXError extends org.apache.thrift.TException implements org.apache
 
   private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, java.lang.ClassNotFoundException {
     try {
-      // it doesn't seem like you should have to do this, but java serialization is wacky, and doesn't call the default constructor.
-      __isset_bitfield = 0;
       read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
     } catch (org.apache.thrift.TException te) {
       throw new java.io.IOException(te);
@@ -385,18 +468,26 @@ public class JMXError extends org.apache.thrift.TException implements org.apache
           break;
         }
         switch (schemeField.id) {
-          case 1: // CODE
-            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
-              struct.code = iprot.readI32();
-              struct.setCodeIsSet(true);
+          case 1: // MESSAGE
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+              struct.message = iprot.readString();
+              struct.setMessageIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 2: // MESSAGE
+          case 2: // CAUSE_MESSAGE
             if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-              struct.message = iprot.readString();
-              struct.setMessageIsSet(true);
+              struct.causeMessage = iprot.readString();
+              struct.setCauseMessageIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 3: // STACKTRACE
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+              struct.stacktrace = iprot.readString();
+              struct.setStacktraceIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
@@ -416,14 +507,19 @@ public class JMXError extends org.apache.thrift.TException implements org.apache
       struct.validate();
 
       oprot.writeStructBegin(STRUCT_DESC);
-      if (struct.isSetCode()) {
-        oprot.writeFieldBegin(CODE_FIELD_DESC);
-        oprot.writeI32(struct.code);
-        oprot.writeFieldEnd();
-      }
       if (struct.message != null) {
         oprot.writeFieldBegin(MESSAGE_FIELD_DESC);
         oprot.writeString(struct.message);
+        oprot.writeFieldEnd();
+      }
+      if (struct.causeMessage != null) {
+        oprot.writeFieldBegin(CAUSE_MESSAGE_FIELD_DESC);
+        oprot.writeString(struct.causeMessage);
+        oprot.writeFieldEnd();
+      }
+      if (struct.stacktrace != null) {
+        oprot.writeFieldBegin(STACKTRACE_FIELD_DESC);
+        oprot.writeString(struct.stacktrace);
         oprot.writeFieldEnd();
       }
       oprot.writeFieldStop();
@@ -444,32 +540,42 @@ public class JMXError extends org.apache.thrift.TException implements org.apache
     public void write(org.apache.thrift.protocol.TProtocol prot, JMXError struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol oprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
       java.util.BitSet optionals = new java.util.BitSet();
-      if (struct.isSetCode()) {
+      if (struct.isSetMessage()) {
         optionals.set(0);
       }
-      if (struct.isSetMessage()) {
+      if (struct.isSetCauseMessage()) {
         optionals.set(1);
       }
-      oprot.writeBitSet(optionals, 2);
-      if (struct.isSetCode()) {
-        oprot.writeI32(struct.code);
+      if (struct.isSetStacktrace()) {
+        optionals.set(2);
       }
+      oprot.writeBitSet(optionals, 3);
       if (struct.isSetMessage()) {
         oprot.writeString(struct.message);
+      }
+      if (struct.isSetCauseMessage()) {
+        oprot.writeString(struct.causeMessage);
+      }
+      if (struct.isSetStacktrace()) {
+        oprot.writeString(struct.stacktrace);
       }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, JMXError struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-      java.util.BitSet incoming = iprot.readBitSet(2);
+      java.util.BitSet incoming = iprot.readBitSet(3);
       if (incoming.get(0)) {
-        struct.code = iprot.readI32();
-        struct.setCodeIsSet(true);
-      }
-      if (incoming.get(1)) {
         struct.message = iprot.readString();
         struct.setMessageIsSet(true);
+      }
+      if (incoming.get(1)) {
+        struct.causeMessage = iprot.readString();
+        struct.setCauseMessageIsSet(true);
+      }
+      if (incoming.get(2)) {
+        struct.stacktrace = iprot.readString();
+        struct.setStacktraceIsSet(true);
       }
     }
   }

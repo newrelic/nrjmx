@@ -37,6 +37,8 @@ func startJMXProcess(ctx context.Context) (*jmxProcess, error) {
 
 	cmd := exec.CommandContext(ctx, filepath.Clean(getNrjmxExec()), "-v2")
 
+	//cmd := exec.CommandContext(ctx, "java", "-cp", "/Users/cciutea/workspace/nr/int/nrjmx/bin/*", "org.newrelic.nrjmx.Application", "-v2")
+
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create stdout pipe to %q: %v", cmd.Path, err)

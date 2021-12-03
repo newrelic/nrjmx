@@ -5,6 +5,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/newrelic/nrjmx/gojmx/nrprotocol"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -15,9 +18,6 @@ import (
 
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
-	"github.com/newrelic/nrjmx/gojmx/nrprotocol"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 )
@@ -36,7 +36,7 @@ const (
 	truststorePassword             = "password"
 	jmxUsername                    = "testuser"
 	jmxPassword                    = "testpassword"
-	defaultTimeoutMs 			   = 5000
+	defaultTimeoutMs               = 5000
 )
 
 var prjDir, keystorePath, truststorepath string
@@ -62,7 +62,7 @@ func Test_Query_Success_LargeAmountOfData(t *testing.T) {
 	require.NoError(t, err)
 	defer container.Terminate(ctx)
 
-	data := []map[string]interface{}{}
+	var data []map[string]interface{}
 
 	name := strings.Repeat("tomas", 100)
 
@@ -103,7 +103,22 @@ func Test_Query_Success_LargeAmountOfData(t *testing.T) {
 	defer client.Disconnect(ctx)
 
 	// AND query returns at least 5Mb of data.
-	result, err := client.QueryMbean(ctx, "test:type=Cat,*", -1)
+	mBeanNames, err := client.GetMBeanNames(ctx, "test:type=Cat,*", -1)
+	assert.NoError(t, err)
+
+	var result []*nrprotocol.JMXAttribute
+
+	for _, mBeanName := range mBeanNames {
+		mBeanAttrNames, err := client.GetMBeanAttrNames(ctx, mBeanName, -1)
+		assert.NoError(t, err)
+
+		for _, mBeanAttrName := range mBeanAttrNames {
+			jmxAttr, err := client.GetMBeanAttr(ctx, mBeanName, mBeanAttrName, -1)
+			assert.NoError(t, err)
+			result = append(result, jmxAttr)
+		}
+
+	}
 	assert.NoError(t, err)
 	assert.GreaterOrEqual(t, len(fmt.Sprintf("%v", result)), 5*1024*1024)
 }
@@ -148,10 +163,21 @@ func Test_Query_Success(t *testing.T) {
 	defer client.Disconnect(ctx)
 	assert.NoError(t, err)
 
-	// AND Query returns expected data
-	actual, err := client.QueryMbean(ctx, "test:type=Cat,*", defaultTimeoutMs)
-	assert.NoError(t, err)
+	expectedMBeanNames := []string{
+		"test:type=Cat,name=tomas",
+	}
+	actualMBeanNames, err := client.GetMBeanNames(ctx, "test:type=Cat,*", defaultTimeoutMs)
+	require.NoError(t, err)
+	require.ElementsMatch(t, expectedMBeanNames, actualMBeanNames)
 
+	expectedMBeanAttrNames := []string{
+		"BoolValue", "FloatValue", "NumberValue", "DoubleValue", "Name",
+	}
+	actualMBeanAttrNames, err := client.GetMBeanAttrNames(ctx, "test:name=tomas,type=Cat", defaultTimeoutMs)
+	require.NoError(t, err)
+	require.ElementsMatch(t, expectedMBeanAttrNames, actualMBeanAttrNames)
+
+	// AND Query returns expected data
 	expected := []*nrprotocol.JMXAttribute{
 		{
 			Attribute: "test:type=Cat,name=tomas,attr=FloatValue",
@@ -185,7 +211,14 @@ func Test_Query_Success(t *testing.T) {
 		},
 	}
 
-	assert.Equal(t, expected, actual)
+	var actual []*nrprotocol.JMXAttribute
+	for _, mBeanAttrName := range expectedMBeanAttrNames {
+		jmxAttribute, err := client.GetMBeanAttr(ctx, "test:type=Cat,name=tomas", mBeanAttrName, defaultTimeoutMs)
+		assert.NoError(t, err)
+		actual = append(actual, jmxAttribute)
+	}
+
+	assert.ElementsMatch(t, expected, actual)
 }
 
 func Test_Query_Timeout(t *testing.T) {
@@ -216,7 +249,7 @@ func Test_Query_Timeout(t *testing.T) {
 	assert.NoError(t, err)
 
 	// AND Query returns expected data
-	actual, err := client.Query(1, "*:*")
+	actual, err := client.GetMBeanAttrNames(ctx, "*:*", 1)
 	assert.Nil(t, actual)
 
 	assert.Error(t, err)
@@ -260,35 +293,13 @@ func Test_URL_Success(t *testing.T) {
 	assert.NoError(t, err)
 
 	// AND Query returns expected data
-	actual, err := client.QueryMbean(ctx, "test:type=Cat,*", defaultTimeoutMs)
+	actual, err := client.GetMBeanAttr(ctx, "test:type=Cat,name=tomas", "FloatValue", defaultTimeoutMs)
 	assert.NoError(t, err)
 
-	expected := []*nrprotocol.JMXAttribute{
-		{
-			Attribute:   "test:type=Cat,name=tomas,attr=FloatValue",
-			ValueType:   nrprotocol.ValueType_DOUBLE,
-			DoubleValue: 2.2,
-		},
-		{
-			Attribute: "test:type=Cat,name=tomas,attr=NumberValue",
-			ValueType: nrprotocol.ValueType_INT,
-			IntValue:  3,
-		},
-		{
-			Attribute: "test:type=Cat,name=tomas,attr=BoolValue",
-			ValueType: nrprotocol.ValueType_BOOL,
-			BoolValue: true,
-		},
-		{
-			Attribute:   "test:type=Cat,name=tomas,attr=DoubleValue",
-			ValueType:   nrprotocol.ValueType_DOUBLE,
-			DoubleValue: 1.2,
-		},
-		{
-			Attribute:   "test:type=Cat,name=tomas,attr=Name",
-			ValueType:   nrprotocol.ValueType_STRING,
-			StringValue: "tomas",
-		},
+	expected := &nrprotocol.JMXAttribute{
+		Attribute:   "test:type=Cat,name=tomas,attr=FloatValue",
+		ValueType:   nrprotocol.ValueType_DOUBLE,
+		DoubleValue: 2.2,
 	}
 
 	assert.Equal(t, expected, actual)
@@ -311,7 +322,7 @@ func Test_JavaNotInstalled(t *testing.T) {
 	assert.EqualError(t, err, "EOF") // TODO: this error message should be fixed
 
 	// AND Query fails with expected error
-	actual, err := client.QueryMbean(ctx, "test:type=Cat,*", defaultTimeoutMs)
+	actual, err := client.GetMBeanNames(ctx, "test:type=Cat,*", defaultTimeoutMs)
 	assert.Nil(t, actual)
 	assert.EqualError(t, err, "write |1: broken pipe") // TODO: this error message should be fixed
 }
@@ -342,10 +353,12 @@ func Test_WrongMbeanFormat(t *testing.T) {
 	assert.NoError(t, err)
 
 	// AND Query returns expected error
-	actual, err := client.QueryMbean(ctx, "wrong_format", defaultTimeoutMs)
+	actual, err := client.GetMBeanNames(ctx, "wrong_format", defaultTimeoutMs)
 	assert.Nil(t, actual)
 
-	assert.EqualError(t, err, "cannot parse MBean glob pattern, valid: 'DOMAIN:BEAN'") //TODO: return the correct error from java to match this message.
+	jmxErr, ok := err.(*nrprotocol.JMXError)
+	assert.True(t, ok)
+	assert.Equal(t, jmxErr.GetMessage(), "cannot parse MBean glob pattern: 'wrong_format', valid: 'DOMAIN:BEAN'")
 }
 
 func Test_Wrong_Connection(t *testing.T) {
@@ -367,9 +380,9 @@ func Test_Wrong_Connection(t *testing.T) {
 	assert.Contains(t, err.Error(), "Connection refused to host: localhost;")
 
 	// AND query returns expected error
-	actual, err := client.QueryMbean(ctx, "test:type=Cat,*", defaultTimeoutMs)
+	actual, err := client.GetMBeanNames(ctx, "test:type=Cat,*", defaultTimeoutMs)
 	assert.Nil(t, actual)
-	assert.Contains(t, err.Error(), "Connection refused to host: localhost;") // TODO: fix this, doesn't return the correct error
+	assert.Errorf(t, err, "connection to JMX endpoint is not established")
 }
 
 func Test_SSLQuery_Success(t *testing.T) {
@@ -418,9 +431,21 @@ func Test_SSLQuery_Success(t *testing.T) {
 	assert.NoError(t, err)
 
 	// AND Query returns expected data
-	actual, err := client.QueryMbean(ctx, "test:type=Cat,*", defaultTimeoutMs)
-	assert.NoError(t, err)
+	expectedMBeanNames := []string{
+		"test:type=Cat,name=tomas",
+	}
+	actualMBeanNames, err := client.GetMBeanNames(ctx, "test:type=Cat,*", defaultTimeoutMs)
+	require.NoError(t, err)
+	require.ElementsMatch(t, expectedMBeanNames, actualMBeanNames)
 
+	expectedMBeanAttrNames := []string{
+		"BoolValue", "FloatValue", "NumberValue", "DoubleValue", "Name",
+	}
+	actualMBeanAttrNames, err := client.GetMBeanAttrNames(ctx, "test:name=tomas,type=Cat", defaultTimeoutMs)
+	require.NoError(t, err)
+	require.ElementsMatch(t, expectedMBeanAttrNames, actualMBeanAttrNames)
+
+	// AND Query returns expected data
 	expected := []*nrprotocol.JMXAttribute{
 		{
 			Attribute: "test:type=Cat,name=tomas,attr=FloatValue",
@@ -454,7 +479,14 @@ func Test_SSLQuery_Success(t *testing.T) {
 		},
 	}
 
-	assert.Equal(t, expected, actual)
+	var actual []*nrprotocol.JMXAttribute
+	for _, mBeanAttrName := range expectedMBeanAttrNames {
+		jmxAttribute, err := client.GetMBeanAttr(ctx, "test:type=Cat,name=tomas", mBeanAttrName, defaultTimeoutMs)
+		assert.NoError(t, err)
+		actual = append(actual, jmxAttribute)
+	}
+
+	assert.ElementsMatch(t, expected, actual)
 }
 
 func Test_Wrong_Credentials(t *testing.T) {
@@ -492,9 +524,9 @@ func Test_Wrong_Credentials(t *testing.T) {
 	assert.Contains(t, err.Error(), "Authentication failed! Invalid username or password")
 
 	// AND Query returns expected error
-	actual, err := client.QueryMbean(ctx, "test:type=Cat,*", defaultTimeoutMs)
+	actual, err := client.GetMBeanNames(ctx, "test:type=Cat,*", defaultTimeoutMs)
 	assert.Nil(t, actual)
-	assert.Contains(t, err.Error(), "Authentication failed! Invalid username or password") // TODO: fix this in java tool, as it doesn't return the correct error
+	assert.Errorf(t, err, "connection to JMX endpoint is not established")
 }
 
 func Test_Wrong_Certificate_password(t *testing.T) {
@@ -532,9 +564,9 @@ func Test_Wrong_Certificate_password(t *testing.T) {
 	assert.Contains(t, err.Error(), "SSLContext") // TODO: improve this error from java
 
 	// AND Query returns expected error
-	actual, err := client.QueryMbean(ctx, "test:type=Cat,*", defaultTimeoutMs)
+	actual, err := client.GetMBeanNames(ctx, "test:type=Cat,*", defaultTimeoutMs)
 	assert.Nil(t, actual)
-	assert.Contains(t, err.Error(), "SSLContext") // TODO: improve this error from java
+	assert.Errorf(t, err, "connection to JMX endpoint is not established")
 }
 
 func Test_Connector_Success(t *testing.T) {
@@ -575,8 +607,35 @@ func Test_Connector_Success(t *testing.T) {
 	assert.NoError(t, err)
 
 	// AND Query returns expected data
-	actual, err := client.QueryMbean(ctx, "jboss.as:subsystem=remoting,configuration=endpoint", defaultTimeoutMs)
+	expectedMbeanNames := []string{
+		"jboss.as:subsystem=remoting,configuration=endpoint",
+	}
+	actualMbeanNames, err := client.GetMBeanNames(ctx, "jboss.as:subsystem=remoting,configuration=endpoint", defaultTimeoutMs)
 	assert.NoError(t, err)
+	assert.ElementsMatch(t, expectedMbeanNames, actualMbeanNames)
+
+	expectedMBeanAttrNames := []string{
+		"authRealm",
+		"authenticationRetries",
+		"authorizeId",
+		"bufferRegionSize",
+		"heartbeatInterval",
+		"maxInboundChannels",
+		"maxInboundMessageSize",
+		"maxInboundMessages",
+		"maxOutboundChannels",
+		"maxOutboundMessageSize",
+		"maxOutboundMessages",
+		"receiveBufferSize",
+		"receiveWindowSize",
+		"saslProtocol",
+		"sendBufferSize",
+		"serverName",
+		"transmitWindowSize",
+		"worker",
+	}
+	actualMBeanAttrNames, err := client.GetMBeanAttrNames(ctx, "jboss.as:subsystem=remoting,configuration=endpoint", defaultTimeoutMs)
+	assert.ElementsMatch(t, expectedMBeanAttrNames, actualMBeanAttrNames)
 
 	expected := []*nrprotocol.JMXAttribute{
 		{
@@ -651,7 +710,16 @@ func Test_Connector_Success(t *testing.T) {
 		},
 	}
 
-	assert.Equal(t, expected, actual)
+	var actual []*nrprotocol.JMXAttribute
+	for _, mBeanAttrName := range expectedMBeanAttrNames {
+		jmxAttribute, err := client.GetMBeanAttr(ctx, "jboss.as:subsystem=remoting,configuration=endpoint", mBeanAttrName, defaultTimeoutMs)
+		if err != nil {
+			continue
+		}
+		actual = append(actual, jmxAttribute)
+	}
+
+	assert.ElementsMatch(t, expected, actual)
 }
 
 // runJMXServiceContainer will start a container running test-server with JMX.
