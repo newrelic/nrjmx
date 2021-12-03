@@ -5,6 +5,7 @@ package org.newrelic.nrjmx.v2;
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.newrelic.nrjmx.v2.nrprotocol.*;
 
 import javax.management.*;
@@ -117,13 +118,23 @@ public class JMXFetcher {
     public List<String> getMBeanNames(String mBeanNamePattern) throws JMXError {
         ObjectName objectName = this.getObjectName(mBeanNamePattern);
         try {
-            return connection.queryMBeans(objectName, null)
+            if (connection == null) {
+                logger.info("connection is null");
+            } else {
+                logger.info("not null");
+            }
+
+
+            return getConnection().queryMBeans(objectName, null)
                     .stream()
                     .map(ObjectInstance::getObjectName)
-                    .map(ObjectName::getCanonicalName)
+                    .map(ObjectName::toString)
                     .collect(Collectors.toList());
         } catch (IOException ioe) {
-            throw new JMXError("can't get beans for query: " + mBeanNamePattern, ioe.getMessage());
+            throw new JMXError()
+                    .setMessage("can't get beans for query: " + mBeanNamePattern)
+                    .setCauseMessage(ioe.getMessage())
+                    .setStacktrace(ExceptionUtils.getStackTrace(ioe));
         }
     }
 
@@ -139,9 +150,12 @@ public class JMXFetcher {
         MBeanInfo info;
 
         try {
-            info = connection.getMBeanInfo(objectName);
+            info = getConnection().getMBeanInfo(objectName);
         } catch (InstanceNotFoundException | IntrospectionException | ReflectionException | IOException e) {
-            throw new JMXError("can't find mBean: " + mBeanName, e.getMessage());
+            throw new JMXError()
+                    .setMessage("can't find mBean: " + mBeanName)
+                    .setCauseMessage(e.getMessage())
+                    .setStacktrace(ExceptionUtils.getStackTrace(e));
         }
 
         return Arrays.stream(info.getAttributes())
@@ -161,14 +175,16 @@ public class JMXFetcher {
         Object value;
         ObjectName objectName = this.getObjectName(mBeanName);
         try {
-            value = connection.getAttribute(objectName, attrName);
+            value = getConnection().getAttribute(objectName, attrName);
             if (value instanceof Attribute) {
                 Attribute jmxAttr = (Attribute) value;
                 value = jmxAttr.getValue();
             }
         } catch (Exception e) {
-            throw new JMXError("can't get attribute: " + attrName + " for bean: " + mBeanName + ": ",
-                    e.getMessage());
+            throw new JMXError()
+                    .setMessage("can't get attribute: " + attrName + " for bean: " + mBeanName + ": ")
+                    .setCauseMessage(e.getMessage())
+                    .setStacktrace(ExceptionUtils.getStackTrace(e));
         }
 
         String name = String.format("%s,attr=%s", mBeanName, attrName);
@@ -179,7 +195,10 @@ public class JMXFetcher {
         try {
             return new ObjectName(mBeanName);
         } catch (MalformedObjectNameException me) {
-            throw new JMXError("can't parse bean name: " + mBeanName, me.getMessage());
+            throw new JMXError()
+                    .setMessage("cannot parse MBean glob pattern: '"+mBeanName+"', valid: 'DOMAIN:BEAN'")
+                    .setCauseMessage(me.getMessage())
+                    .setStacktrace(ExceptionUtils.getStackTrace(me));
         }
     }
 
@@ -189,11 +208,25 @@ public class JMXFetcher {
                 return future.get();
             }
             return future.get(timeoutMs, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
-            //TODO: Thread.currentThread().interrupt();
-            // Set status again?!
-            //https://www.baeldung.com/java-interrupted-exception
-            throw new JMXError("error occurred: ", e.getMessage());
+
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new JMXError()
+                    .setMessage("operation was interrupted " + e.getMessage())
+                    .setCauseMessage(e.getMessage())
+                    .setStacktrace(ExceptionUtils.getStackTrace(e));
+        } catch (TimeoutException e) {
+            throw new JMXError()
+                    .setMessage("operation timeout exceeded: " + timeoutMs + "ms")
+                    .setCauseMessage(e.getMessage())
+                    .setStacktrace(ExceptionUtils.getStackTrace(e));
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof JMXError) {
+                throw (JMXError) e.getCause();
+            }
+            throw new JMXError()
+                    .setMessage("failed to execute operation, error: " + e.getMessage())
+                    .setStacktrace(ExceptionUtils.getStackTrace(e));
         }
     }
 
@@ -202,7 +235,8 @@ public class JMXFetcher {
         attr.attribute = name;
 
         if (value == null) {
-            throw new JMXError("found a null value for bean: " + name, null);
+            throw new JMXError()
+                    .setMessage("found a null value for bean: " + name);
         } else if (value instanceof java.lang.Double) {
             attr.doubleValue = parseDouble((Double) value);
             attr.valueType = ValueType.DOUBLE;
@@ -243,9 +277,18 @@ public class JMXFetcher {
             // logger.fine("Arrays are not supported yet: " + name);
             return null;
         } else {
-            throw new JMXError("unsuported data type (" + value.getClass() + ") for bean " + name, null);
+            throw new JMXError()
+                    .setMessage("unsuported data type (" + value.getClass() + ") for bean " + name);
         }
         return null;
+    }
+
+    private MBeanServerConnection getConnection() throws JMXError {
+        if (this.connection == null) {
+            throw new JMXError()
+                    .setMessage("connection to JMX endpoint is not established");
+        }
+        return this.connection;
     }
 
     /**

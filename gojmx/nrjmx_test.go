@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -53,59 +54,74 @@ func init() {
 	os.Setenv("NR_JMX_TOOL", filepath.Join(prjDir, "bin", "nrjmx"))
 }
 
-//func Test_Query_Success_LargeAmountOfData(t *testing.T) {
-//	ctx := context.Background()
-//
-//	// GIVEN a JMX Server running inside a container
-//	container, err := runJMXServiceContainer(ctx)
-//	require.NoError(t, err)
-//	defer container.Terminate(ctx)
-//
-//	var data []map[string]interface{}
-//
-//	name := strings.Repeat("tomas", 100)
-//
-//	for i := 0; i < 1500; i++ {
-//		data = append(data, map[string]interface{}{
-//			"name":        fmt.Sprintf("%s-%d", name, i),
-//			"doubleValue": 1.2,
-//			"floatValue":  2.2,
-//			"numberValue": 3,
-//			"boolValue":   true,
-//		})
-//	}
-//
-//	// Populate the JMX Server with mbeans
-//	resp, err := addMBeansBatch(ctx, container, data)
-//	assert.NoError(t, err)
-//	assert.Equal(t, "ok!\n", string(resp))
-//
-//	defer cleanMBeans(ctx, container)
-//
-//	jmxPort, err := container.MappedPort(ctx, testServerJMXPort)
-//	require.NoError(t, err)
-//	jmxHost, err := container.Host(ctx)
-//	require.NoError(t, err)
-//
-//	// THEN JMX connection can be oppened
-//	client, err := NewJMXServiceClient(ctx)
-//	assert.NoError(t, err)
-//
-//	config := &nrprotocol.JMXConfig{
-//		Hostname: jmxHost,
-//		Port:     int32(jmxPort.Int()),
-//		UriPath:  "jmxrmi",
-//	}
-//
-//	err = client.Connect(ctx, config, -1)
-//	assert.NoError(t, err)
-//	defer client.Disconnect(ctx)
-//
-//	// AND query returns at least 5Mb of data.
-//	result, err := client.QueryMbean(ctx, "test:type=Cat,*", -1)
-//	assert.NoError(t, err)
-//	assert.GreaterOrEqual(t, len(fmt.Sprintf("%v", result)), 5*1024*1024)
-//}
+func Test_Query_Success_LargeAmountOfData(t *testing.T) {
+	ctx := context.Background()
+
+	// GIVEN a JMX Server running inside a container
+	container, err := runJMXServiceContainer(ctx)
+	require.NoError(t, err)
+	defer container.Terminate(ctx)
+
+	var data []map[string]interface{}
+
+	name := strings.Repeat("tomas", 100)
+
+	for i := 0; i < 1500; i++ {
+		data = append(data, map[string]interface{}{
+			"name":        fmt.Sprintf("%s-%d", name, i),
+			"doubleValue": 1.2,
+			"floatValue":  2.2,
+			"numberValue": 3,
+			"boolValue":   true,
+		})
+	}
+
+	// Populate the JMX Server with mbeans
+	resp, err := addMBeansBatch(ctx, container, data)
+	assert.NoError(t, err)
+	assert.Equal(t, "ok!\n", string(resp))
+
+	defer cleanMBeans(ctx, container)
+
+	jmxPort, err := container.MappedPort(ctx, testServerJMXPort)
+	require.NoError(t, err)
+	jmxHost, err := container.Host(ctx)
+	require.NoError(t, err)
+
+	// THEN JMX connection can be oppened
+	client, err := NewJMXServiceClient(ctx)
+	assert.NoError(t, err)
+
+	config := &nrprotocol.JMXConfig{
+		Hostname: jmxHost,
+		Port:     int32(jmxPort.Int()),
+		UriPath:  "jmxrmi",
+	}
+
+	err = client.Connect(ctx, config, -1)
+	assert.NoError(t, err)
+	defer client.Disconnect(ctx)
+
+	// AND query returns at least 5Mb of data.
+	mBeanNames, err := client.GetMBeanNames(ctx, "test:type=Cat,*", -1)
+	assert.NoError(t, err)
+
+	var result []*nrprotocol.JMXAttribute
+
+	for _, mBeanName := range mBeanNames {
+		mBeanAttrNames, err := client.GetMBeanAttrNames(ctx, mBeanName, -1)
+		assert.NoError(t, err)
+
+		for _, mBeanAttrName := range mBeanAttrNames {
+			jmxAttr, err := client.GetMBeanAttr(ctx, mBeanName, mBeanAttrName, -1)
+			assert.NoError(t, err)
+			result = append(result, jmxAttr)
+		}
+
+	}
+	assert.NoError(t, err)
+	assert.GreaterOrEqual(t, len(fmt.Sprintf("%v", result)), 5*1024*1024)
+}
 
 func Test_Query_Success(t *testing.T) {
 	ctx := context.Background()
@@ -148,521 +164,563 @@ func Test_Query_Success(t *testing.T) {
 	assert.NoError(t, err)
 
 	expectedMBeanNames := []string{
-		"test:name=tomas,type=Cat",
+		"test:type=Cat,name=tomas",
 	}
 	actualMBeanNames, err := client.GetMBeanNames(ctx, "test:type=Cat,*", defaultTimeoutMs)
 	require.NoError(t, err)
-	require.Equal(t, expectedMBeanNames, actualMBeanNames)
+	require.ElementsMatch(t, expectedMBeanNames, actualMBeanNames)
 
-	for _, mBeanName := range actualMBeanNames {
+	expectedMBeanAttrNames := []string{
+		"BoolValue", "FloatValue", "NumberValue", "DoubleValue", "Name",
+	}
+	actualMBeanAttrNames, err := client.GetMBeanAttrNames(ctx, "test:name=tomas,type=Cat", defaultTimeoutMs)
+	require.NoError(t, err)
+	require.ElementsMatch(t, expectedMBeanAttrNames, actualMBeanAttrNames)
 
+	// AND Query returns expected data
+	expected := []*nrprotocol.JMXAttribute{
+		{
+			Attribute: "test:type=Cat,name=tomas,attr=FloatValue",
+
+			ValueType:   nrprotocol.ValueType_DOUBLE,
+			DoubleValue: 2.222222,
+		},
+		{
+			Attribute: "test:type=Cat,name=tomas,attr=NumberValue",
+
+			ValueType: nrprotocol.ValueType_INT,
+			IntValue:  3,
+		},
+		{
+			Attribute: "test:type=Cat,name=tomas,attr=BoolValue",
+
+			ValueType: nrprotocol.ValueType_BOOL,
+			BoolValue: true,
+		},
+		{
+			Attribute: "test:type=Cat,name=tomas,attr=DoubleValue",
+
+			ValueType:   nrprotocol.ValueType_DOUBLE,
+			DoubleValue: 1.2,
+		},
+		{
+			Attribute: "test:type=Cat,name=tomas,attr=Name",
+
+			ValueType:   nrprotocol.ValueType_STRING,
+			StringValue: "tomas",
+		},
 	}
 
-	//// AND Query returns expected data
-	//actual, err := client.QueryMbean(ctx, "test:type=Cat,*", defaultTimeoutMs)
-	//assert.NoError(t, err)
-	//
-	//expected := []*nrprotocol.JMXAttribute{
-	//	{
-	//		Attribute: "test:type=Cat,name=tomas,attr=FloatValue",
-	//
-	//		ValueType:   nrprotocol.ValueType_DOUBLE,
-	//		DoubleValue: 2.222222,
-	//	},
-	//	{
-	//		Attribute: "test:type=Cat,name=tomas,attr=NumberValue",
-	//
-	//		ValueType: nrprotocol.ValueType_INT,
-	//		IntValue:  3,
-	//	},
-	//	{
-	//		Attribute: "test:type=Cat,name=tomas,attr=BoolValue",
-	//
-	//		ValueType: nrprotocol.ValueType_BOOL,
-	//		BoolValue: true,
-	//	},
-	//	{
-	//		Attribute: "test:type=Cat,name=tomas,attr=DoubleValue",
-	//
-	//		ValueType:   nrprotocol.ValueType_DOUBLE,
-	//		DoubleValue: 1.2,
-	//	},
-	//	{
-	//		Attribute: "test:type=Cat,name=tomas,attr=Name",
-	//
-	//		ValueType:   nrprotocol.ValueType_STRING,
-	//		StringValue: "tomas",
-	//	},
-	//}
-	//
-	//assert.Equal(t, expected, actual)
+	var actual []*nrprotocol.JMXAttribute
+	for _, mBeanAttrName := range expectedMBeanAttrNames {
+		jmxAttribute, err := client.GetMBeanAttr(ctx, "test:type=Cat,name=tomas", mBeanAttrName, defaultTimeoutMs)
+		assert.NoError(t, err)
+		actual = append(actual, jmxAttribute)
+	}
+
+	assert.ElementsMatch(t, expected, actual)
 }
 
-//func Test_Query_Timeout(t *testing.T) {
-//	ctx := context.Background()
-//
-//	// GIVEN a JMX Server running inside a container
-//	container, err := runJMXServiceContainer(ctx)
-//	require.NoError(t, err)
-//	defer container.Terminate(ctx)
-//
-//	jmxPort, err := container.MappedPort(ctx, testServerJMXPort)
-//	require.NoError(t, err)
-//	jmxHost, err := container.Host(ctx)
-//	require.NoError(t, err)
-//
-//	// THEN JMX connection can be oppened
-//	client, err := NewJMXServiceClient(ctx)
-//	assert.NoError(t, err)
-//
-//	config := &nrprotocol.JMXConfig{
-//		Hostname: jmxHost,
-//		Port:     int32(jmxPort.Int()),
-//		UriPath:  "jmxrmi",
-//	}
-//
-//	err = client.Connect(ctx, config, defaultTimeoutMs)
-//	defer client.Disconnect(ctx)
-//	assert.NoError(t, err)
-//
-//	// AND Query returns expected data
-//	actual, err := client.Query(1, "*:*")
-//	assert.Nil(t, actual)
-//
-//	assert.Error(t, err)
-//}
-//
-//func Test_URL_Success(t *testing.T) {
-//	ctx := context.Background()
-//
-//	// GIVEN a JMX Server running inside a container
-//	container, err := runJMXServiceContainer(ctx)
-//	require.NoError(t, err)
-//	defer container.Terminate(ctx)
-//
-//	// Populate the JMX Server with mbeans
-//	resp, err := addMBeans(ctx, container, map[string]interface{}{
-//		"name":        "tomas",
-//		"doubleValue": 1.2,
-//		"floatValue":  2.2,
-//		"numberValue": 3,
-//		"boolValue":   true,
-//	})
-//	assert.NoError(t, err)
-//	assert.Equal(t, "ok!\n", string(resp))
-//	defer cleanMBeans(ctx, container)
-//
-//	jmxPort, err := container.MappedPort(ctx, testServerJMXPort)
-//	require.NoError(t, err)
-//	jmxHost, err := container.Host(ctx)
-//	require.NoError(t, err)
-//
-//	// THEN JMX connection can be oppened
-//	client, err := NewJMXServiceClient(ctx)
-//	assert.NoError(t, err)
-//
-//	config := &nrprotocol.JMXConfig{
-//		ConnectionURL: fmt.Sprintf("service:jmx:rmi:///jndi/rmi://%s:%s/jmxrmi", jmxHost, jmxPort.Port()),
-//	}
-//
-//	err = client.Connect(ctx, config, defaultTimeoutMs)
-//	defer client.Disconnect(ctx)
-//	assert.NoError(t, err)
-//
-//	// AND Query returns expected data
-//	actual, err := client.QueryMbean(ctx, "test:type=Cat,*", defaultTimeoutMs)
-//	assert.NoError(t, err)
-//
-//	expected := []*nrprotocol.JMXAttribute{
-//		{
-//			Attribute:   "test:type=Cat,name=tomas,attr=FloatValue",
-//			ValueType:   nrprotocol.ValueType_DOUBLE,
-//			DoubleValue: 2.2,
-//		},
-//		{
-//			Attribute: "test:type=Cat,name=tomas,attr=NumberValue",
-//			ValueType: nrprotocol.ValueType_INT,
-//			IntValue:  3,
-//		},
-//		{
-//			Attribute: "test:type=Cat,name=tomas,attr=BoolValue",
-//			ValueType: nrprotocol.ValueType_BOOL,
-//			BoolValue: true,
-//		},
-//		{
-//			Attribute:   "test:type=Cat,name=tomas,attr=DoubleValue",
-//			ValueType:   nrprotocol.ValueType_DOUBLE,
-//			DoubleValue: 1.2,
-//		},
-//		{
-//			Attribute:   "test:type=Cat,name=tomas,attr=Name",
-//			ValueType:   nrprotocol.ValueType_STRING,
-//			StringValue: "tomas",
-//		},
-//	}
-//
-//	assert.Equal(t, expected, actual)
-//}
-//
-//func Test_JavaNotInstalled(t *testing.T) {
-//	// GIVEN a wrong Java Home
-//	os.Setenv("NRIA_JAVA_HOME", "/wrong/path")
-//	defer os.Unsetenv("NRIA_JAVA_HOME")
-//
-//	ctx := context.Background()
-//	client, err := NewJMXServiceClient(ctx)
-//	assert.NoError(t, err)
-//
-//	config := &nrprotocol.JMXConfig{}
-//
-//	// THEN connect fails with expected error
-//	err = client.Connect(ctx, config, defaultTimeoutMs)
-//	defer client.Disconnect(ctx)
-//	assert.EqualError(t, err, "EOF") // TODO: this error message should be fixed
-//
-//	// AND Query fails with expected error
-//	actual, err := client.QueryMbean(ctx, "test:type=Cat,*", defaultTimeoutMs)
-//	assert.Nil(t, actual)
-//	assert.EqualError(t, err, "write |1: broken pipe") // TODO: this error message should be fixed
-//}
-//
-//func Test_WrongMbeanFormat(t *testing.T) {
-//	ctx := context.Background()
-//
-//	// GIVEN a JMX Server running inside a container
-//	container, err := runJMXServiceContainer(ctx)
-//	require.NoError(t, err)
-//	defer container.Terminate(ctx)
-//
-//	jmxPort, err := container.MappedPort(ctx, testServerJMXPort)
-//	require.NoError(t, err)
-//	jmxHost, err := container.Host(ctx)
-//	require.NoError(t, err)
-//
-//	// THEN JMX connection can be oppened
-//	client, err := NewJMXServiceClient(ctx)
-//	assert.NoError(t, err)
-//
-//	config := &nrprotocol.JMXConfig{
-//		ConnectionURL: fmt.Sprintf("service:jmx:rmi:///jndi/rmi://%s:%s/jmxrmi", jmxHost, jmxPort.Port()),
-//	}
-//
-//	err = client.Connect(ctx, config, defaultTimeoutMs)
-//	defer client.Disconnect(ctx)
-//	assert.NoError(t, err)
-//
-//	// AND Query returns expected error
-//	actual, err := client.QueryMbean(ctx, "wrong_format", defaultTimeoutMs)
-//	assert.Nil(t, actual)
-//
-//	assert.EqualError(t, err, "cannot parse MBean glob pattern, valid: 'DOMAIN:BEAN'") //TODO: return the correct error from java to match this message.
-//}
-//
-//func Test_Wrong_Connection(t *testing.T) {
-//	ctx := context.Background()
-//
-//	client, err := NewJMXServiceClient(ctx)
-//	assert.NoError(t, err)
-//
-//	// GIVEN a wrong hostname and port
-//	config := &nrprotocol.JMXConfig{
-//		Hostname: "localhost",
-//		Port:     1234,
-//		UriPath:  "jmxrmi",
-//	}
-//
-//	// WHEN connecting expected error is returned
-//	err = client.Connect(ctx, config, defaultTimeoutMs)
-//	defer client.Disconnect(ctx)
-//	assert.Contains(t, err.Error(), "Connection refused to host: localhost;")
-//
-//	// AND query returns expected error
-//	actual, err := client.QueryMbean(ctx, "test:type=Cat,*", defaultTimeoutMs)
-//	assert.Nil(t, actual)
-//	assert.Contains(t, err.Error(), "Connection refused to host: localhost;") // TODO: fix this, doesn't return the correct error
-//}
-//
-//func Test_SSLQuery_Success(t *testing.T) {
-//	ctx := context.Background()
-//
-//	// GIVEN an SSL JMX Server running inside a container
-//	container, err := runJMXServiceContainerSSL(ctx)
-//	require.NoError(t, err)
-//	defer container.Terminate(ctx)
-//
-//	// Populate the JMX Server with mbeans
-//	resp, err := addMBeans(ctx, container, map[string]interface{}{
-//		"name":        "tomas",
-//		"doubleValue": 1.2,
-//		"floatValue":  2.222222,
-//		"numberValue": 3,
-//		"boolValue":   true,
-//	})
-//	assert.NoError(t, err)
-//	assert.Equal(t, "ok!\n", string(resp))
-//	defer cleanMBeans(ctx, container)
-//
-//	jmxPort, err := container.MappedPort(ctx, testServerJMXPort)
-//	require.NoError(t, err)
-//	jmxHost, err := container.Host(ctx)
-//	require.NoError(t, err)
-//
-//	// THEN SSL JMX connection can be oppened
-//	client, err := NewJMXServiceClient(ctx)
-//	assert.NoError(t, err)
-//
-//	config := &nrprotocol.JMXConfig{
-//		Hostname:           jmxHost,
-//		Port:               int32(jmxPort.Int()),
-//		UriPath:            "jmxrmi",
-//		Username:           jmxUsername,
-//		Password:           jmxPassword,
-//		KeyStore:           keystorePath,
-//		KeyStorePassword:   keystorePassword,
-//		TrustStore:         truststorepath,
-//		TrustStorePassword: truststorePassword,
-//	}
-//
-//	err = client.Connect(ctx, config, defaultTimeoutMs)
-//	defer client.Disconnect(ctx)
-//	assert.NoError(t, err)
-//
-//	// AND Query returns expected data
-//	actual, err := client.QueryMbean(ctx, "test:type=Cat,*", defaultTimeoutMs)
-//	assert.NoError(t, err)
-//
-//	expected := []*nrprotocol.JMXAttribute{
-//		{
-//			Attribute: "test:type=Cat,name=tomas,attr=FloatValue",
-//
-//			ValueType:   nrprotocol.ValueType_DOUBLE,
-//			DoubleValue: 2.222222,
-//		},
-//		{
-//			Attribute: "test:type=Cat,name=tomas,attr=NumberValue",
-//
-//			ValueType: nrprotocol.ValueType_INT,
-//			IntValue:  3,
-//		},
-//		{
-//			Attribute: "test:type=Cat,name=tomas,attr=BoolValue",
-//
-//			ValueType: nrprotocol.ValueType_BOOL,
-//			BoolValue: true,
-//		},
-//		{
-//			Attribute: "test:type=Cat,name=tomas,attr=DoubleValue",
-//
-//			ValueType:   nrprotocol.ValueType_DOUBLE,
-//			DoubleValue: 1.2,
-//		},
-//		{
-//			Attribute: "test:type=Cat,name=tomas,attr=Name",
-//
-//			ValueType:   nrprotocol.ValueType_STRING,
-//			StringValue: "tomas",
-//		},
-//	}
-//
-//	assert.Equal(t, expected, actual)
-//}
-//
-//func Test_Wrong_Credentials(t *testing.T) {
-//	ctx := context.Background()
-//
-//	// GIVEN an SSL JMX Server running inside a container
-//	container, err := runJMXServiceContainerSSL(ctx)
-//	require.NoError(t, err)
-//	defer container.Terminate(ctx)
-//
-//	jmxPort, err := container.MappedPort(ctx, testServerJMXPort)
-//	require.NoError(t, err)
-//	jmxHost, err := container.Host(ctx)
-//	require.NoError(t, err)
-//
-//	// WHEN wrong jmx username and password is provided
-//	client, err := NewJMXServiceClient(ctx)
-//	assert.NoError(t, err)
-//
-//	config := &nrprotocol.JMXConfig{
-//		Hostname:           jmxHost,
-//		Port:               int32(jmxPort.Int()),
-//		UriPath:            "jmxrmi",
-//		Username:           "wrong_username",
-//		Password:           "wrong_password",
-//		KeyStore:           keystorePath,
-//		KeyStorePassword:   keystorePassword,
-//		TrustStore:         truststorepath,
-//		TrustStorePassword: truststorePassword,
-//	}
-//
-//	// THEN connect fails with expected error
-//	err = client.Connect(ctx, config, defaultTimeoutMs)
-//	defer client.Disconnect(ctx)
-//	assert.Contains(t, err.Error(), "Authentication failed! Invalid username or password")
-//
-//	// AND Query returns expected error
-//	actual, err := client.QueryMbean(ctx, "test:type=Cat,*", defaultTimeoutMs)
-//	assert.Nil(t, actual)
-//	assert.Contains(t, err.Error(), "Authentication failed! Invalid username or password") // TODO: fix this in java tool, as it doesn't return the correct error
-//}
-//
-//func Test_Wrong_Certificate_password(t *testing.T) {
-//	ctx := context.Background()
-//
-//	// GIVEN an SSL JMX Server running inside a container
-//	container, err := runJMXServiceContainerSSL(ctx)
-//	require.NoError(t, err)
-//	defer container.Terminate(ctx)
-//
-//	jmxPort, err := container.MappedPort(ctx, testServerJMXPort)
-//	require.NoError(t, err)
-//	jmxHost, err := container.Host(ctx)
-//	require.NoError(t, err)
-//
-//	// WHEN wrong jmx username and password is provided
-//	client, err := NewJMXServiceClient(ctx)
-//	assert.NoError(t, err)
-//
-//	config := &nrprotocol.JMXConfig{
-//		Hostname:           jmxHost,
-//		Port:               int32(jmxPort.Int()),
-//		UriPath:            "jmxrmi",
-//		Username:           jmxUsername,
-//		Password:           jmxPassword,
-//		KeyStore:           keystorePath,
-//		KeyStorePassword:   "wrong_password",
-//		TrustStore:         truststorepath,
-//		TrustStorePassword: truststorePassword,
-//	}
-//
-//	// THEN Connect returns expected error
-//	err = client.Connect(ctx, config, defaultTimeoutMs)
-//	defer client.Disconnect(ctx)
-//	assert.Contains(t, err.Error(), "SSLContext") // TODO: improve this error from java
-//
-//	// AND Query returns expected error
-//	actual, err := client.QueryMbean(ctx, "test:type=Cat,*", defaultTimeoutMs)
-//	assert.Nil(t, actual)
-//	assert.Contains(t, err.Error(), "SSLContext") // TODO: improve this error from java
-//}
-//
-//func Test_Connector_Success(t *testing.T) {
-//	ctx := context.Background()
-//
-//	// GIVEN a JBoss Server with JMX exposed running inside a container
-//	container, err := runJbossStandaloneJMXContainer(ctx)
-//	require.NoError(t, err)
-//	defer container.Terminate(ctx)
-//
-//	// Install the connector
-//	dstFile := filepath.Join(prjDir, "/bin/jboss-client.jar")
-//	err = copyFileFromContainer(ctx, container.GetContainerID(), "/opt/jboss/wildfly/bin/client/jboss-client.jar", dstFile)
-//	assert.NoError(t, err)
-//
-//	defer os.Remove(dstFile)
-//
-//	jmxPort, err := container.MappedPort(ctx, jbossJMXPort)
-//	require.NoError(t, err)
-//	jmxHost, err := container.Host(ctx)
-//	require.NoError(t, err)
-//
-//	// THEN JMX connection can be oppened
-//	client, err := NewJMXServiceClient(ctx)
-//	assert.NoError(t, err)
-//
-//	config := &nrprotocol.JMXConfig{
-//		Hostname:              jmxHost,
-//		Port:                  int32(jmxPort.Int()),
-//		Username:              jbossJMXUsername,
-//		Password:              jbossJMXPassword,
-//		IsJBossStandaloneMode: true,
-//		IsRemote:              true,
-//	}
-//
-//	err = client.Connect(ctx, config, defaultTimeoutMs)
-//	defer client.Disconnect(ctx)
-//	assert.NoError(t, err)
-//
-//	// AND Query returns expected data
-//	actual, err := client.QueryMbean(ctx, "jboss.as:subsystem=remoting,configuration=endpoint", defaultTimeoutMs)
-//	assert.NoError(t, err)
-//
-//	expected := []*nrprotocol.JMXAttribute{
-//		{
-//			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=authenticationRetries",
-//			ValueType: nrprotocol.ValueType_INT,
-//			IntValue:  3,
-//		},
-//		{
-//			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=heartbeatInterval",
-//			ValueType: nrprotocol.ValueType_INT,
-//			IntValue:  60000,
-//		},
-//		{
-//			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=maxInboundChannels",
-//			ValueType: nrprotocol.ValueType_INT,
-//			IntValue:  40,
-//		},
-//		{
-//			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=maxInboundMessageSize",
-//			ValueType: nrprotocol.ValueType_INT,
-//			IntValue:  9223372036854775807,
-//		},
-//		{
-//			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=maxInboundMessages",
-//			ValueType: nrprotocol.ValueType_INT,
-//			IntValue:  80,
-//		},
-//		{
-//			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=maxOutboundChannels",
-//			ValueType: nrprotocol.ValueType_INT,
-//			IntValue:  40,
-//		},
-//		{
-//			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=maxOutboundMessageSize",
-//			ValueType: nrprotocol.ValueType_INT,
-//			IntValue:  9223372036854775807,
-//		},
-//		{
-//			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=maxOutboundMessages",
-//			ValueType: nrprotocol.ValueType_INT,
-//			IntValue:  65535,
-//		},
-//		{
-//			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=receiveBufferSize",
-//			ValueType: nrprotocol.ValueType_INT,
-//			IntValue:  8192,
-//		},
-//		{
-//			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=receiveWindowSize",
-//			ValueType: nrprotocol.ValueType_INT,
-//			IntValue:  131072,
-//		},
-//		{
-//			Attribute:   "jboss.as:subsystem=remoting,configuration=endpoint,attr=saslProtocol",
-//			ValueType:   nrprotocol.ValueType_STRING,
-//			StringValue: "remote",
-//		},
-//		{
-//			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=sendBufferSize",
-//			ValueType: nrprotocol.ValueType_INT,
-//			IntValue:  8192,
-//		},
-//		{
-//			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=transmitWindowSize",
-//			ValueType: nrprotocol.ValueType_INT,
-//			IntValue:  131072,
-//		},
-//		{
-//			Attribute:   "jboss.as:subsystem=remoting,configuration=endpoint,attr=worker",
-//			ValueType:   nrprotocol.ValueType_STRING,
-//			StringValue: "default",
-//		},
-//	}
-//
-//	assert.Equal(t, expected, actual)
-//}
+func Test_Query_Timeout(t *testing.T) {
+	ctx := context.Background()
+
+	// GIVEN a JMX Server running inside a container
+	container, err := runJMXServiceContainer(ctx)
+	require.NoError(t, err)
+	defer container.Terminate(ctx)
+
+	jmxPort, err := container.MappedPort(ctx, testServerJMXPort)
+	require.NoError(t, err)
+	jmxHost, err := container.Host(ctx)
+	require.NoError(t, err)
+
+	// THEN JMX connection can be oppened
+	client, err := NewJMXServiceClient(ctx)
+	assert.NoError(t, err)
+
+	config := &nrprotocol.JMXConfig{
+		Hostname: jmxHost,
+		Port:     int32(jmxPort.Int()),
+		UriPath:  "jmxrmi",
+	}
+
+	err = client.Connect(ctx, config, defaultTimeoutMs)
+	defer client.Disconnect(ctx)
+	assert.NoError(t, err)
+
+	// AND Query returns expected data
+	actual, err := client.GetMBeanAttrNames(ctx, "*:*", 1)
+	assert.Nil(t, actual)
+
+	assert.Error(t, err)
+}
+
+func Test_URL_Success(t *testing.T) {
+	ctx := context.Background()
+
+	// GIVEN a JMX Server running inside a container
+	container, err := runJMXServiceContainer(ctx)
+	require.NoError(t, err)
+	defer container.Terminate(ctx)
+
+	// Populate the JMX Server with mbeans
+	resp, err := addMBeans(ctx, container, map[string]interface{}{
+		"name":        "tomas",
+		"doubleValue": 1.2,
+		"floatValue":  2.2,
+		"numberValue": 3,
+		"boolValue":   true,
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, "ok!\n", string(resp))
+	defer cleanMBeans(ctx, container)
+
+	jmxPort, err := container.MappedPort(ctx, testServerJMXPort)
+	require.NoError(t, err)
+	jmxHost, err := container.Host(ctx)
+	require.NoError(t, err)
+
+	// THEN JMX connection can be oppened
+	client, err := NewJMXServiceClient(ctx)
+	assert.NoError(t, err)
+
+	config := &nrprotocol.JMXConfig{
+		ConnectionURL: fmt.Sprintf("service:jmx:rmi:///jndi/rmi://%s:%s/jmxrmi", jmxHost, jmxPort.Port()),
+	}
+
+	err = client.Connect(ctx, config, defaultTimeoutMs)
+	defer client.Disconnect(ctx)
+	assert.NoError(t, err)
+
+	// AND Query returns expected data
+	actual, err := client.GetMBeanAttr(ctx, "test:type=Cat,name=tomas", "FloatValue", defaultTimeoutMs)
+	assert.NoError(t, err)
+
+	expected := &nrprotocol.JMXAttribute{
+		Attribute:   "test:type=Cat,name=tomas,attr=FloatValue",
+		ValueType:   nrprotocol.ValueType_DOUBLE,
+		DoubleValue: 2.2,
+	}
+
+	assert.Equal(t, expected, actual)
+}
+
+func Test_JavaNotInstalled(t *testing.T) {
+	// GIVEN a wrong Java Home
+	os.Setenv("NRIA_JAVA_HOME", "/wrong/path")
+	defer os.Unsetenv("NRIA_JAVA_HOME")
+
+	ctx := context.Background()
+	client, err := NewJMXServiceClient(ctx)
+	assert.NoError(t, err)
+
+	config := &nrprotocol.JMXConfig{}
+
+	// THEN connect fails with expected error
+	err = client.Connect(ctx, config, defaultTimeoutMs)
+	defer client.Disconnect(ctx)
+	assert.EqualError(t, err, "EOF") // TODO: this error message should be fixed
+
+	// AND Query fails with expected error
+	actual, err := client.GetMBeanNames(ctx, "test:type=Cat,*", defaultTimeoutMs)
+	assert.Nil(t, actual)
+	assert.EqualError(t, err, "write |1: broken pipe") // TODO: this error message should be fixed
+}
+
+func Test_WrongMbeanFormat(t *testing.T) {
+	ctx := context.Background()
+
+	// GIVEN a JMX Server running inside a container
+	container, err := runJMXServiceContainer(ctx)
+	require.NoError(t, err)
+	defer container.Terminate(ctx)
+
+	jmxPort, err := container.MappedPort(ctx, testServerJMXPort)
+	require.NoError(t, err)
+	jmxHost, err := container.Host(ctx)
+	require.NoError(t, err)
+
+	// THEN JMX connection can be oppened
+	client, err := NewJMXServiceClient(ctx)
+	assert.NoError(t, err)
+
+	config := &nrprotocol.JMXConfig{
+		ConnectionURL: fmt.Sprintf("service:jmx:rmi:///jndi/rmi://%s:%s/jmxrmi", jmxHost, jmxPort.Port()),
+	}
+
+	err = client.Connect(ctx, config, defaultTimeoutMs)
+	defer client.Disconnect(ctx)
+	assert.NoError(t, err)
+
+	// AND Query returns expected error
+	actual, err := client.GetMBeanNames(ctx, "wrong_format", defaultTimeoutMs)
+	assert.Nil(t, actual)
+
+	jmxErr, ok := err.(*nrprotocol.JMXError)
+	assert.True(t, ok)
+	assert.Equal(t, jmxErr.GetMessage(), "cannot parse MBean glob pattern: 'wrong_format', valid: 'DOMAIN:BEAN'")
+}
+
+func Test_Wrong_Connection(t *testing.T) {
+	ctx := context.Background()
+
+	client, err := NewJMXServiceClient(ctx)
+	assert.NoError(t, err)
+
+	// GIVEN a wrong hostname and port
+	config := &nrprotocol.JMXConfig{
+		Hostname: "localhost",
+		Port:     1234,
+		UriPath:  "jmxrmi",
+	}
+
+	// WHEN connecting expected error is returned
+	err = client.Connect(ctx, config, defaultTimeoutMs)
+	defer client.Disconnect(ctx)
+	assert.Contains(t, err.Error(), "Connection refused to host: localhost;")
+
+	// AND query returns expected error
+	actual, err := client.GetMBeanNames(ctx, "test:type=Cat,*", defaultTimeoutMs)
+	assert.Nil(t, actual)
+	assert.Errorf(t, err, "connection to JMX endpoint is not established")
+}
+
+func Test_SSLQuery_Success(t *testing.T) {
+	ctx := context.Background()
+
+	// GIVEN an SSL JMX Server running inside a container
+	container, err := runJMXServiceContainerSSL(ctx)
+	require.NoError(t, err)
+	defer container.Terminate(ctx)
+
+	// Populate the JMX Server with mbeans
+	resp, err := addMBeans(ctx, container, map[string]interface{}{
+		"name":        "tomas",
+		"doubleValue": 1.2,
+		"floatValue":  2.222222,
+		"numberValue": 3,
+		"boolValue":   true,
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, "ok!\n", string(resp))
+	defer cleanMBeans(ctx, container)
+
+	jmxPort, err := container.MappedPort(ctx, testServerJMXPort)
+	require.NoError(t, err)
+	jmxHost, err := container.Host(ctx)
+	require.NoError(t, err)
+
+	// THEN SSL JMX connection can be oppened
+	client, err := NewJMXServiceClient(ctx)
+	assert.NoError(t, err)
+
+	config := &nrprotocol.JMXConfig{
+		Hostname:           jmxHost,
+		Port:               int32(jmxPort.Int()),
+		UriPath:            "jmxrmi",
+		Username:           jmxUsername,
+		Password:           jmxPassword,
+		KeyStore:           keystorePath,
+		KeyStorePassword:   keystorePassword,
+		TrustStore:         truststorepath,
+		TrustStorePassword: truststorePassword,
+	}
+
+	err = client.Connect(ctx, config, defaultTimeoutMs)
+	defer client.Disconnect(ctx)
+	assert.NoError(t, err)
+
+	// AND Query returns expected data
+	expectedMBeanNames := []string{
+		"test:type=Cat,name=tomas",
+	}
+	actualMBeanNames, err := client.GetMBeanNames(ctx, "test:type=Cat,*", defaultTimeoutMs)
+	require.NoError(t, err)
+	require.ElementsMatch(t, expectedMBeanNames, actualMBeanNames)
+
+	expectedMBeanAttrNames := []string{
+		"BoolValue", "FloatValue", "NumberValue", "DoubleValue", "Name",
+	}
+	actualMBeanAttrNames, err := client.GetMBeanAttrNames(ctx, "test:name=tomas,type=Cat", defaultTimeoutMs)
+	require.NoError(t, err)
+	require.ElementsMatch(t, expectedMBeanAttrNames, actualMBeanAttrNames)
+
+	// AND Query returns expected data
+	expected := []*nrprotocol.JMXAttribute{
+		{
+			Attribute: "test:type=Cat,name=tomas,attr=FloatValue",
+
+			ValueType:   nrprotocol.ValueType_DOUBLE,
+			DoubleValue: 2.222222,
+		},
+		{
+			Attribute: "test:type=Cat,name=tomas,attr=NumberValue",
+
+			ValueType: nrprotocol.ValueType_INT,
+			IntValue:  3,
+		},
+		{
+			Attribute: "test:type=Cat,name=tomas,attr=BoolValue",
+
+			ValueType: nrprotocol.ValueType_BOOL,
+			BoolValue: true,
+		},
+		{
+			Attribute: "test:type=Cat,name=tomas,attr=DoubleValue",
+
+			ValueType:   nrprotocol.ValueType_DOUBLE,
+			DoubleValue: 1.2,
+		},
+		{
+			Attribute: "test:type=Cat,name=tomas,attr=Name",
+
+			ValueType:   nrprotocol.ValueType_STRING,
+			StringValue: "tomas",
+		},
+	}
+
+	var actual []*nrprotocol.JMXAttribute
+	for _, mBeanAttrName := range expectedMBeanAttrNames {
+		jmxAttribute, err := client.GetMBeanAttr(ctx, "test:type=Cat,name=tomas", mBeanAttrName, defaultTimeoutMs)
+		assert.NoError(t, err)
+		actual = append(actual, jmxAttribute)
+	}
+
+	assert.ElementsMatch(t, expected, actual)
+}
+
+func Test_Wrong_Credentials(t *testing.T) {
+	ctx := context.Background()
+
+	// GIVEN an SSL JMX Server running inside a container
+	container, err := runJMXServiceContainerSSL(ctx)
+	require.NoError(t, err)
+	defer container.Terminate(ctx)
+
+	jmxPort, err := container.MappedPort(ctx, testServerJMXPort)
+	require.NoError(t, err)
+	jmxHost, err := container.Host(ctx)
+	require.NoError(t, err)
+
+	// WHEN wrong jmx username and password is provided
+	client, err := NewJMXServiceClient(ctx)
+	assert.NoError(t, err)
+
+	config := &nrprotocol.JMXConfig{
+		Hostname:           jmxHost,
+		Port:               int32(jmxPort.Int()),
+		UriPath:            "jmxrmi",
+		Username:           "wrong_username",
+		Password:           "wrong_password",
+		KeyStore:           keystorePath,
+		KeyStorePassword:   keystorePassword,
+		TrustStore:         truststorepath,
+		TrustStorePassword: truststorePassword,
+	}
+
+	// THEN connect fails with expected error
+	err = client.Connect(ctx, config, defaultTimeoutMs)
+	defer client.Disconnect(ctx)
+	assert.Contains(t, err.Error(), "Authentication failed! Invalid username or password")
+
+	// AND Query returns expected error
+	actual, err := client.GetMBeanNames(ctx, "test:type=Cat,*", defaultTimeoutMs)
+	assert.Nil(t, actual)
+	assert.Errorf(t, err, "connection to JMX endpoint is not established")
+}
+
+func Test_Wrong_Certificate_password(t *testing.T) {
+	ctx := context.Background()
+
+	// GIVEN an SSL JMX Server running inside a container
+	container, err := runJMXServiceContainerSSL(ctx)
+	require.NoError(t, err)
+	defer container.Terminate(ctx)
+
+	jmxPort, err := container.MappedPort(ctx, testServerJMXPort)
+	require.NoError(t, err)
+	jmxHost, err := container.Host(ctx)
+	require.NoError(t, err)
+
+	// WHEN wrong jmx username and password is provided
+	client, err := NewJMXServiceClient(ctx)
+	assert.NoError(t, err)
+
+	config := &nrprotocol.JMXConfig{
+		Hostname:           jmxHost,
+		Port:               int32(jmxPort.Int()),
+		UriPath:            "jmxrmi",
+		Username:           jmxUsername,
+		Password:           jmxPassword,
+		KeyStore:           keystorePath,
+		KeyStorePassword:   "wrong_password",
+		TrustStore:         truststorepath,
+		TrustStorePassword: truststorePassword,
+	}
+
+	// THEN Connect returns expected error
+	err = client.Connect(ctx, config, defaultTimeoutMs)
+	defer client.Disconnect(ctx)
+	assert.Contains(t, err.Error(), "SSLContext") // TODO: improve this error from java
+
+	// AND Query returns expected error
+	actual, err := client.GetMBeanNames(ctx, "test:type=Cat,*", defaultTimeoutMs)
+	assert.Nil(t, actual)
+	assert.Errorf(t, err, "connection to JMX endpoint is not established")
+}
+
+func Test_Connector_Success(t *testing.T) {
+	ctx := context.Background()
+
+	// GIVEN a JBoss Server with JMX exposed running inside a container
+	container, err := runJbossStandaloneJMXContainer(ctx)
+	require.NoError(t, err)
+	defer container.Terminate(ctx)
+
+	// Install the connector
+	dstFile := filepath.Join(prjDir, "/bin/jboss-client.jar")
+	err = copyFileFromContainer(ctx, container.GetContainerID(), "/opt/jboss/wildfly/bin/client/jboss-client.jar", dstFile)
+	assert.NoError(t, err)
+
+	defer os.Remove(dstFile)
+
+	jmxPort, err := container.MappedPort(ctx, jbossJMXPort)
+	require.NoError(t, err)
+	jmxHost, err := container.Host(ctx)
+	require.NoError(t, err)
+
+	// THEN JMX connection can be oppened
+	client, err := NewJMXServiceClient(ctx)
+	assert.NoError(t, err)
+
+	config := &nrprotocol.JMXConfig{
+		Hostname:              jmxHost,
+		Port:                  int32(jmxPort.Int()),
+		Username:              jbossJMXUsername,
+		Password:              jbossJMXPassword,
+		IsJBossStandaloneMode: true,
+		IsRemote:              true,
+	}
+
+	err = client.Connect(ctx, config, defaultTimeoutMs)
+	defer client.Disconnect(ctx)
+	assert.NoError(t, err)
+
+	// AND Query returns expected data
+	expectedMbeanNames := []string{
+		"jboss.as:subsystem=remoting,configuration=endpoint",
+	}
+	actualMbeanNames, err := client.GetMBeanNames(ctx, "jboss.as:subsystem=remoting,configuration=endpoint", defaultTimeoutMs)
+	assert.NoError(t, err)
+	assert.ElementsMatch(t, expectedMbeanNames, actualMbeanNames)
+
+	expectedMBeanAttrNames := []string{
+		"authRealm",
+		"authenticationRetries",
+		"authorizeId",
+		"bufferRegionSize",
+		"heartbeatInterval",
+		"maxInboundChannels",
+		"maxInboundMessageSize",
+		"maxInboundMessages",
+		"maxOutboundChannels",
+		"maxOutboundMessageSize",
+		"maxOutboundMessages",
+		"receiveBufferSize",
+		"receiveWindowSize",
+		"saslProtocol",
+		"sendBufferSize",
+		"serverName",
+		"transmitWindowSize",
+		"worker",
+	}
+	actualMBeanAttrNames, err := client.GetMBeanAttrNames(ctx, "jboss.as:subsystem=remoting,configuration=endpoint", defaultTimeoutMs)
+	assert.ElementsMatch(t, expectedMBeanAttrNames, actualMBeanAttrNames)
+
+	expected := []*nrprotocol.JMXAttribute{
+		{
+			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=authenticationRetries",
+			ValueType: nrprotocol.ValueType_INT,
+			IntValue:  3,
+		},
+		{
+			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=heartbeatInterval",
+			ValueType: nrprotocol.ValueType_INT,
+			IntValue:  60000,
+		},
+		{
+			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=maxInboundChannels",
+			ValueType: nrprotocol.ValueType_INT,
+			IntValue:  40,
+		},
+		{
+			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=maxInboundMessageSize",
+			ValueType: nrprotocol.ValueType_INT,
+			IntValue:  9223372036854775807,
+		},
+		{
+			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=maxInboundMessages",
+			ValueType: nrprotocol.ValueType_INT,
+			IntValue:  80,
+		},
+		{
+			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=maxOutboundChannels",
+			ValueType: nrprotocol.ValueType_INT,
+			IntValue:  40,
+		},
+		{
+			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=maxOutboundMessageSize",
+			ValueType: nrprotocol.ValueType_INT,
+			IntValue:  9223372036854775807,
+		},
+		{
+			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=maxOutboundMessages",
+			ValueType: nrprotocol.ValueType_INT,
+			IntValue:  65535,
+		},
+		{
+			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=receiveBufferSize",
+			ValueType: nrprotocol.ValueType_INT,
+			IntValue:  8192,
+		},
+		{
+			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=receiveWindowSize",
+			ValueType: nrprotocol.ValueType_INT,
+			IntValue:  131072,
+		},
+		{
+			Attribute:   "jboss.as:subsystem=remoting,configuration=endpoint,attr=saslProtocol",
+			ValueType:   nrprotocol.ValueType_STRING,
+			StringValue: "remote",
+		},
+		{
+			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=sendBufferSize",
+			ValueType: nrprotocol.ValueType_INT,
+			IntValue:  8192,
+		},
+		{
+			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=transmitWindowSize",
+			ValueType: nrprotocol.ValueType_INT,
+			IntValue:  131072,
+		},
+		{
+			Attribute:   "jboss.as:subsystem=remoting,configuration=endpoint,attr=worker",
+			ValueType:   nrprotocol.ValueType_STRING,
+			StringValue: "default",
+		},
+	}
+
+	var actual []*nrprotocol.JMXAttribute
+	for _, mBeanAttrName := range expectedMBeanAttrNames {
+		jmxAttribute, err := client.GetMBeanAttr(ctx, "jboss.as:subsystem=remoting,configuration=endpoint", mBeanAttrName, defaultTimeoutMs)
+		if err != nil {
+			continue
+		}
+		actual = append(actual, jmxAttribute)
+	}
+
+	assert.ElementsMatch(t, expected, actual)
+}
 
 // runJMXServiceContainer will start a container running test-server with JMX.
 func runJMXServiceContainer(ctx context.Context) (testcontainers.Container, error) {

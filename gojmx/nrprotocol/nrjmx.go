@@ -841,9 +841,11 @@ func (p *JMXAttribute) String() string {
 // Attributes:
 //  - Message
 //  - CauseMessage
+//  - Stacktrace
 type JMXError struct {
-  Message string `thrift:"message,1,required" db:"message" json:"message"`
+  Message string `thrift:"message,1" db:"message" json:"message"`
   CauseMessage string `thrift:"causeMessage,2" db:"causeMessage" json:"causeMessage"`
+  Stacktrace string `thrift:"stacktrace,3" db:"stacktrace" json:"stacktrace"`
 }
 
 func NewJMXError() *JMXError {
@@ -858,12 +860,15 @@ func (p *JMXError) GetMessage() string {
 func (p *JMXError) GetCauseMessage() string {
   return p.CauseMessage
 }
+
+func (p *JMXError) GetStacktrace() string {
+  return p.Stacktrace
+}
 func (p *JMXError) Read(iprot thrift.TProtocol) error {
   if _, err := iprot.ReadStructBegin(); err != nil {
     return thrift.PrependError(fmt.Sprintf("%T read error: ", p), err)
   }
 
-  var issetMessage bool = false;
 
   for {
     _, fieldTypeId, fieldId, err := iprot.ReadFieldBegin()
@@ -877,7 +882,6 @@ func (p *JMXError) Read(iprot thrift.TProtocol) error {
         if err := p.ReadField1(iprot); err != nil {
           return err
         }
-        issetMessage = true
       } else {
         if err := iprot.Skip(fieldTypeId); err != nil {
           return err
@@ -886,6 +890,16 @@ func (p *JMXError) Read(iprot thrift.TProtocol) error {
     case 2:
       if fieldTypeId == thrift.STRING {
         if err := p.ReadField2(iprot); err != nil {
+          return err
+        }
+      } else {
+        if err := iprot.Skip(fieldTypeId); err != nil {
+          return err
+        }
+      }
+    case 3:
+      if fieldTypeId == thrift.STRING {
+        if err := p.ReadField3(iprot); err != nil {
           return err
         }
       } else {
@@ -904,9 +918,6 @@ func (p *JMXError) Read(iprot thrift.TProtocol) error {
   }
   if err := iprot.ReadStructEnd(); err != nil {
     return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
-  }
-  if !issetMessage{
-    return thrift.NewTProtocolExceptionWithType(thrift.INVALID_DATA, fmt.Errorf("Required field Message is not set"));
   }
   return nil
 }
@@ -929,12 +940,22 @@ func (p *JMXError)  ReadField2(iprot thrift.TProtocol) error {
   return nil
 }
 
+func (p *JMXError)  ReadField3(iprot thrift.TProtocol) error {
+  if v, err := iprot.ReadString(); err != nil {
+  return thrift.PrependError("error reading field 3: ", err)
+} else {
+  p.Stacktrace = v
+}
+  return nil
+}
+
 func (p *JMXError) Write(oprot thrift.TProtocol) error {
   if err := oprot.WriteStructBegin("JMXError"); err != nil {
     return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err) }
   if p != nil {
     if err := p.writeField1(oprot); err != nil { return err }
     if err := p.writeField2(oprot); err != nil { return err }
+    if err := p.writeField3(oprot); err != nil { return err }
   }
   if err := oprot.WriteFieldStop(); err != nil {
     return thrift.PrependError("write field stop error: ", err) }
@@ -960,6 +981,16 @@ func (p *JMXError) writeField2(oprot thrift.TProtocol) (err error) {
   return thrift.PrependError(fmt.Sprintf("%T.causeMessage (2) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(); err != nil {
     return thrift.PrependError(fmt.Sprintf("%T write field end error 2:causeMessage: ", p), err) }
+  return err
+}
+
+func (p *JMXError) writeField3(oprot thrift.TProtocol) (err error) {
+  if err := oprot.WriteFieldBegin("stacktrace", thrift.STRING, 3); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 3:stacktrace: ", p), err) }
+  if err := oprot.WriteString(string(p.Stacktrace)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.stacktrace (3) field write error: ", p), err) }
+  if err := oprot.WriteFieldEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 3:stacktrace: ", p), err) }
   return err
 }
 

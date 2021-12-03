@@ -32,8 +32,9 @@ struct JMXAttribute {
 }
 
 exception JMXError {
-  1: required string message,
+  1: string message,
   2: string causeMessage
+  3: string stacktrace
 }
 
 exception JMXConnectionError {
