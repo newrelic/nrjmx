@@ -49,14 +49,12 @@ type JMXClient struct {
 	jmxService nrprotocol.JMXService
 	jmxProcess jmxProcess
 	ctx        context.Context
+	timeoutMs  int64
 }
 
-//Connect(ctx context.Context, config *JMXConfig) (err error)
-//Disconnect(ctx context.Context) (err error)
-// Parameters:
-//  - BeanName
-//QueryMbean(ctx context.Context, beanName string) (r []*JMXAttribute, err error)
-//GetLogs(ctx context.Context) (r []*LogMessage, err error)
+func (j *JMXClient) SetJMXClientTimeout(timeout int64) {
+	j.timeoutMs = timeout
+}
 
 func (j *JMXClient) Ping(timeout time.Duration) error {
 	ctx, cancel := context.WithCancel(j.ctx)
@@ -82,20 +80,20 @@ func (j *JMXClient) Ping(timeout time.Duration) error {
 	}
 }
 
-func (j *JMXClient) Connect(config *nrprotocol.JMXConfig, timeout int64) error {
+func (j *JMXClient) Connect(config *nrprotocol.JMXConfig) error {
 	err := j.jmxProcess.Error()
 	if err != nil {
 		return err
 	}
-	return j.jmxService.Connect(j.ctx, config, timeout)
+	return j.jmxService.Connect(j.ctx, config, j.timeoutMs)
 }
 
-func (j *JMXClient) Query(mbean string, timeout int64) ([]*nrprotocol.JMXAttribute, error) {
+func (j *JMXClient) Query(mbean string) ([]*nrprotocol.JMXAttribute, error) {
 	err := j.jmxProcess.Error()
 	if err != nil {
 		return nil, err
 	}
-	return j.jmxService.QueryMbean(j.ctx, mbean, timeout)
+	return j.jmxService.QueryMbean(j.ctx, mbean, j.timeoutMs)
 }
 
 func (j *JMXClient) Close(timeout time.Duration) error {
