@@ -25,6 +25,7 @@ func Usage() {
   fmt.Fprintln(os.Stderr, "\nFunctions:")
   fmt.Fprintln(os.Stderr, "  void connect(JMXConfig config, i64 timeoutMs)")
   fmt.Fprintln(os.Stderr, "  void disconnect()")
+  fmt.Fprintln(os.Stderr, "  void ping()")
   fmt.Fprintln(os.Stderr, "   getMBeanNames(string mBeanNamePattern, i64 timeoutMs)")
   fmt.Fprintln(os.Stderr, "   getMBeanAttrNames(string mBeanName, i64 timeoutMs)")
   fmt.Fprintln(os.Stderr, "  JMXAttribute getMBeanAttr(string mBeanName, string attrName, i64 timeoutMs)")
@@ -154,25 +155,25 @@ func main() {
       fmt.Fprintln(os.Stderr, "Connect requires 2 args")
       flag.Usage()
     }
-    arg14 := flag.Arg(1)
-    mbTrans15 := thrift.NewTMemoryBufferLen(len(arg14))
-    defer mbTrans15.Close()
-    _, err16 := mbTrans15.WriteString(arg14)
-    if err16 != nil {
+    arg16 := flag.Arg(1)
+    mbTrans17 := thrift.NewTMemoryBufferLen(len(arg16))
+    defer mbTrans17.Close()
+    _, err18 := mbTrans17.WriteString(arg16)
+    if err18 != nil {
       Usage()
       return
     }
-    factory17 := thrift.NewTJSONProtocolFactory()
-    jsProt18 := factory17.GetProtocol(mbTrans15)
+    factory19 := thrift.NewTJSONProtocolFactory()
+    jsProt20 := factory19.GetProtocol(mbTrans17)
     argvalue0 := nrprotocol.NewJMXConfig()
-    err19 := argvalue0.Read(jsProt18)
-    if err19 != nil {
+    err21 := argvalue0.Read(jsProt20)
+    if err21 != nil {
       Usage()
       return
     }
     value0 := argvalue0
-    argvalue1, err20 := (strconv.ParseInt(flag.Arg(2), 10, 64))
-    if err20 != nil {
+    argvalue1, err22 := (strconv.ParseInt(flag.Arg(2), 10, 64))
+    if err22 != nil {
       Usage()
       return
     }
@@ -188,6 +189,14 @@ func main() {
     fmt.Print(client.Disconnect(context.Background()))
     fmt.Print("\n")
     break
+  case "ping":
+    if flag.NArg() - 1 != 0 {
+      fmt.Fprintln(os.Stderr, "Ping requires 0 args")
+      flag.Usage()
+    }
+    fmt.Print(client.Ping(context.Background()))
+    fmt.Print("\n")
+    break
   case "getMBeanNames":
     if flag.NArg() - 1 != 2 {
       fmt.Fprintln(os.Stderr, "GetMBeanNames requires 2 args")
@@ -195,8 +204,8 @@ func main() {
     }
     argvalue0 := flag.Arg(1)
     value0 := argvalue0
-    argvalue1, err22 := (strconv.ParseInt(flag.Arg(2), 10, 64))
-    if err22 != nil {
+    argvalue1, err24 := (strconv.ParseInt(flag.Arg(2), 10, 64))
+    if err24 != nil {
       Usage()
       return
     }
@@ -211,8 +220,8 @@ func main() {
     }
     argvalue0 := flag.Arg(1)
     value0 := argvalue0
-    argvalue1, err24 := (strconv.ParseInt(flag.Arg(2), 10, 64))
-    if err24 != nil {
+    argvalue1, err26 := (strconv.ParseInt(flag.Arg(2), 10, 64))
+    if err26 != nil {
       Usage()
       return
     }
@@ -229,8 +238,8 @@ func main() {
     value0 := argvalue0
     argvalue1 := flag.Arg(2)
     value1 := argvalue1
-    argvalue2, err27 := (strconv.ParseInt(flag.Arg(3), 10, 64))
-    if err27 != nil {
+    argvalue2, err29 := (strconv.ParseInt(flag.Arg(3), 10, 64))
+    if err29 != nil {
       Usage()
       return
     }

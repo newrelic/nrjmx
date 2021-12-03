@@ -118,13 +118,6 @@ public class JMXFetcher {
     public List<String> getMBeanNames(String mBeanNamePattern) throws JMXError {
         ObjectName objectName = this.getObjectName(mBeanNamePattern);
         try {
-            if (connection == null) {
-                logger.info("connection is null");
-            } else {
-                logger.info("not null");
-            }
-
-
             return getConnection().queryMBeans(objectName, null)
                     .stream()
                     .map(ObjectInstance::getObjectName)

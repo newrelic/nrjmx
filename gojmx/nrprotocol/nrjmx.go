@@ -1142,6 +1142,7 @@ type JMXService interface {
   //  - TimeoutMs
   Connect(ctx context.Context, config *JMXConfig, timeoutMs int64) (err error)
   Disconnect(ctx context.Context) (err error)
+  Ping(ctx context.Context) (err error)
   // Parameters:
   //  - MBeanNamePattern
   //  - TimeoutMs
@@ -1217,36 +1218,29 @@ func (p *JMXServiceClient) Disconnect(ctx context.Context) (err error) {
   return nil
 }
 
+func (p *JMXServiceClient) Ping(ctx context.Context) (err error) {
+  var _args4 JMXServicePingArgs
+  var _result5 JMXServicePingResult
+  if err = p.Client_().Call(ctx, "ping", &_args4, &_result5); err != nil {
+    return
+  }
+  switch {
+  case _result5.Err!= nil:
+    return _result5.Err
+  }
+
+  return nil
+}
+
 // Parameters:
 //  - MBeanNamePattern
 //  - TimeoutMs
 func (p *JMXServiceClient) GetMBeanNames(ctx context.Context, mBeanNamePattern string, timeoutMs int64) (r []string, err error) {
-  var _args4 JMXServiceGetMBeanNamesArgs
-  _args4.MBeanNamePattern = mBeanNamePattern
-  _args4.TimeoutMs = timeoutMs
-  var _result5 JMXServiceGetMBeanNamesResult
-  if err = p.Client_().Call(ctx, "getMBeanNames", &_args4, &_result5); err != nil {
-    return
-  }
-  switch {
-  case _result5.ConnErr!= nil:
-    return r, _result5.ConnErr
-  case _result5.JmxErr!= nil:
-    return r, _result5.JmxErr
-  }
-
-  return _result5.GetSuccess(), nil
-}
-
-// Parameters:
-//  - MBeanName
-//  - TimeoutMs
-func (p *JMXServiceClient) GetMBeanAttrNames(ctx context.Context, mBeanName string, timeoutMs int64) (r []string, err error) {
-  var _args6 JMXServiceGetMBeanAttrNamesArgs
-  _args6.MBeanName = mBeanName
+  var _args6 JMXServiceGetMBeanNamesArgs
+  _args6.MBeanNamePattern = mBeanNamePattern
   _args6.TimeoutMs = timeoutMs
-  var _result7 JMXServiceGetMBeanAttrNamesResult
-  if err = p.Client_().Call(ctx, "getMBeanAttrNames", &_args6, &_result7); err != nil {
+  var _result7 JMXServiceGetMBeanNamesResult
+  if err = p.Client_().Call(ctx, "getMBeanNames", &_args6, &_result7); err != nil {
     return
   }
   switch {
@@ -1261,15 +1255,13 @@ func (p *JMXServiceClient) GetMBeanAttrNames(ctx context.Context, mBeanName stri
 
 // Parameters:
 //  - MBeanName
-//  - AttrName
 //  - TimeoutMs
-func (p *JMXServiceClient) GetMBeanAttr(ctx context.Context, mBeanName string, attrName string, timeoutMs int64) (r *JMXAttribute, err error) {
-  var _args8 JMXServiceGetMBeanAttrArgs
+func (p *JMXServiceClient) GetMBeanAttrNames(ctx context.Context, mBeanName string, timeoutMs int64) (r []string, err error) {
+  var _args8 JMXServiceGetMBeanAttrNamesArgs
   _args8.MBeanName = mBeanName
-  _args8.AttrName = attrName
   _args8.TimeoutMs = timeoutMs
-  var _result9 JMXServiceGetMBeanAttrResult
-  if err = p.Client_().Call(ctx, "getMBeanAttr", &_args8, &_result9); err != nil {
+  var _result9 JMXServiceGetMBeanAttrNamesResult
+  if err = p.Client_().Call(ctx, "getMBeanAttrNames", &_args8, &_result9); err != nil {
     return
   }
   switch {
@@ -1280,6 +1272,29 @@ func (p *JMXServiceClient) GetMBeanAttr(ctx context.Context, mBeanName string, a
   }
 
   return _result9.GetSuccess(), nil
+}
+
+// Parameters:
+//  - MBeanName
+//  - AttrName
+//  - TimeoutMs
+func (p *JMXServiceClient) GetMBeanAttr(ctx context.Context, mBeanName string, attrName string, timeoutMs int64) (r *JMXAttribute, err error) {
+  var _args10 JMXServiceGetMBeanAttrArgs
+  _args10.MBeanName = mBeanName
+  _args10.AttrName = attrName
+  _args10.TimeoutMs = timeoutMs
+  var _result11 JMXServiceGetMBeanAttrResult
+  if err = p.Client_().Call(ctx, "getMBeanAttr", &_args10, &_result11); err != nil {
+    return
+  }
+  switch {
+  case _result11.ConnErr!= nil:
+    return r, _result11.ConnErr
+  case _result11.JmxErr!= nil:
+    return r, _result11.JmxErr
+  }
+
+  return _result11.GetSuccess(), nil
 }
 
 type JMXServiceProcessor struct {
@@ -1302,13 +1317,14 @@ func (p *JMXServiceProcessor) ProcessorMap() map[string]thrift.TProcessorFunctio
 
 func NewJMXServiceProcessor(handler JMXService) *JMXServiceProcessor {
 
-  self10 := &JMXServiceProcessor{handler:handler, processorMap:make(map[string]thrift.TProcessorFunction)}
-  self10.processorMap["connect"] = &jMXServiceProcessorConnect{handler:handler}
-  self10.processorMap["disconnect"] = &jMXServiceProcessorDisconnect{handler:handler}
-  self10.processorMap["getMBeanNames"] = &jMXServiceProcessorGetMBeanNames{handler:handler}
-  self10.processorMap["getMBeanAttrNames"] = &jMXServiceProcessorGetMBeanAttrNames{handler:handler}
-  self10.processorMap["getMBeanAttr"] = &jMXServiceProcessorGetMBeanAttr{handler:handler}
-return self10
+  self12 := &JMXServiceProcessor{handler:handler, processorMap:make(map[string]thrift.TProcessorFunction)}
+  self12.processorMap["connect"] = &jMXServiceProcessorConnect{handler:handler}
+  self12.processorMap["disconnect"] = &jMXServiceProcessorDisconnect{handler:handler}
+  self12.processorMap["ping"] = &jMXServiceProcessorPing{handler:handler}
+  self12.processorMap["getMBeanNames"] = &jMXServiceProcessorGetMBeanNames{handler:handler}
+  self12.processorMap["getMBeanAttrNames"] = &jMXServiceProcessorGetMBeanAttrNames{handler:handler}
+  self12.processorMap["getMBeanAttr"] = &jMXServiceProcessorGetMBeanAttr{handler:handler}
+return self12
 }
 
 func (p *JMXServiceProcessor) Process(ctx context.Context, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
@@ -1319,12 +1335,12 @@ func (p *JMXServiceProcessor) Process(ctx context.Context, iprot, oprot thrift.T
   }
   iprot.Skip(thrift.STRUCT)
   iprot.ReadMessageEnd()
-  x11 := thrift.NewTApplicationException(thrift.UNKNOWN_METHOD, "Unknown function " + name)
+  x13 := thrift.NewTApplicationException(thrift.UNKNOWN_METHOD, "Unknown function " + name)
   oprot.WriteMessageBegin(name, thrift.EXCEPTION, seqId)
-  x11.Write(oprot)
+  x13.Write(oprot)
   oprot.WriteMessageEnd()
   oprot.Flush(ctx)
-  return false, x11
+  return false, x13
 
 }
 
@@ -1413,6 +1429,56 @@ func (p *jMXServiceProcessorDisconnect) Process(ctx context.Context, seqId int32
   }
   }
   if err2 = oprot.WriteMessageBegin("disconnect", thrift.REPLY, seqId); err2 != nil {
+    err = err2
+  }
+  if err2 = result.Write(oprot); err == nil && err2 != nil {
+    err = err2
+  }
+  if err2 = oprot.WriteMessageEnd(); err == nil && err2 != nil {
+    err = err2
+  }
+  if err2 = oprot.Flush(ctx); err == nil && err2 != nil {
+    err = err2
+  }
+  if err != nil {
+    return
+  }
+  return true, err
+}
+
+type jMXServiceProcessorPing struct {
+  handler JMXService
+}
+
+func (p *jMXServiceProcessorPing) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+  args := JMXServicePingArgs{}
+  if err = args.Read(iprot); err != nil {
+    iprot.ReadMessageEnd()
+    x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
+    oprot.WriteMessageBegin("ping", thrift.EXCEPTION, seqId)
+    x.Write(oprot)
+    oprot.WriteMessageEnd()
+    oprot.Flush(ctx)
+    return false, err
+  }
+
+  iprot.ReadMessageEnd()
+  result := JMXServicePingResult{}
+  var err2 error
+  if err2 = p.handler.Ping(ctx); err2 != nil {
+  switch v := err2.(type) {
+    case *JMXError:
+  result.Err = v
+    default:
+    x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing ping: " + err2.Error())
+    oprot.WriteMessageBegin("ping", thrift.EXCEPTION, seqId)
+    x.Write(oprot)
+    oprot.WriteMessageEnd()
+    oprot.Flush(ctx)
+    return true, err2
+  }
+  }
+  if err2 = oprot.WriteMessageBegin("ping", thrift.REPLY, seqId); err2 != nil {
     err = err2
   }
   if err2 = result.Write(oprot); err == nil && err2 != nil {
@@ -2028,6 +2094,157 @@ func (p *JMXServiceDisconnectResult) String() string {
   return fmt.Sprintf("JMXServiceDisconnectResult(%+v)", *p)
 }
 
+type JMXServicePingArgs struct {
+}
+
+func NewJMXServicePingArgs() *JMXServicePingArgs {
+  return &JMXServicePingArgs{}
+}
+
+func (p *JMXServicePingArgs) Read(iprot thrift.TProtocol) error {
+  if _, err := iprot.ReadStructBegin(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read error: ", p), err)
+  }
+
+
+  for {
+    _, fieldTypeId, fieldId, err := iprot.ReadFieldBegin()
+    if err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T field %d read error: ", p, fieldId), err)
+    }
+    if fieldTypeId == thrift.STOP { break; }
+    if err := iprot.Skip(fieldTypeId); err != nil {
+      return err
+    }
+    if err := iprot.ReadFieldEnd(); err != nil {
+      return err
+    }
+  }
+  if err := iprot.ReadStructEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+  }
+  return nil
+}
+
+func (p *JMXServicePingArgs) Write(oprot thrift.TProtocol) error {
+  if err := oprot.WriteStructBegin("ping_args"); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err) }
+  if p != nil {
+  }
+  if err := oprot.WriteFieldStop(); err != nil {
+    return thrift.PrependError("write field stop error: ", err) }
+  if err := oprot.WriteStructEnd(); err != nil {
+    return thrift.PrependError("write struct stop error: ", err) }
+  return nil
+}
+
+func (p *JMXServicePingArgs) String() string {
+  if p == nil {
+    return "<nil>"
+  }
+  return fmt.Sprintf("JMXServicePingArgs(%+v)", *p)
+}
+
+// Attributes:
+//  - Err
+type JMXServicePingResult struct {
+  Err *JMXError `thrift:"err,1" db:"err" json:"err,omitempty"`
+}
+
+func NewJMXServicePingResult() *JMXServicePingResult {
+  return &JMXServicePingResult{}
+}
+
+var JMXServicePingResult_Err_DEFAULT *JMXError
+func (p *JMXServicePingResult) GetErr() *JMXError {
+  if !p.IsSetErr() {
+    return JMXServicePingResult_Err_DEFAULT
+  }
+return p.Err
+}
+func (p *JMXServicePingResult) IsSetErr() bool {
+  return p.Err != nil
+}
+
+func (p *JMXServicePingResult) Read(iprot thrift.TProtocol) error {
+  if _, err := iprot.ReadStructBegin(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read error: ", p), err)
+  }
+
+
+  for {
+    _, fieldTypeId, fieldId, err := iprot.ReadFieldBegin()
+    if err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T field %d read error: ", p, fieldId), err)
+    }
+    if fieldTypeId == thrift.STOP { break; }
+    switch fieldId {
+    case 1:
+      if fieldTypeId == thrift.STRUCT {
+        if err := p.ReadField1(iprot); err != nil {
+          return err
+        }
+      } else {
+        if err := iprot.Skip(fieldTypeId); err != nil {
+          return err
+        }
+      }
+    default:
+      if err := iprot.Skip(fieldTypeId); err != nil {
+        return err
+      }
+    }
+    if err := iprot.ReadFieldEnd(); err != nil {
+      return err
+    }
+  }
+  if err := iprot.ReadStructEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+  }
+  return nil
+}
+
+func (p *JMXServicePingResult)  ReadField1(iprot thrift.TProtocol) error {
+  p.Err = &JMXError{}
+  if err := p.Err.Read(iprot); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T error reading struct: ", p.Err), err)
+  }
+  return nil
+}
+
+func (p *JMXServicePingResult) Write(oprot thrift.TProtocol) error {
+  if err := oprot.WriteStructBegin("ping_result"); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err) }
+  if p != nil {
+    if err := p.writeField1(oprot); err != nil { return err }
+  }
+  if err := oprot.WriteFieldStop(); err != nil {
+    return thrift.PrependError("write field stop error: ", err) }
+  if err := oprot.WriteStructEnd(); err != nil {
+    return thrift.PrependError("write struct stop error: ", err) }
+  return nil
+}
+
+func (p *JMXServicePingResult) writeField1(oprot thrift.TProtocol) (err error) {
+  if p.IsSetErr() {
+    if err := oprot.WriteFieldBegin("err", thrift.STRUCT, 1); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:err: ", p), err) }
+    if err := p.Err.Write(oprot); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T error writing struct: ", p.Err), err)
+    }
+    if err := oprot.WriteFieldEnd(); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field end error 1:err: ", p), err) }
+  }
+  return err
+}
+
+func (p *JMXServicePingResult) String() string {
+  if p == nil {
+    return "<nil>"
+  }
+  return fmt.Sprintf("JMXServicePingResult(%+v)", *p)
+}
+
 // Attributes:
 //  - MBeanNamePattern
 //  - TimeoutMs
@@ -2266,13 +2483,13 @@ func (p *JMXServiceGetMBeanNamesResult)  ReadField0(iprot thrift.TProtocol) erro
   tSlice := make([]string, 0, size)
   p.Success =  tSlice
   for i := 0; i < size; i ++ {
-var _elem12 string
+var _elem14 string
     if v, err := iprot.ReadString(); err != nil {
     return thrift.PrependError("error reading field 0: ", err)
 } else {
-    _elem12 = v
+    _elem14 = v
 }
-    p.Success = append(p.Success, _elem12)
+    p.Success = append(p.Success, _elem14)
   }
   if err := iprot.ReadListEnd(); err != nil {
     return thrift.PrependError("error reading list end: ", err)
@@ -2602,13 +2819,13 @@ func (p *JMXServiceGetMBeanAttrNamesResult)  ReadField0(iprot thrift.TProtocol) 
   tSlice := make([]string, 0, size)
   p.Success =  tSlice
   for i := 0; i < size; i ++ {
-var _elem13 string
+var _elem15 string
     if v, err := iprot.ReadString(); err != nil {
     return thrift.PrependError("error reading field 0: ", err)
 } else {
-    _elem13 = v
+    _elem15 = v
 }
-    p.Success = append(p.Success, _elem13)
+    p.Success = append(p.Success, _elem15)
   }
   if err := iprot.ReadListEnd(); err != nil {
     return thrift.PrependError("error reading list end: ", err)

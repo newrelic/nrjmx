@@ -47,6 +47,8 @@ service JMXService {
 
     void disconnect() throws (1:JMXError err),
 
+    void ping() throws (1:JMXError err),
+
     list<string> getMBeanNames(1:string mBeanNamePattern, 2:i64 timeoutMs) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr),
 
     list<string> getMBeanAttrNames(1:string mBeanName, 2:i64 timeoutMs) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr),

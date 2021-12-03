@@ -15,10 +15,12 @@ import (
 
 	"github.com/newrelic/nrjmx/gojmx/nrprotocol"
 	"github.com/stretchr/testify/assert"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
+
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 )
@@ -57,7 +59,7 @@ func init() {
 
 func Test_Query_Success_LargeAmountOfData(t *testing.T) {
 	ctx := context.Background()
-
+	//
 	// GIVEN a JMX Server running inside a container
 	container, err := runJMXServiceContainer(ctx)
 	require.NoError(t, err)
@@ -90,7 +92,7 @@ func Test_Query_Success_LargeAmountOfData(t *testing.T) {
 	require.NoError(t, err)
 
 	// THEN JMX connection can be oppened
-	client, err := NewJMXServiceClient(ctx)
+	client, err := NewJMXClient(ctx).InitStandardIO()
 	assert.NoError(t, err)
 
 	config := &nrprotocol.JMXConfig{
@@ -99,22 +101,22 @@ func Test_Query_Success_LargeAmountOfData(t *testing.T) {
 		UriPath:  "jmxrmi",
 	}
 
-	err = client.Connect(ctx, config, -1)
+	err = client.Connect(config, -1)
 	assert.NoError(t, err)
-	defer client.Disconnect(ctx)
+	defer client.Disconnect()
 
 	// AND query returns at least 5Mb of data.
-	mBeanNames, err := client.GetMBeanNames(ctx, "test:type=Cat,*", -1)
+	mBeanNames, err := client.GetMBeanNames("test:type=Cat,*", -1)
 	assert.NoError(t, err)
 
 	var result []*nrprotocol.JMXAttribute
 
 	for _, mBeanName := range mBeanNames {
-		mBeanAttrNames, err := client.GetMBeanAttrNames(ctx, mBeanName, -1)
+		mBeanAttrNames, err := client.GetMBeanAttrNames(mBeanName, -1)
 		assert.NoError(t, err)
 
 		for _, mBeanAttrName := range mBeanAttrNames {
-			jmxAttr, err := client.GetMBeanAttr(ctx, mBeanName, mBeanAttrName, -1)
+			jmxAttr, err := client.GetMBeanAttr(mBeanName, mBeanAttrName, -1)
 			assert.NoError(t, err)
 			result = append(result, jmxAttr)
 		}
@@ -151,7 +153,7 @@ func Test_Query_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	// THEN JMX connection can be oppened
-	client, err := NewJMXServiceClient(ctx)
+	client, err := NewJMXClient(ctx).InitStandardIO()
 	assert.NoError(t, err)
 
 	config := &nrprotocol.JMXConfig{
@@ -160,21 +162,22 @@ func Test_Query_Success(t *testing.T) {
 		UriPath:  "jmxrmi",
 	}
 
-	err = client.Connect(ctx, config, defaultTimeoutMs)
-	defer client.Disconnect(ctx)
+	err = client.Connect(config, defaultTimeoutMs)
+	defer client.Disconnect()
 	assert.NoError(t, err)
 
+	// AND Query returns expected data
 	expectedMBeanNames := []string{
 		"test:type=Cat,name=tomas",
 	}
-	actualMBeanNames, err := client.GetMBeanNames(ctx, "test:type=Cat,*", defaultTimeoutMs)
+	actualMBeanNames, err := client.GetMBeanNames("test:type=Cat,*", defaultTimeoutMs)
 	require.NoError(t, err)
 	require.ElementsMatch(t, expectedMBeanNames, actualMBeanNames)
 
 	expectedMBeanAttrNames := []string{
 		"BoolValue", "FloatValue", "NumberValue", "DoubleValue", "Name",
 	}
-	actualMBeanAttrNames, err := client.GetMBeanAttrNames(ctx, "test:name=tomas,type=Cat", defaultTimeoutMs)
+	actualMBeanAttrNames, err := client.GetMBeanAttrNames("test:name=tomas,type=Cat", defaultTimeoutMs)
 	require.NoError(t, err)
 	require.ElementsMatch(t, expectedMBeanAttrNames, actualMBeanAttrNames)
 
@@ -214,7 +217,7 @@ func Test_Query_Success(t *testing.T) {
 
 	var actual []*nrprotocol.JMXAttribute
 	for _, mBeanAttrName := range expectedMBeanAttrNames {
-		jmxAttribute, err := client.GetMBeanAttr(ctx, "test:type=Cat,name=tomas", mBeanAttrName, defaultTimeoutMs)
+		jmxAttribute, err := client.GetMBeanAttr("test:type=Cat,name=tomas", mBeanAttrName, defaultTimeoutMs)
 		assert.NoError(t, err)
 		actual = append(actual, jmxAttribute)
 	}
@@ -236,7 +239,7 @@ func Test_Query_Timeout(t *testing.T) {
 	require.NoError(t, err)
 
 	// THEN JMX connection can be oppened
-	client, err := NewJMXServiceClient(ctx)
+	client, err := NewJMXClient(ctx).InitStandardIO()
 	assert.NoError(t, err)
 
 	config := &nrprotocol.JMXConfig{
@@ -245,12 +248,12 @@ func Test_Query_Timeout(t *testing.T) {
 		UriPath:  "jmxrmi",
 	}
 
-	err = client.Connect(ctx, config, defaultTimeoutMs)
-	defer client.Disconnect(ctx)
+	err = client.Connect(config, defaultTimeoutMs)
+	defer client.Disconnect()
 	assert.NoError(t, err)
 
 	// AND Query returns expected data
-	actual, err := client.GetMBeanAttrNames(ctx, "*:*", 1)
+	actual, err := client.GetMBeanAttrNames("*:*", 1)
 	assert.Nil(t, actual)
 
 	assert.Error(t, err)
@@ -282,19 +285,19 @@ func Test_URL_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	// THEN JMX connection can be oppened
-	client, err := NewJMXServiceClient(ctx)
+	client, err := NewJMXClient(ctx).InitStandardIO()
 	assert.NoError(t, err)
 
 	config := &nrprotocol.JMXConfig{
 		ConnectionURL: fmt.Sprintf("service:jmx:rmi:///jndi/rmi://%s:%s/jmxrmi", jmxHost, jmxPort.Port()),
 	}
 
-	err = client.Connect(ctx, config, defaultTimeoutMs)
-	defer client.Disconnect(ctx)
+	err = client.Connect(config, defaultTimeoutMs)
+	defer client.Disconnect()
 	assert.NoError(t, err)
 
 	// AND Query returns expected data
-	actual, err := client.GetMBeanAttr(ctx, "test:type=Cat,name=tomas", "FloatValue", defaultTimeoutMs)
+	actual, err := client.GetMBeanAttr("test:type=Cat,name=tomas", "FloatValue", defaultTimeoutMs)
 	assert.NoError(t, err)
 
 	expected := &nrprotocol.JMXAttribute{
@@ -312,20 +315,20 @@ func Test_JavaNotInstalled(t *testing.T) {
 	defer os.Unsetenv("NRIA_JAVA_HOME")
 
 	ctx := context.Background()
-	client, err := NewJMXServiceClient(ctx)
-	assert.NoError(t, err)
+	client, err := NewJMXClient(ctx).InitStandardIO()
+	assert.Contains(t, err.Error(), "/wrong/path/bin/java")
 
 	config := &nrprotocol.JMXConfig{}
 
 	// THEN connect fails with expected error
-	err = client.Connect(ctx, config, defaultTimeoutMs)
-	defer client.Disconnect(ctx)
-	assert.EqualError(t, err, "EOF") // TODO: this error message should be fixed
+	err = client.Connect(config, defaultTimeoutMs)
+	defer client.Disconnect()
+	assert.ErrorIs(t, err, ErrNotRunning)
 
 	// AND Query fails with expected error
-	actual, err := client.GetMBeanNames(ctx, "test:type=Cat,*", defaultTimeoutMs)
+	actual, err := client.GetMBeanNames("test:type=Cat,*", defaultTimeoutMs)
 	assert.Nil(t, actual)
-	assert.EqualError(t, err, "write |1: broken pipe") // TODO: this error message should be fixed
+	assert.ErrorIs(t, err, ErrNotRunning)
 }
 
 func Test_WrongMbeanFormat(t *testing.T) {
@@ -342,19 +345,19 @@ func Test_WrongMbeanFormat(t *testing.T) {
 	require.NoError(t, err)
 
 	// THEN JMX connection can be oppened
-	client, err := NewJMXServiceClient(ctx)
+	client, err := NewJMXClient(ctx).InitStandardIO()
 	assert.NoError(t, err)
 
 	config := &nrprotocol.JMXConfig{
 		ConnectionURL: fmt.Sprintf("service:jmx:rmi:///jndi/rmi://%s:%s/jmxrmi", jmxHost, jmxPort.Port()),
 	}
 
-	err = client.Connect(ctx, config, defaultTimeoutMs)
-	defer client.Disconnect(ctx)
+	err = client.Connect(config, defaultTimeoutMs)
+	defer client.Disconnect()
 	assert.NoError(t, err)
 
 	// AND Query returns expected error
-	actual, err := client.GetMBeanNames(ctx, "wrong_format", defaultTimeoutMs)
+	actual, err := client.GetMBeanNames("wrong_format", defaultTimeoutMs)
 	assert.Nil(t, actual)
 
 	jmxErr, ok := err.(*nrprotocol.JMXError)
@@ -365,7 +368,7 @@ func Test_WrongMbeanFormat(t *testing.T) {
 func Test_Wrong_Connection(t *testing.T) {
 	ctx := context.Background()
 
-	client, err := NewJMXServiceClient(ctx)
+	client, err := NewJMXClient(ctx).InitStandardIO()
 	assert.NoError(t, err)
 
 	// GIVEN a wrong hostname and port
@@ -375,13 +378,14 @@ func Test_Wrong_Connection(t *testing.T) {
 		UriPath:  "jmxrmi",
 	}
 
-	// WHEN connecting expected error is returned
-	err = client.Connect(ctx, config, defaultTimeoutMs)
-	defer client.Disconnect(ctx)
+	err = client.Connect(config, defaultTimeoutMs)
+	defer client.Disconnect()
 	assert.Contains(t, err.Error(), "Connection refused to host: localhost;")
 
 	// AND query returns expected error
-	actual, err := client.GetMBeanNames(ctx, "test:type=Cat,*", defaultTimeoutMs)
+	assert.Contains(t, err.Error(), "Connection refused to host: localhost;") // TODO: fix this, doesn't return the correct error
+
+	actual, err := client.GetMBeanNames("test:type=Cat,*", defaultTimeoutMs)
 	assert.Nil(t, actual)
 	assert.Errorf(t, err, "connection to JMX endpoint is not established")
 }
@@ -412,7 +416,7 @@ func Test_SSLQuery_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	// THEN SSL JMX connection can be oppened
-	client, err := NewJMXServiceClient(ctx)
+	client, err := NewJMXClient(ctx).InitStandardIO()
 	assert.NoError(t, err)
 
 	config := &nrprotocol.JMXConfig{
@@ -427,22 +431,22 @@ func Test_SSLQuery_Success(t *testing.T) {
 		TrustStorePassword: truststorePassword,
 	}
 
-	err = client.Connect(ctx, config, defaultTimeoutMs)
-	defer client.Disconnect(ctx)
+	err = client.Connect(config, defaultTimeoutMs)
+	defer client.Disconnect()
 	assert.NoError(t, err)
 
 	// AND Query returns expected data
 	expectedMBeanNames := []string{
 		"test:type=Cat,name=tomas",
 	}
-	actualMBeanNames, err := client.GetMBeanNames(ctx, "test:type=Cat,*", defaultTimeoutMs)
+	actualMBeanNames, err := client.GetMBeanNames("test:type=Cat,*", defaultTimeoutMs)
 	require.NoError(t, err)
 	require.ElementsMatch(t, expectedMBeanNames, actualMBeanNames)
 
 	expectedMBeanAttrNames := []string{
 		"BoolValue", "FloatValue", "NumberValue", "DoubleValue", "Name",
 	}
-	actualMBeanAttrNames, err := client.GetMBeanAttrNames(ctx, "test:name=tomas,type=Cat", defaultTimeoutMs)
+	actualMBeanAttrNames, err := client.GetMBeanAttrNames("test:name=tomas,type=Cat", defaultTimeoutMs)
 	require.NoError(t, err)
 	require.ElementsMatch(t, expectedMBeanAttrNames, actualMBeanAttrNames)
 
@@ -482,7 +486,7 @@ func Test_SSLQuery_Success(t *testing.T) {
 
 	var actual []*nrprotocol.JMXAttribute
 	for _, mBeanAttrName := range expectedMBeanAttrNames {
-		jmxAttribute, err := client.GetMBeanAttr(ctx, "test:type=Cat,name=tomas", mBeanAttrName, defaultTimeoutMs)
+		jmxAttribute, err := client.GetMBeanAttr("test:type=Cat,name=tomas", mBeanAttrName, defaultTimeoutMs)
 		assert.NoError(t, err)
 		actual = append(actual, jmxAttribute)
 	}
@@ -504,7 +508,7 @@ func Test_Wrong_Credentials(t *testing.T) {
 	require.NoError(t, err)
 
 	// WHEN wrong jmx username and password is provided
-	client, err := NewJMXServiceClient(ctx)
+	client, err := NewJMXClient(ctx).InitStandardIO()
 	assert.NoError(t, err)
 
 	config := &nrprotocol.JMXConfig{
@@ -520,12 +524,12 @@ func Test_Wrong_Credentials(t *testing.T) {
 	}
 
 	// THEN connect fails with expected error
-	err = client.Connect(ctx, config, defaultTimeoutMs)
-	defer client.Disconnect(ctx)
+	err = client.Connect(config, defaultTimeoutMs)
+	defer client.Disconnect()
 	assert.Contains(t, err.Error(), "Authentication failed! Invalid username or password")
 
 	// AND Query returns expected error
-	actual, err := client.GetMBeanNames(ctx, "test:type=Cat,*", defaultTimeoutMs)
+	actual, err := client.GetMBeanNames("test:type=Cat,*", defaultTimeoutMs)
 	assert.Nil(t, actual)
 	assert.Errorf(t, err, "connection to JMX endpoint is not established")
 }
@@ -544,7 +548,7 @@ func Test_Wrong_Certificate_password(t *testing.T) {
 	require.NoError(t, err)
 
 	// WHEN wrong jmx username and password is provided
-	client, err := NewJMXServiceClient(ctx)
+	client, err := NewJMXClient(ctx).InitStandardIO()
 	assert.NoError(t, err)
 
 	config := &nrprotocol.JMXConfig{
@@ -560,12 +564,12 @@ func Test_Wrong_Certificate_password(t *testing.T) {
 	}
 
 	// THEN Connect returns expected error
-	err = client.Connect(ctx, config, defaultTimeoutMs)
-	defer client.Disconnect(ctx)
+	err = client.Connect(config, defaultTimeoutMs)
+	defer client.Disconnect()
 	assert.Contains(t, err.Error(), "SSLContext") // TODO: improve this error from java
 
 	// AND Query returns expected error
-	actual, err := client.GetMBeanNames(ctx, "test:type=Cat,*", defaultTimeoutMs)
+	actual, err := client.GetMBeanNames("test:type=Cat,*", defaultTimeoutMs)
 	assert.Nil(t, actual)
 	assert.Errorf(t, err, "connection to JMX endpoint is not established")
 }
@@ -591,7 +595,7 @@ func Test_Connector_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	// THEN JMX connection can be oppened
-	client, err := NewJMXServiceClient(ctx)
+	client, err := NewJMXClient(ctx).InitStandardIO()
 	assert.NoError(t, err)
 
 	config := &nrprotocol.JMXConfig{
@@ -603,15 +607,15 @@ func Test_Connector_Success(t *testing.T) {
 		IsRemote:              true,
 	}
 
-	err = client.Connect(ctx, config, defaultTimeoutMs)
-	defer client.Disconnect(ctx)
+	err = client.Connect(config, defaultTimeoutMs)
+	defer client.Disconnect()
 	assert.NoError(t, err)
 
 	// AND Query returns expected data
 	expectedMbeanNames := []string{
 		"jboss.as:subsystem=remoting,configuration=endpoint",
 	}
-	actualMbeanNames, err := client.GetMBeanNames(ctx, "jboss.as:subsystem=remoting,configuration=endpoint", defaultTimeoutMs)
+	actualMbeanNames, err := client.GetMBeanNames("jboss.as:subsystem=remoting,configuration=endpoint", defaultTimeoutMs)
 	assert.NoError(t, err)
 	assert.ElementsMatch(t, expectedMbeanNames, actualMbeanNames)
 
@@ -635,7 +639,7 @@ func Test_Connector_Success(t *testing.T) {
 		"transmitWindowSize",
 		"worker",
 	}
-	actualMBeanAttrNames, err := client.GetMBeanAttrNames(ctx, "jboss.as:subsystem=remoting,configuration=endpoint", defaultTimeoutMs)
+	actualMBeanAttrNames, err := client.GetMBeanAttrNames("jboss.as:subsystem=remoting,configuration=endpoint", defaultTimeoutMs)
 	assert.ElementsMatch(t, expectedMBeanAttrNames, actualMBeanAttrNames)
 
 	expected := []*nrprotocol.JMXAttribute{
@@ -713,7 +717,7 @@ func Test_Connector_Success(t *testing.T) {
 
 	var actual []*nrprotocol.JMXAttribute
 	for _, mBeanAttrName := range expectedMBeanAttrNames {
-		jmxAttribute, err := client.GetMBeanAttr(ctx, "jboss.as:subsystem=remoting,configuration=endpoint", mBeanAttrName, defaultTimeoutMs)
+		jmxAttribute, err := client.GetMBeanAttr("jboss.as:subsystem=remoting,configuration=endpoint", mBeanAttrName, defaultTimeoutMs)
 		if err != nil {
 			continue
 		}
@@ -750,7 +754,7 @@ func TestJMXServiceDisconnect(t *testing.T) {
 	require.NoError(t, err)
 
 	// THEN JMX connection can be oppened
-	client, err := NewJMXServiceClient(ctx)
+	client, err := NewJMXClient(ctx).InitStandardIO()
 	assert.NoError(t, err)
 
 	config := &nrprotocol.JMXConfig{
@@ -759,22 +763,23 @@ func TestJMXServiceDisconnect(t *testing.T) {
 		UriPath:  "jmxrmi",
 	}
 
-	err = client.Connect(ctx, config, defaultTimeoutMs)
+	err = client.Connect(config, defaultTimeoutMs)
 	assert.NoError(t, err)
-	err = client.Disconnect(ctx)
+	err = client.Disconnect()
 	assert.NoError(t, err)
 
 	time.Sleep(2 * time.Second)
 	// AND Query returns expected error
-	actual, err := client.GetMBeanNames(ctx, "test:type=Cat,*", defaultTimeoutMs)
+	actual, err := client.GetMBeanNames("test:type=Cat,*", defaultTimeoutMs)
 	assert.Nil(t, actual)
-	assert.Error(t, err) // TODO: Get valid error message
+	assert.ErrorIs(t, err, ErrNotRunning) // TODO: Get valid error message
 
-	err = client.jmxProcess.cmd.Wait()
-	assert.NoError(t, err)
-
-	assert.NotNil(t, client.jmxProcess.cmd.ProcessState)
-	assert.True(t, client.jmxProcess.cmd.ProcessState.Success())
+	assert.Eventually(t, func() bool {
+		if client.jmxProcess.cmd.ProcessState == nil {
+			return false
+		}
+		return client.jmxProcess.cmd.ProcessState.Success()
+	}, 5*time.Second, 50*time.Millisecond)
 }
 
 // runJMXServiceContainer will start a container running test-server with JMX.

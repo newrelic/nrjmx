@@ -1,14 +1,14 @@
 package gojmx
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"time"
+	"strings"
+	"sync"
 )
 
 var bufferSize = 4 * 1024 // initial 4KB per line.
@@ -24,12 +24,14 @@ func getNrjmxExec() string {
 // var defaultNrjmxExec = "/home/cristi/workspace/cppc/java/nrjmx/bin/nrjmx"
 
 type jmxProcess struct {
-	cmd    *exec.Cmd
-	ctx    context.Context
-	cancel context.CancelFunc
-	Stdout io.ReadCloser
-	Stdin  io.WriteCloser
-	Stderr io.ReadCloser
+	sync.Mutex
+	cmd     *exec.Cmd
+	ctx     context.Context
+	cancel  context.CancelFunc
+	running bool
+	Stdout  io.ReadCloser
+	Stdin   io.WriteCloser
+	errCh   chan error
 }
 
 func startJMXProcess(ctx context.Context) (*jmxProcess, error) {
@@ -49,50 +51,77 @@ func startJMXProcess(ctx context.Context) (*jmxProcess, error) {
 		return nil, fmt.Errorf("failed to create stdin pipe to %q: %v", cmd.Path, err)
 	}
 
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		return nil, fmt.Errorf("failed to create stderr pipe to %q: %v", cmd.Path, err)
-	}
+	stderrbuf := new(strings.Builder)
+	cmd.Stderr = stderrbuf
 
-	go func() {
-		reader := bufio.NewReaderSize(stderr, bufferSize)
-
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			default:
-				break
-			}
-
-			line, err := reader.ReadString('\n')
-			// API needs re to allow stderr full read before closing
-			if err != nil {
-				if _, isAlreadyClosed := err.(*os.PathError); !isAlreadyClosed && err != io.EOF {
-					fmt.Fprintf(os.Stderr, "error while reading stderr: '%v'", err)
-					continue
-				}
-				return
-			}
-			fmt.Fprint(os.Stderr, line)
-		}
-	}()
+	//
+	//go func() {
+	//	reader := bufio.NewReaderSize(stderr, bufferSize)
+	//
+	//	for {
+	//		select {
+	//		case <-ctx.Done():
+	//			return
+	//		default:
+	//			break
+	//		}
+	//
+	//		line, err := reader.ReadString('\n')
+	//		// API needs re to allow stderr full read before closing
+	//		if err != nil {
+	//			if _, isAlreadyClosed := err.(*os.PathError); !isAlreadyClosed && err != io.EOF {
+	//				fmt.Fprintf(os.Stderr, "error while reading stderr: '%v'", err)
+	//				continue
+	//			}
+	//			return
+	//		}
+	//		fmt.Fprint(os.Stderr, line)
+	//	}
+	//}()
 
 	if err := cmd.Start(); err != nil {
 		return nil, fmt.Errorf("failed to start %q: %v", cmd.Path, err)
 	}
+	errCh := make(chan error, 1)
 
-	return &jmxProcess{
-		Stdout: stdout,
-		Stdin:  stdin,
-		Stderr: stderr,
-		cmd:    cmd,
-		ctx:    ctx,
-		cancel: cancel,
-	}, nil
+	jmxProcess := &jmxProcess{
+		Stdout:  stdout,
+		Stdin:   stdin,
+		running: true,
+		cmd:     cmd,
+		ctx:     ctx,
+		cancel:  cancel,
+		errCh:   errCh,
+	}
+	go func() {
+		// stderr we must read before wait, not with strings builder
+		err := cmd.Wait()
+		if err != nil {
+			errCh <- fmt.Errorf("%s: %w", stderrbuf.String(), err)
+		}
+		jmxProcess.Lock()
+		defer jmxProcess.Unlock()
+		jmxProcess.running = false
+	}()
+
+	return jmxProcess, nil
 }
 
-func (p *jmxProcess) stop(timeout time.Duration) error {
+func (p *jmxProcess) Error() error {
+	select {
+	case err := <-p.errCh:
+		return err
+	default:
+		p.Lock()
+		defer p.Unlock()
+		if !p.running {
+			return ErrNotRunning
+		}
+		return nil
+	}
+}
+
+func (p *jmxProcess) stop() error {
 	var errors error
 
 	if err := p.Stdout.Close(); err != nil {
@@ -101,13 +130,10 @@ func (p *jmxProcess) stop(timeout time.Duration) error {
 	if err := p.Stdin.Close(); err != nil {
 		errors = fmt.Errorf("failed to detach stdin from %q: %w", p.cmd.Path, err)
 	}
-	if err := p.Stderr.Close(); err != nil {
-		errors = fmt.Errorf("failed to detach stder from %q: %w", p.cmd.Path, err)
-	}
 	p.cancel()
-	err := p.cmd.Wait()
-	if err != nil {
-		errors = fmt.Errorf("command failed %q: %w", p.cmd.Path, err)
-	}
+	//err := p.cmd.Wait()
+	//if err != nil {
+	//	errors = fmt.Errorf("command failed %q: %w", p.cmd.Path, err)
+	//}
 	return errors
 }

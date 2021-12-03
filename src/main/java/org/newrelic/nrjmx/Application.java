@@ -32,7 +32,7 @@ public class Application {
         new HelpFormatter().printHelp("nrjmx", Arguments.options());
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws TTransportException {
         Arguments cliArgs = null;
         try {
             cliArgs = Arguments.from(args);

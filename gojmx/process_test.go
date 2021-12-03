@@ -46,7 +46,7 @@ func TestJMXServiceSubprocessStops(t *testing.T) {
 		require.NoError(t, err)
 
 		// THEN JMX connection can be oppened
-		client, err := NewJMXServiceClient(ctx)
+		client, err := NewJMXClient(ctx).InitStandardIO()
 		assert.NoError(t, err)
 
 		config := &nrprotocol.JMXConfig{
@@ -55,7 +55,7 @@ func TestJMXServiceSubprocessStops(t *testing.T) {
 			UriPath:  "jmxrmi",
 		}
 
-		err = client.Connect(ctx, config, defaultTimeoutMs)
+		err = client.Connect(config, defaultTimeoutMs)
 		assert.NoError(t, err)
 		f, err := os.OpenFile(os.Getenv("TMP_FILE"), os.O_WRONLY|os.O_TRUNC, 0644)
 		defer f.Close()

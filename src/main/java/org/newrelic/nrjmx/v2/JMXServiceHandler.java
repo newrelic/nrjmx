@@ -15,8 +15,9 @@ public class JMXServiceHandler implements JMXService.Iface {
         this.jmxFetcher = jmxFetcher;
     }
 
-    public void addServer(TServer server) {
-        this.server = server;
+    @Override
+    public void ping() throws TException {
+        return;
     }
 
     @Override
@@ -45,5 +46,9 @@ public class JMXServiceHandler implements JMXService.Iface {
     @Override
     public JMXAttribute getMBeanAttr(String mBeanName, String attrName, long timeoutMs) throws TException {
         return jmxFetcher.getMBeanAttr(mBeanName, attrName, timeoutMs);
+    }
+
+    public void addServer(TServer server) {
+        this.server = server;
     }
 }

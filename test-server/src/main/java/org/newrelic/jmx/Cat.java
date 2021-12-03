@@ -13,7 +13,6 @@ public class Cat implements CatMBean, MBeanRegistration {
     private Float floatValue;
     private Boolean boolValue;
     private Number numberValue;
-
     private Integer timeout;
 
     public Cat(String name, Double doubleValue, Float floatValue, Boolean boolValue, Number numberValue, Integer timeout) {
