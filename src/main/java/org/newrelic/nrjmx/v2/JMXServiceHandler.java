@@ -6,6 +6,11 @@ import org.apache.thrift.TException;
 import org.apache.thrift.server.TServer;
 import org.newrelic.nrjmx.v2.nrprotocol.*;
 
+/*
+ * Copyright 2021 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 public class JMXServiceHandler implements JMXService.Iface {
 
     private JMXFetcher jmxFetcher;
@@ -28,7 +33,7 @@ public class JMXServiceHandler implements JMXService.Iface {
     @Override
     public void disconnect() throws TException {
         if (server == null) {
-            throw new TException("cannot disconnect, server handler null");
+            throw new TException("cannot disconnect, nrjmx handler null");
         }
         server.stop();
     }

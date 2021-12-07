@@ -5,6 +5,10 @@ import org.apache.thrift.transport.TServerTransport;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
 
+/*
+ * Copyright 2021 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
 public class StandardIOTransportServer extends TServerTransport {
 
@@ -16,7 +20,9 @@ public class StandardIOTransportServer extends TServerTransport {
 
     @Override
     public void close() {
-        transport.close();
+        if (transport != null) {
+            transport.close();
+        }
     }
 
     @Override
@@ -24,5 +30,4 @@ public class StandardIOTransportServer extends TServerTransport {
         transport = new TIOStreamTransport(System.in, System.out);
         return transport;
     }
-
 }

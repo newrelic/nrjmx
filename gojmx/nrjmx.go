@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/apache/thrift/lib/go/thrift"
+	"io"
 	"time"
 
 	"github.com/newrelic/nrjmx/gojmx/nrprotocol"
@@ -22,41 +23,49 @@ type JMXClient struct {
 	jmxProcess *jmxProcess
 	isRunning  bool
 	ctx        context.Context
+	cancelfn   context.CancelFunc
+	socket     *thrift.TSocket
+}
+
+func (c *JMXClient) Cancel() {
+	c.cancelfn()
 }
 
 func NewJMXClient(ctx context.Context) *JMXClient {
+	ctx2, cancelfn := context.WithCancel(ctx)
 	return &JMXClient{
-		ctx: ctx,
+		ctx:      ctx2,
+		cancelfn: cancelfn,
 	}
 }
 
 func (j *JMXClient) InitStandardIO() (*JMXClient, error) {
-	if j.isRunning {
-		return j, ErrAlreadyStarted
+	//if j.isRunning {
+	//	return j, ErrAlreadyStarted
+	//}
+
+	var err error
+	if j.jmxProcess == nil {
+		j.jmxProcess, err = startJMXProcess(j.ctx)
+		if err != nil {
+			j.jmxProcess.stop() // TODO: Handle err
+			return j, err
+		}
 	}
 
-	jmxProcess, err := startJMXProcess(j.ctx)
+	transport := thrift.NewStreamTransport(j.jmxProcess.Stdout, j.jmxProcess.Stdin)
+	j.jmxService, err = j.configureJMXServiceClient(transport)
+
 	if err != nil {
-		jmxProcess.stop() // TODO: Handle err
+		j.jmxProcess.stop() // TODO: Handle err
 		return j, err
 	}
 
-	transport := thrift.NewStreamTransport(jmxProcess.Stdout, jmxProcess.Stdin)
-	jmxServiceClient, err := j.configureJMXServiceClient(transport)
-
-	if err != nil {
-		jmxProcess.stop() // TODO: Handle err
-		return j, err
-	}
-
-	j.jmxProcess = jmxProcess
-	j.jmxService = jmxServiceClient
-
-	err = j.ping(pingTimeout)
-	if err != nil {
-		jmxProcess.stop() // TODO: Handle err
-		return j, err
-	}
+	//err = j.ping(pingTimeout)
+	//if err != nil {
+	//	jmxProcess.stop() // TODO: Handle err
+	//	return j, err
+	//}
 	j.isRunning = true
 
 	return j, nil
@@ -64,7 +73,7 @@ func (j *JMXClient) InitStandardIO() (*JMXClient, error) {
 
 func (j *JMXClient) configureJMXServiceClient(transport thrift.TTransport) (*nrprotocol.JMXServiceClient, error) {
 	var protocolFactory thrift.TProtocolFactory
-	protocolFactory = thrift.NewTCompactProtocolFactory()
+	protocolFactory = thrift.NewTJSONProtocolFactory()
 
 	var transportFactory thrift.TTransportFactory
 	transportFactory = thrift.NewTBufferedTransportFactory(8192)
@@ -129,14 +138,25 @@ func (j *JMXClient) Connect(config *nrprotocol.JMXConfig, timeout int64) error {
 	if err := j.checkState(); err != nil {
 		return err
 	}
-	return j.jmxService.Connect(j.ctx, config, timeout)
+	return j.checkPostCallState(j.jmxService.Connect(j.ctx, config, timeout))
+}
+
+func (j* JMXClient) checkPostCallState(err error) error {
+	if err == io.EOF {
+		//
+	}
 }
 
 func (j *JMXClient) GetMBeanNames(mbean string, timeout int64) ([]string, error) {
 	if err := j.checkState(); err != nil {
 		return nil, err
 	}
-	return j.jmxService.GetMBeanNames(j.ctx, mbean, timeout)
+	result, err := j.jmxService.GetMBeanNames(j.ctx, mbean, timeout)
+	err2 := j.jmxProcess.Error()
+	if err2 != nil {
+		return nil, err2
+	}
+	return result, err
 }
 
 func (j *JMXClient) GetMBeanAttrNames(mbean string, timeout int64) ([]string, error) {
@@ -165,9 +185,9 @@ func (j *JMXClient) Disconnect() error {
 }
 
 func (j *JMXClient) InitTCP(startSubprocess bool) (*JMXClient, error) {
-	if j.isRunning {
-		return j, ErrAlreadyStarted
-	}
+	//if j.isRunning {
+	//	return j, ErrAlreadyStarted
+	//}
 
 	if startSubprocess {
 		jmxProcess, err := startJMXProcess(j.ctx)
@@ -179,6 +199,7 @@ func (j *JMXClient) InitTCP(startSubprocess bool) (*JMXClient, error) {
 	}
 
 	transport, err := thrift.NewTSocket("localhost:9090")
+	j.socket = (*thrift.TSocket)(transport)
 	if err != nil {
 		if startSubprocess {
 			j.jmxProcess.stop()
@@ -213,6 +234,27 @@ func (j *JMXClient) InitTCP(startSubprocess bool) (*JMXClient, error) {
 
 	j.isRunning = true
 	return j, nil
+}
+
+func (j *JMXClient) WriteJunk() {
+	//_, err := j.socket.Write([]byte("some junk\n"))
+	//if err != nil {
+	//	panic(err)
+	//}
+	//fmt.Fprintln(j.socket)
+	//err = j.socket.Flush(context.Background())
+	//if err != nil {
+	//	panic(err)
+	//}
+	fmt.Fprintf(j.jmxProcess.Stdin, "aa")
+	//fmt.Fprintf(j.jmxProcess.Stdin, "junk")
+	//fmt.Fprintln(j.jmxProcess.Stdin)
+	//transport := thrift.NewStreamTransport(j.jmxProcess.Stdout, j.jmxProcess.Stdin)
+	//var err error
+	//j.jmxService, err = j.configureJMXServiceClient(transport)
+	//if err != nil {
+	//	panic(err)
+	//}
 }
 
 func (j *JMXClient) Close() error {

@@ -22,4 +22,7 @@ else
     CLASSPATH=${path}/*:./connectors/*
 fi
 
-${java_tool} -cp ${CLASSPATH} org.newrelic.nrjmx.Application $@
+export JAVA_OPTS="-agentlib:jdwp=transport=dt_socket,server=n,address=localhost:5005,suspend=y"
+#export JAVA_OPTS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=localhost:5005"
+${java_tool} ${JAVA_OPTS} -cp ${CLASSPATH} org.newrelic.nrjmx.Application $@
+

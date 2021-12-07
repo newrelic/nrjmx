@@ -16,6 +16,7 @@ import java.util.logging.Logger;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.protocol.TCompactProtocol;
+import org.apache.thrift.protocol.TJSONProtocol;
 import org.apache.thrift.server.TServer;
 import org.apache.thrift.server.TServer.Args;
 import org.apache.thrift.server.TSimpleServer;
@@ -32,7 +33,7 @@ public class Application {
         new HelpFormatter().printHelp("nrjmx", Arguments.options());
     }
 
-    public static void main(String[] args) throws TTransportException {
+    public static void main(String[] args) throws Exception {
         Arguments cliArgs = null;
         try {
             cliArgs = Arguments.from(args);
@@ -99,14 +100,14 @@ public class Application {
 
         try {
             message += "\n";
-            Files.write(Paths.get("/Users/cciutea/workspace/nr/int/nrjmx/gojmx/cmd/out2"), message.getBytes(), StandardOpenOption.APPEND);
+            Files.write(Paths.get("/Users/cciutea/workspace/nr/int/nrjmx/gojmx/cmd/out"), message.getBytes(), StandardOpenOption.APPEND);
         } catch (IOException e) {
             //exception handling left as an exercise for the reader
         }
 
     }
 
-    private static void runV2(Arguments cliArgs) {
+    private static void runV2(Arguments cliArgs) throws Exception {
         Runtime.getRuntime().addShutdownHook(new Thread() {
             public void run() {
                 write("Shutdown Hook is running !");
@@ -120,14 +121,25 @@ public class Application {
         TProcessor processor = new JMXService.Processor<JMXServiceHandler>(handler);
 
         TServerTransport serverTransport = new StandardIOTransportServer();
-        TServer server = new StandardIOServer(
-                new Args(serverTransport).processor(processor).protocolFactory(new TCompactProtocol.Factory()));
+        StandardIOServer server = new StandardIOServer(
+                new Args(serverTransport)
+                        .processor(processor)
+                        .inputTransportFactory(new TFramedTransport.Factory(8192))
+                        .outputTransportFactory(new TFramedTransport.Factory(8192))
+                        .protocolFactory(new TJSONProtocol.Factory()));
 
         handler.addServer(server);
-        server.serve();
 
-        serverTransport.close();
-        executor.shutdownNow();
+        try {
+            server.listen();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.exit(1);
+        } finally {
+            write("serving returned");
+            serverTransport.close();
+            executor.shutdownNow();
+        }
     }
 
     private static void runV3(Arguments cliArgs) throws TTransportException {
@@ -138,7 +150,7 @@ public class Application {
         TProcessor processor = new JMXService.Processor<JMXServiceHandler>(handler);
 
         TServerTransport serverTransport = new TServerSocket(9090);
-        TServer server = new TSimpleServer(
+        TServer server = new StandardIOServer(
                 new Args(serverTransport).processor(processor)
                         .inputTransportFactory(new TFramedTransport.Factory(8192))
                         .outputTransportFactory(new TFramedTransport.Factory(8192))
