@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"github.com/apache/thrift/lib/go/thrift"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -13,11 +12,31 @@ import (
 	"testing"
 	"time"
 
+	"github.com/apache/thrift/lib/go/thrift"
+
 	"github.com/newrelic/nrjmx/gojmx/nrprotocol"
 	"github.com/shirou/gopsutil/v3/process"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestStderrBuffer(t *testing.T) {
+	buff := NewStderrBuffer(4)
+	n, err := buff.WriteString("12345")
+	assert.NoError(t, err)
+	assert.Equal(t, 4, n)
+	n, err = buff.WriteString("67")
+	assert.NoError(t, err)
+	assert.Equal(t, 2, n)
+	assert.Equal(t, "4567", buff.String())
+	buff2 := NewStderrBuffer(5)
+	n1, err := buff2.WriteString("12")
+	assert.NoError(t, err)
+	assert.Equal(t, 2, n1)
+	n1, err = buff2.WriteString("3456")
+	assert.NoError(t, err)
+	assert.Equal(t, "23456", buff2.String())
+}
 
 func TestJMXServiceSubprocessStops(t *testing.T) {
 	if os.Getenv("SHOULD_RUN_EXIT") == "1" {

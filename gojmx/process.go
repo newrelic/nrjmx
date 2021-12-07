@@ -1,17 +1,17 @@
 package gojmx
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 	"sync"
 )
 
-var bufferSize = 4 * 1024 // initial 4KB per line.
+var bufferSize = 1024 * 1024
 var defaultNrjmxExec = "/usr/local/bin/nrjmx"
 
 func getNrjmxExec() string {
@@ -34,6 +34,41 @@ type jmxProcess struct {
 	errCh   chan error
 }
 
+type stderrBuffer struct {
+	cap  int
+	buff bytes.Buffer
+}
+
+func (s *stderrBuffer) Write(p []byte) (int, error) {
+	if len(p) > s.cap {
+		p = p[len(p)-s.cap:]
+	}
+	if len(p)+s.buff.Len() > s.cap {
+		data := s.buff.String()
+		data = data[s.cap-len(p):]
+		s.buff.Reset()
+		_, err := s.buff.Write([]byte(data))
+		if err != nil {
+			return 0, err
+		}
+	}
+	return s.buff.Write(p)
+}
+
+func (s *stderrBuffer) WriteString(p string) (int, error) {
+	return s.Write([]byte(p))
+}
+
+func (s *stderrBuffer) String() string {
+	return s.buff.String()
+}
+
+func NewStderrBuffer(capacity int) *stderrBuffer {
+	return &stderrBuffer{
+		cap: capacity,
+	}
+}
+
 func startJMXProcess(ctx context.Context) (*jmxProcess, error) {
 	ctx, cancel := context.WithCancel(ctx)
 
@@ -51,33 +86,8 @@ func startJMXProcess(ctx context.Context) (*jmxProcess, error) {
 		return nil, fmt.Errorf("failed to create stdin pipe to %q: %v", cmd.Path, err)
 	}
 
-	stderrbuf := new(strings.Builder)
+	stderrbuf := NewStderrBuffer(bufferSize)
 	cmd.Stderr = stderrbuf
-
-	//
-	//go func() {
-	//	reader := bufio.NewReaderSize(stderr, bufferSize)
-	//
-	//	for {
-	//		select {
-	//		case <-ctx.Done():
-	//			return
-	//		default:
-	//			break
-	//		}
-	//
-	//		line, err := reader.ReadString('\n')
-	//		// API needs re to allow stderr full read before closing
-	//		if err != nil {
-	//			if _, isAlreadyClosed := err.(*os.PathError); !isAlreadyClosed && err != io.EOF {
-	//				fmt.Fprintf(os.Stderr, "error while reading stderr: '%v'", err)
-	//				continue
-	//			}
-	//			return
-	//		}
-	//		fmt.Fprint(os.Stderr, line)
-	//	}
-	//}()
 
 	if err := cmd.Start(); err != nil {
 		return nil, fmt.Errorf("failed to start %q: %v", cmd.Path, err)
