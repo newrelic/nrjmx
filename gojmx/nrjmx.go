@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/apache/thrift/lib/go/thrift"
+	"io"
 	"time"
+
+	"github.com/apache/thrift/lib/go/thrift"
 
 	"github.com/newrelic/nrjmx/gojmx/nrprotocol"
 )
@@ -136,7 +138,14 @@ func (j *JMXClient) GetMBeanNames(mbean string, timeout int64) ([]string, error)
 	if err := j.checkState(); err != nil {
 		return nil, err
 	}
-	return j.jmxService.GetMBeanNames(j.ctx, mbean, timeout)
+	result, err := j.jmxService.GetMBeanNames(j.ctx, mbean, timeout)
+	if err == io.EOF {
+		err2 := j.jmxProcess.WaitExitError(5 * time.Second)
+		if err2 != nil {
+			return nil, err2
+		}
+	}
+	return result, err
 }
 
 func (j *JMXClient) GetMBeanAttrNames(mbean string, timeout int64) ([]string, error) {

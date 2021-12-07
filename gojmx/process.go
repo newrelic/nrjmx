@@ -3,12 +3,14 @@ package gojmx
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"sync"
+	"time"
 )
 
 var bufferSize = 1024 * 1024
@@ -128,6 +130,15 @@ func (p *jmxProcess) Error() error {
 			return ErrNotRunning
 		}
 		return nil
+	}
+}
+
+func (p *jmxProcess) WaitExitError(timeout time.Duration) error {
+	select {
+	case <-time.After(timeout):
+		return errors.New("timeout exceeded while waiting for jmx process error")
+	case err := <-p.errCh:
+		return err
 	}
 }
 
