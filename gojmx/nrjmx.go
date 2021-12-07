@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/apache/thrift/lib/go/thrift"
-	"io"
+
 	"time"
 
 	"github.com/newrelic/nrjmx/gojmx/nrprotocol"
@@ -21,36 +21,23 @@ var (
 type JMXClient struct {
 	jmxService nrprotocol.JMXService
 	jmxProcess *jmxProcess
-	isRunning  bool
 	ctx        context.Context
-	cancelfn   context.CancelFunc
 	socket     *thrift.TSocket
 }
 
-func (c *JMXClient) Cancel() {
-	c.cancelfn()
-}
-
 func NewJMXClient(ctx context.Context) *JMXClient {
-	ctx2, cancelfn := context.WithCancel(ctx)
 	return &JMXClient{
-		ctx:      ctx2,
-		cancelfn: cancelfn,
+		ctx: ctx,
 	}
 }
 
-func (j *JMXClient) InitStandardIO() (*JMXClient, error) {
-	//if j.isRunning {
-	//	return j, ErrAlreadyStarted
-	//}
+func (j *JMXClient) Init() (*JMXClient, error) {
 
 	var err error
-	if j.jmxProcess == nil {
-		j.jmxProcess, err = startJMXProcess(j.ctx)
-		if err != nil {
-			j.jmxProcess.stop() // TODO: Handle err
-			return j, err
-		}
+	j.jmxProcess, err = NewJMXProcess(j.ctx).Start()
+	if err != nil {
+		j.jmxProcess.stop() // TODO: Handle err
+		return j, err
 	}
 
 	transport := thrift.NewStreamTransport(j.jmxProcess.Stdout, j.jmxProcess.Stdin)
@@ -61,12 +48,11 @@ func (j *JMXClient) InitStandardIO() (*JMXClient, error) {
 		return j, err
 	}
 
-	//err = j.ping(pingTimeout)
-	//if err != nil {
-	//	jmxProcess.stop() // TODO: Handle err
-	//	return j, err
-	//}
-	j.isRunning = true
+	err = j.ping(pingTimeout)
+	if err != nil {
+		j.jmxProcess.stop() // TODO: Handle err
+		return j, err
+	}
 
 	return j, nil
 }
@@ -122,29 +108,31 @@ func (j *JMXClient) ping(timeout time.Duration) error {
 }
 
 func (j *JMXClient) checkState() error {
-	if !j.isRunning {
+	if !j.jmxProcess.IsRunning() {
 		return ErrNotRunning
 	}
-	if j.jmxProcess != nil {
-		err := j.jmxProcess.Error()
-		if err != nil {
-			return err
-		}
+
+	err := j.jmxProcess.Error()
+	if err != nil {
+		return err
 	}
+
 	return nil
+}
+
+func (j *JMXClient) checkForTransportError(err error) error {
+	if _, ok := err.(thrift.TTransportException); ok {
+		return j.jmxProcess.WaitExitError(5 * time.Second)
+	}
+	return err
 }
 
 func (j *JMXClient) Connect(config *nrprotocol.JMXConfig, timeout int64) error {
 	if err := j.checkState(); err != nil {
 		return err
 	}
-	return j.checkPostCallState(j.jmxService.Connect(j.ctx, config, timeout))
-}
-
-func (j* JMXClient) checkPostCallState(err error) error {
-	if err == io.EOF {
-		//
-	}
+	err := j.jmxService.Connect(j.ctx, config, timeout)
+	return j.checkForTransportError(err)
 }
 
 func (j *JMXClient) GetMBeanNames(mbean string, timeout int64) ([]string, error) {
@@ -152,25 +140,24 @@ func (j *JMXClient) GetMBeanNames(mbean string, timeout int64) ([]string, error)
 		return nil, err
 	}
 	result, err := j.jmxService.GetMBeanNames(j.ctx, mbean, timeout)
-	err2 := j.jmxProcess.Error()
-	if err2 != nil {
-		return nil, err2
-	}
-	return result, err
+
+	return result, j.checkForTransportError(err)
 }
 
 func (j *JMXClient) GetMBeanAttrNames(mbean string, timeout int64) ([]string, error) {
 	if err := j.checkState(); err != nil {
 		return nil, err
 	}
-	return j.jmxService.GetMBeanAttrNames(j.ctx, mbean, timeout)
+	result, err := j.jmxService.GetMBeanAttrNames(j.ctx, mbean, timeout)
+	return result, j.checkForTransportError(err)
 }
 
 func (j *JMXClient) GetMBeanAttr(mBeanName, mBeanAttrName string, timeout int64) (*nrprotocol.JMXAttribute, error) {
 	if err := j.checkState(); err != nil {
 		return nil, err
 	}
-	return j.jmxService.GetMBeanAttr(j.ctx, mBeanName, mBeanAttrName, timeout)
+	result, err := j.jmxService.GetMBeanAttr(j.ctx, mBeanName, mBeanAttrName, timeout)
+	return result, j.checkForTransportError(err)
 }
 
 func (j *JMXClient) Disconnect() error {
@@ -181,59 +168,8 @@ func (j *JMXClient) Disconnect() error {
 		//j.jmxProcess.stop()
 		//j = NewJMXClient(j.ctx)
 	}()
-	return j.jmxService.Disconnect(j.ctx)
-}
-
-func (j *JMXClient) InitTCP(startSubprocess bool) (*JMXClient, error) {
-	//if j.isRunning {
-	//	return j, ErrAlreadyStarted
-	//}
-
-	if startSubprocess {
-		jmxProcess, err := startJMXProcess(j.ctx)
-		if err != nil {
-			jmxProcess.stop() // TODO: Handle err
-			return j, err
-		}
-		j.jmxProcess = jmxProcess
-	}
-
-	transport, err := thrift.NewTSocket("localhost:9090")
-	j.socket = (*thrift.TSocket)(transport)
-	if err != nil {
-		if startSubprocess {
-			j.jmxProcess.stop()
-		}
-		return j, err
-	}
-
-	err = transport.Open()
-	if err != nil {
-		if startSubprocess {
-			j.jmxProcess.stop()
-		}
-		return j, err
-	}
-	jmxServiceClient, err := j.configureJMXServiceClient(transport)
-	if err != nil {
-		if startSubprocess {
-			j.jmxProcess.stop()
-		}
-		return j, err
-	}
-
-	j.jmxService = jmxServiceClient
-
-	if startSubprocess {
-		err = j.ping(pingTimeout)
-		if err != nil {
-			j.jmxProcess.stop() // TODO: Handle err
-			return j, err
-		}
-	}
-
-	j.isRunning = true
-	return j, nil
+	err := j.jmxService.Disconnect(j.ctx)
+	return j.checkForTransportError(err)
 }
 
 func (j *JMXClient) WriteJunk() {

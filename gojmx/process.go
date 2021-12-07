@@ -3,12 +3,14 @@ package gojmx
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"sync"
+	"time"
 )
 
 var bufferSize = 1024 * 1024
@@ -25,14 +27,14 @@ func getNrjmxExec() string {
 
 type jmxProcess struct {
 	sync.Mutex
-	cmd     *exec.Cmd
-	ctx     context.Context
-	cancel  context.CancelFunc
-	running bool
-	Stdout  io.ReadCloser
-	Stdin   io.WriteCloser
-	errCh   chan error
-	stderrbuf *strings.Builder
+	cmd          *exec.Cmd
+	ctx          context.Context
+	cancel       context.CancelFunc
+	running      bool
+	Stdout       io.ReadCloser
+	Stdin        io.WriteCloser
+	errCh        chan error
+	stderrBuffer *stderrBuffer
 }
 
 type stderrBuffer struct {
@@ -70,59 +72,68 @@ func NewStderrBuffer(capacity int) *stderrBuffer {
 	}
 }
 
-func startJMXProcess(ctx context.Context) (*jmxProcess, error) {
+func (j *jmxProcess) Start() (*jmxProcess, error) {
+	if j.IsRunning() {
+		return j, ErrAlreadyStarted
+	}
+
+	var err error
+	j.Stdout, err = j.cmd.StdoutPipe()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create stdout pipe to %q: %v", j.cmd.Path, err)
+	}
+
+	j.Stdin, err = j.cmd.StdinPipe()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create stdin pipe to %q: %v", j.cmd.Path, err)
+	}
+
+	j.stderrBuffer = NewStderrBuffer(bufferSize)
+	j.cmd.Stderr = j.stderrBuffer
+
+	if err := j.cmd.Start(); err != nil {
+		return j, fmt.Errorf("failed to start %q: %v", j.cmd.Path, err)
+	}
+	j.SetIsRunning(true)
+
+	go func() {
+		// stderr we must read before wait, not with strings builder
+		err := j.cmd.Wait()
+		if err != nil {
+			j.errCh <- fmt.Errorf("%s: %w", j.stderrBuffer.String(), err)
+		}
+		j.SetIsRunning(false)
+	}()
+
+	return j, nil
+}
+
+func NewJMXProcess(ctx context.Context) *jmxProcess {
 	ctx, cancel := context.WithCancel(ctx)
 
 	cmd := exec.CommandContext(ctx, filepath.Clean(getNrjmxExec()), "-v2")
 
 	//cmd := exec.CommandContext(ctx, "java", "-cp", "/Users/cciutea/workspace/nr/int/nrjmx/bin/*", "org.newrelic.nrjmx.Application", "-v2")
 
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return nil, fmt.Errorf("failed to create stdout pipe to %q: %v", cmd.Path, err)
-	}
-
-	stdin, err := cmd.StdinPipe()
-	if err != nil {
-		return nil, fmt.Errorf("failed to create stdin pipe to %q: %v", cmd.Path, err)
-	}
-
-	stderrbuf := NewStderrBuffer(bufferSize)
-	cmd.Stderr = stderrbuf
-
-	if err := cmd.Start(); err != nil {
-		return nil, fmt.Errorf("failed to start %q: %v", cmd.Path, err)
-	}
-	errCh := make(chan error, 1)
-
-	jmxProcess := &jmxProcess{
-		Stdout:  stdout,
-		Stdin:   stdin,
-		running: true,
+	return &jmxProcess{
+		running: false,
 		cmd:     cmd,
 		ctx:     ctx,
 		cancel:  cancel,
-		errCh:   errCh,
-		stderrbuf: stderrbuf,
-	}
-
-	return jmxProcess, nil
+		errCh:   make(chan error, 1),
+		}
 }
 
-func (p *jmxProcess) Error2() error {
-	go func() {
-		// stderr we must read before wait, not with strings builder
-		err := p.cmd.Wait()
-		fmt.Println("wait done", err)
-		if err != nil {
-			p.errCh <- fmt.Errorf("%s: %w", p.stderrbuf.String(), err)
-		}
-		fmt.Println(fmt.Errorf("%s: %w", p.stderrbuf.String(), err))
-		p.Lock()
-		defer p.Unlock()
-		p.running = false
-	}()
+func (p *jmxProcess) IsRunning() bool {
+	p.Lock()
+	defer p.Unlock()
+	return p.running
+}
 
+func (j *jmxProcess) SetIsRunning(running bool) {
+	j.Lock()
+	defer j.Unlock()
+	j.running = running
 }
 
 func (p *jmxProcess) Error() error {
@@ -136,6 +147,15 @@ func (p *jmxProcess) Error() error {
 			return ErrNotRunning
 		}
 		return nil
+	}
+}
+
+func (p *jmxProcess) WaitExitError(timeout time.Duration) error {
+	select {
+	case <-time.After(timeout):
+		return errors.New("timeout exceeded while waiting for jmx process error")
+	case err := <-p.errCh:
+		return err
 	}
 }
 

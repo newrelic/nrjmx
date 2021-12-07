@@ -66,7 +66,7 @@ func TestJMXServiceSubprocessStops(t *testing.T) {
 		require.NoError(t, err)
 
 		// THEN JMX connection can be oppened
-		client, err := NewJMXClient(ctx).InitStandardIO()
+		client, err := NewJMXClient(ctx).Init()
 		assert.NoError(t, err)
 
 		config := &nrprotocol.JMXConfig{
