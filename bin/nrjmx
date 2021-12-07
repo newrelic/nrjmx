@@ -24,5 +24,5 @@ fi
 
 export JAVA_OPTS="-agentlib:jdwp=transport=dt_socket,server=n,address=localhost:5005,suspend=y"
 #export JAVA_OPTS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=localhost:5005"
-${java_tool} ${JAVA_OPTS} -cp ${CLASSPATH} org.newrelic.nrjmx.Application $@
+${java_tool} ${JAVA_OPTS2} -cp ${CLASSPATH} org.newrelic.nrjmx.Application $@
 

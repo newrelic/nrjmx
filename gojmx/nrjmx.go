@@ -32,7 +32,7 @@ func NewJMXClient(ctx context.Context) *JMXClient {
 	}
 }
 
-func (j *JMXClient) Init() (*JMXClient, error) {
+func (j *JMXClient) Open() (*JMXClient, error) {
 
 	var err error
 	j.jmxProcess, err = NewJMXProcess(j.ctx).Start()
@@ -92,9 +92,10 @@ func (j *JMXClient) GetMBeanAttr(mBeanName, mBeanAttrName string, timeout int64)
 
 func (j *JMXClient) Close() error {
 	err := j.disconnect()
-	stopErr := j.jmxProcess.stop()
-	if stopErr != nil {
-		err = fmt.Errorf("%w", stopErr)
+	if err != nil {
+		if stopErr := j.jmxProcess.stop(); stopErr != nil {
+			err = fmt.Errorf("%w", stopErr)
+		}
 	}
 	return err
 }
@@ -104,7 +105,10 @@ func (j *JMXClient) disconnect() error {
 		return err
 	}
 	err := j.jmxService.Disconnect(j.ctx)
-	return j.checkForTransportError(err)
+	if waitErr := j.jmxProcess.WaitExitError(5 * time.Second); waitErr != nil {
+		err = fmt.Errorf("%w", waitErr)
+	}
+	return err
 }
 
 func (j *JMXClient) WriteJunk() {

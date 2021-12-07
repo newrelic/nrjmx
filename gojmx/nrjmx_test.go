@@ -92,7 +92,7 @@ func Test_Query_Success_LargeAmountOfData(t *testing.T) {
 	require.NoError(t, err)
 
 	// THEN JMX connection can be oppened
-	client, err := NewJMXClient(ctx).Init()
+	client, err := NewJMXClient(ctx).Open()
 	assert.NoError(t, err)
 
 	config := &nrprotocol.JMXConfig{
@@ -102,7 +102,7 @@ func Test_Query_Success_LargeAmountOfData(t *testing.T) {
 
 	err = client.Connect(config, -1)
 	assert.NoError(t, err)
-	defer client.Disconnect()
+	defer client.Close()
 
 	// AND query returns at least 5Mb of data.
 	mBeanNames, err := client.GetMBeanNames("test:type=Cat,*", -1)
@@ -152,7 +152,7 @@ func Test_Query_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	// THEN JMX connection can be oppened
-	client, err := NewJMXClient(ctx).Init()
+	client, err := NewJMXClient(ctx).Open()
 	assert.NoError(t, err)
 
 	config := &nrprotocol.JMXConfig{
@@ -161,7 +161,7 @@ func Test_Query_Success(t *testing.T) {
 	}
 
 	err = client.Connect(config, defaultTimeoutMs)
-	defer client.Disconnect()
+	defer client.Close()
 	assert.NoError(t, err)
 
 	// AND Query returns expected data
@@ -237,7 +237,7 @@ func Test_Query_Timeout(t *testing.T) {
 	require.NoError(t, err)
 
 	// THEN JMX connection can be oppened
-	client, err := NewJMXClient(ctx).Init()
+	client, err := NewJMXClient(ctx).Open()
 	assert.NoError(t, err)
 
 	config := &nrprotocol.JMXConfig{
@@ -246,7 +246,7 @@ func Test_Query_Timeout(t *testing.T) {
 	}
 
 	err = client.Connect(config, defaultTimeoutMs)
-	defer client.Disconnect()
+	defer client.Close()
 	assert.NoError(t, err)
 
 	// AND Query returns expected data
@@ -282,7 +282,7 @@ func Test_URL_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	// THEN JMX connection can be oppened
-	client, err := NewJMXClient(ctx).Init()
+	client, err := NewJMXClient(ctx).Open()
 	assert.NoError(t, err)
 
 	config := &nrprotocol.JMXConfig{
@@ -290,7 +290,7 @@ func Test_URL_Success(t *testing.T) {
 	}
 
 	err = client.Connect(config, defaultTimeoutMs)
-	defer client.Disconnect()
+	defer client.Close()
 	assert.NoError(t, err)
 
 	// AND Query returns expected data
@@ -312,14 +312,14 @@ func Test_JavaNotInstalled(t *testing.T) {
 	defer os.Unsetenv("NRIA_JAVA_HOME")
 
 	ctx := context.Background()
-	client, err := NewJMXClient(ctx).Init()
+	client, err := NewJMXClient(ctx).Open()
 	assert.Contains(t, err.Error(), "/wrong/path/bin/java")
 
 	config := &nrprotocol.JMXConfig{}
 
 	// THEN connect fails with expected error
 	err = client.Connect(config, defaultTimeoutMs)
-	defer client.Disconnect()
+	defer client.Close()
 	assert.ErrorIs(t, err, ErrNotRunning)
 
 	// AND Query fails with expected error
@@ -342,7 +342,7 @@ func Test_WrongMbeanFormat(t *testing.T) {
 	require.NoError(t, err)
 
 	// THEN JMX connection can be oppened
-	client, err := NewJMXClient(ctx).Init()
+	client, err := NewJMXClient(ctx).Open()
 	assert.NoError(t, err)
 
 	config := &nrprotocol.JMXConfig{
@@ -350,7 +350,7 @@ func Test_WrongMbeanFormat(t *testing.T) {
 	}
 
 	err = client.Connect(config, defaultTimeoutMs)
-	defer client.Disconnect()
+	defer client.Close()
 	assert.NoError(t, err)
 
 	// AND Query returns expected error
@@ -365,7 +365,7 @@ func Test_WrongMbeanFormat(t *testing.T) {
 func Test_Wrong_Connection(t *testing.T) {
 	ctx := context.Background()
 
-	client, err := NewJMXClient(ctx).Init()
+	client, err := NewJMXClient(ctx).Open()
 	assert.NoError(t, err)
 
 	// GIVEN a wrong hostname and port
@@ -375,7 +375,7 @@ func Test_Wrong_Connection(t *testing.T) {
 	}
 
 	err = client.Connect(config, defaultTimeoutMs)
-	defer client.Disconnect()
+	defer client.Close()
 	assert.Contains(t, err.Error(), "Connection refused to host: localhost;")
 
 	// AND query returns expected error
@@ -412,7 +412,7 @@ func Test_SSLQuery_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	// THEN SSL JMX connection can be oppened
-	client, err := NewJMXClient(ctx).Init()
+	client, err := NewJMXClient(ctx).Open()
 	assert.NoError(t, err)
 
 	config := &nrprotocol.JMXConfig{
@@ -427,7 +427,7 @@ func Test_SSLQuery_Success(t *testing.T) {
 	}
 
 	err = client.Connect(config, defaultTimeoutMs)
-	defer client.Disconnect()
+	defer client.Close()
 	assert.NoError(t, err)
 
 	// AND Query returns expected data
@@ -503,7 +503,7 @@ func Test_Wrong_Credentials(t *testing.T) {
 	require.NoError(t, err)
 
 	// WHEN wrong jmx username and password is provided
-	client, err := NewJMXClient(ctx).Init()
+	client, err := NewJMXClient(ctx).Open()
 	assert.NoError(t, err)
 
 	config := &nrprotocol.JMXConfig{
@@ -519,7 +519,7 @@ func Test_Wrong_Credentials(t *testing.T) {
 
 	// THEN connect fails with expected error
 	err = client.Connect(config, defaultTimeoutMs)
-	defer client.Disconnect()
+	defer client.Close()
 	assert.Contains(t, err.Error(), "Authentication failed! Invalid username or password")
 
 	// AND Query returns expected error
@@ -542,7 +542,7 @@ func Test_Wrong_Certificate_password(t *testing.T) {
 	require.NoError(t, err)
 
 	// WHEN wrong jmx username and password is provided
-	client, err := NewJMXClient(ctx).Init()
+	client, err := NewJMXClient(ctx).Open()
 	assert.NoError(t, err)
 
 	config := &nrprotocol.JMXConfig{
@@ -558,7 +558,7 @@ func Test_Wrong_Certificate_password(t *testing.T) {
 
 	// THEN Connect returns expected error
 	err = client.Connect(config, defaultTimeoutMs)
-	defer client.Disconnect()
+	defer client.Close()
 	assert.Contains(t, err.Error(), "SSLContext") // TODO: improve this error from java
 
 	// AND Query returns expected error
@@ -588,7 +588,7 @@ func Test_Connector_Success(t *testing.T) {
 	require.NoError(t, err)
 
 	// THEN JMX connection can be oppened
-	client, err := NewJMXClient(ctx).Init()
+	client, err := NewJMXClient(ctx).Open()
 	assert.NoError(t, err)
 
 	config := &nrprotocol.JMXConfig{
@@ -601,7 +601,7 @@ func Test_Connector_Success(t *testing.T) {
 	}
 
 	err = client.Connect(config, defaultTimeoutMs)
-	defer client.Disconnect()
+	defer client.Close()
 	assert.NoError(t, err)
 
 	// AND Query returns expected data
@@ -720,7 +720,7 @@ func Test_Connector_Success(t *testing.T) {
 	assert.ElementsMatch(t, expected, actual)
 }
 
-func TestJMXServiceDisconnect(t *testing.T) {
+func TestJMXServiceClose(t *testing.T) {
 	ctx := context.Background()
 
 	// GIVEN a JMX Server running inside a container
@@ -747,7 +747,7 @@ func TestJMXServiceDisconnect(t *testing.T) {
 	require.NoError(t, err)
 
 	// THEN JMX connection can be oppened
-	client, err := NewJMXClient(ctx).Init()
+	client, err := NewJMXClient(ctx).Open()
 	assert.NoError(t, err)
 
 	config := &nrprotocol.JMXConfig{
@@ -757,7 +757,7 @@ func TestJMXServiceDisconnect(t *testing.T) {
 
 	err = client.Connect(config, defaultTimeoutMs)
 	assert.NoError(t, err)
-	err = client.Disconnect()
+	err = client.Close()
 	assert.NoError(t, err)
 
 	time.Sleep(2 * time.Second)

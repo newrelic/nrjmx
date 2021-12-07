@@ -120,10 +120,12 @@ func (j *jmxProcess) Start() (*jmxProcess, error) {
 	go func() {
 		// stderr we must read before wait, not with strings builder
 		err := j.cmd.Wait()
+		j.SetIsRunning(false)
 		if err != nil {
 			j.errCh <- fmt.Errorf("%s: %w", j.stderrBuffer.String(), err)
+		} else {
+			close(j.errCh)
 		}
-		j.SetIsRunning(false)
 	}()
 
 	return j, nil
@@ -171,6 +173,7 @@ func (p *jmxProcess) stop() error {
 	if err := p.Stdin.Close(); err != nil {
 		errors = fmt.Errorf("failed to detach stdin from %q: %w", p.cmd.Path, err)
 	}
+
 	p.cancel()
 
 	return errors
