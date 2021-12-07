@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/apache/thrift/lib/go/thrift"
 
 	"time"
@@ -36,7 +37,6 @@ func (j *JMXClient) Init() (*JMXClient, error) {
 	var err error
 	j.jmxProcess, err = NewJMXProcess(j.ctx).Start()
 	if err != nil {
-		j.jmxProcess.stop() // TODO: Handle err
 		return j, err
 	}
 
@@ -44,17 +44,71 @@ func (j *JMXClient) Init() (*JMXClient, error) {
 	j.jmxService, err = j.configureJMXServiceClient(transport)
 
 	if err != nil {
-		j.jmxProcess.stop() // TODO: Handle err
+		j.jmxProcess.stop()
 		return j, err
 	}
 
 	err = j.ping(pingTimeout)
 	if err != nil {
-		j.jmxProcess.stop() // TODO: Handle err
+		j.jmxProcess.stop()
 		return j, err
 	}
 
 	return j, nil
+}
+
+func (j *JMXClient) Connect(config *nrprotocol.JMXConfig, timeout int64) error {
+	if err := j.checkState(); err != nil {
+		return err
+	}
+	err := j.jmxService.Connect(j.ctx, config, timeout)
+	return j.checkForTransportError(err)
+}
+
+func (j *JMXClient) GetMBeanNames(mbean string, timeout int64) ([]string, error) {
+	if err := j.checkState(); err != nil {
+		return nil, err
+	}
+	result, err := j.jmxService.GetMBeanNames(j.ctx, mbean, timeout)
+
+	return result, j.checkForTransportError(err)
+}
+
+func (j *JMXClient) GetMBeanAttrNames(mbean string, timeout int64) ([]string, error) {
+	if err := j.checkState(); err != nil {
+		return nil, err
+	}
+	result, err := j.jmxService.GetMBeanAttrNames(j.ctx, mbean, timeout)
+	return result, j.checkForTransportError(err)
+}
+
+func (j *JMXClient) GetMBeanAttr(mBeanName, mBeanAttrName string, timeout int64) (*nrprotocol.JMXAttribute, error) {
+	if err := j.checkState(); err != nil {
+		return nil, err
+	}
+	result, err := j.jmxService.GetMBeanAttr(j.ctx, mBeanName, mBeanAttrName, timeout)
+	return result, j.checkForTransportError(err)
+}
+
+func (j *JMXClient) Close() error {
+	err := j.disconnect()
+	stopErr := j.jmxProcess.stop()
+	if stopErr != nil {
+		err = fmt.Errorf("%w", stopErr)
+	}
+	return err
+}
+
+func (j *JMXClient) disconnect() error {
+	if err := j.checkState(); err != nil {
+		return err
+	}
+	err := j.jmxService.Disconnect(j.ctx)
+	return j.checkForTransportError(err)
+}
+
+func (j *JMXClient) WriteJunk() {
+	fmt.Fprintf(j.jmxProcess.Stdin, "aa")
 }
 
 func (j *JMXClient) configureJMXServiceClient(transport thrift.TTransport) (*nrprotocol.JMXServiceClient, error) {
@@ -75,13 +129,6 @@ func (j *JMXClient) configureJMXServiceClient(transport thrift.TTransport) (*nrp
 	jmxServiceClient := nrprotocol.NewJMXServiceClient(thrift.NewTStandardClient(iprot, oprot))
 	return jmxServiceClient, err
 }
-
-//Connect(ctx context.Context, config *JMXConfig) (err error)
-//Disconnect(ctx context.Context) (err error)
-// Parameters:
-//  - BeanName
-//QueryMbean(ctx context.Context, beanName string) (r []*JMXAttribute, err error)
-//GetLogs(ctx context.Context) (r []*LogMessage, err error)
 
 func (j *JMXClient) ping(timeout time.Duration) error {
 	ctx, cancel := context.WithCancel(j.ctx)
@@ -125,75 +172,4 @@ func (j *JMXClient) checkForTransportError(err error) error {
 		return j.jmxProcess.WaitExitError(5 * time.Second)
 	}
 	return err
-}
-
-func (j *JMXClient) Connect(config *nrprotocol.JMXConfig, timeout int64) error {
-	if err := j.checkState(); err != nil {
-		return err
-	}
-	err := j.jmxService.Connect(j.ctx, config, timeout)
-	return j.checkForTransportError(err)
-}
-
-func (j *JMXClient) GetMBeanNames(mbean string, timeout int64) ([]string, error) {
-	if err := j.checkState(); err != nil {
-		return nil, err
-	}
-	result, err := j.jmxService.GetMBeanNames(j.ctx, mbean, timeout)
-
-	return result, j.checkForTransportError(err)
-}
-
-func (j *JMXClient) GetMBeanAttrNames(mbean string, timeout int64) ([]string, error) {
-	if err := j.checkState(); err != nil {
-		return nil, err
-	}
-	result, err := j.jmxService.GetMBeanAttrNames(j.ctx, mbean, timeout)
-	return result, j.checkForTransportError(err)
-}
-
-func (j *JMXClient) GetMBeanAttr(mBeanName, mBeanAttrName string, timeout int64) (*nrprotocol.JMXAttribute, error) {
-	if err := j.checkState(); err != nil {
-		return nil, err
-	}
-	result, err := j.jmxService.GetMBeanAttr(j.ctx, mBeanName, mBeanAttrName, timeout)
-	return result, j.checkForTransportError(err)
-}
-
-func (j *JMXClient) Disconnect() error {
-	if err := j.checkState(); err != nil {
-		return err
-	}
-	defer func() {
-		//j.jmxProcess.stop()
-		//j = NewJMXClient(j.ctx)
-	}()
-	err := j.jmxService.Disconnect(j.ctx)
-	return j.checkForTransportError(err)
-}
-
-func (j *JMXClient) WriteJunk() {
-	//_, err := j.socket.Write([]byte("some junk\n"))
-	//if err != nil {
-	//	panic(err)
-	//}
-	//fmt.Fprintln(j.socket)
-	//err = j.socket.Flush(context.Background())
-	//if err != nil {
-	//	panic(err)
-	//}
-	fmt.Fprintf(j.jmxProcess.Stdin, "aa")
-	//fmt.Fprintf(j.jmxProcess.Stdin, "junk")
-	//fmt.Fprintln(j.jmxProcess.Stdin)
-	//transport := thrift.NewStreamTransport(j.jmxProcess.Stdout, j.jmxProcess.Stdin)
-	//var err error
-	//j.jmxService, err = j.configureJMXServiceClient(transport)
-	//if err != nil {
-	//	panic(err)
-	//}
-}
-
-func (j *JMXClient) Close() error {
-	j.jmxService.Disconnect(j.ctx)
-	return j.jmxProcess.stop()
 }

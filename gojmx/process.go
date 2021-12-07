@@ -23,8 +23,6 @@ func getNrjmxExec() string {
 	return defaultNrjmxExec
 }
 
-// var defaultNrjmxExec = "/home/cristi/workspace/cppc/java/nrjmx/bin/nrjmx"
-
 type jmxProcess struct {
 	sync.Mutex
 	cmd          *exec.Cmd
@@ -72,12 +70,35 @@ func NewStderrBuffer(capacity int) *stderrBuffer {
 	}
 }
 
+func NewJMXProcess(ctx context.Context) *jmxProcess {
+	ctx, cancel := context.WithCancel(ctx)
+
+	cmd := exec.CommandContext(ctx, filepath.Clean(getNrjmxExec()), "-v2")
+
+	//cmd := exec.CommandContext(ctx, "java", "-cp", "/Users/cciutea/workspace/nr/int/nrjmx/bin/*", "org.newrelic.nrjmx.Application", "-v2")
+
+	return &jmxProcess{
+		running: false,
+		cmd:     cmd,
+		ctx:     ctx,
+		cancel:  cancel,
+		errCh:   make(chan error, 1),
+	}
+}
+
 func (j *jmxProcess) Start() (*jmxProcess, error) {
 	if j.IsRunning() {
 		return j, ErrAlreadyStarted
 	}
 
 	var err error
+
+	defer func() {
+		if err != nil {
+			j.stop()
+		}
+	}()
+
 	j.Stdout, err = j.cmd.StdoutPipe()
 	if err != nil {
 		return nil, fmt.Errorf("failed to create stdout pipe to %q: %v", j.cmd.Path, err)
@@ -108,22 +129,6 @@ func (j *jmxProcess) Start() (*jmxProcess, error) {
 	return j, nil
 }
 
-func NewJMXProcess(ctx context.Context) *jmxProcess {
-	ctx, cancel := context.WithCancel(ctx)
-
-	cmd := exec.CommandContext(ctx, filepath.Clean(getNrjmxExec()), "-v2")
-
-	//cmd := exec.CommandContext(ctx, "java", "-cp", "/Users/cciutea/workspace/nr/int/nrjmx/bin/*", "org.newrelic.nrjmx.Application", "-v2")
-
-	return &jmxProcess{
-		running: false,
-		cmd:     cmd,
-		ctx:     ctx,
-		cancel:  cancel,
-		errCh:   make(chan error, 1),
-		}
-}
-
 func (p *jmxProcess) IsRunning() bool {
 	p.Lock()
 	defer p.Unlock()
@@ -141,9 +146,7 @@ func (p *jmxProcess) Error() error {
 	case err := <-p.errCh:
 		return err
 	default:
-		p.Lock()
-		defer p.Unlock()
-		if !p.running {
+		if !p.IsRunning() {
 			return ErrNotRunning
 		}
 		return nil
@@ -169,9 +172,6 @@ func (p *jmxProcess) stop() error {
 		errors = fmt.Errorf("failed to detach stdin from %q: %w", p.cmd.Path, err)
 	}
 	p.cancel()
-	//err := p.cmd.Wait()
-	//if err != nil {
-	//	errors = fmt.Errorf("command failed %q: %w", p.cmd.Path, err)
-	//}
+
 	return errors
 }
