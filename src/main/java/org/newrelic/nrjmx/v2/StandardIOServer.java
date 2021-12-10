@@ -1,10 +1,8 @@
 package org.newrelic.nrjmx.v2;
 
-import org.apache.thrift.TException;
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.server.TServer;
-import org.apache.thrift.server.TSimpleServer;
 import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
 import org.slf4j.Logger;
@@ -16,7 +14,7 @@ import org.slf4j.LoggerFactory;
  */
 
 /**
- * Simple singlethreaded server standard io implementation.
+ * Simple single-threaded server standard io implementation.
  */
 public class StandardIOServer extends TServer {
     private static final Logger LOGGER = LoggerFactory.getLogger(StandardIOServer.class.getName());
@@ -25,6 +23,11 @@ public class StandardIOServer extends TServer {
         super(args);
     }
 
+    /**
+     * listen waits for stdin/stdout connections.
+     *
+     * @throws Exception related with transport problems.
+     */
     public void listen() throws Exception {
         try {
             serverTransport_.listen();
@@ -67,22 +70,11 @@ public class StandardIOServer extends TServer {
 
     @Override
     public void serve() {
-        try {
-            listen();
-        } catch (TTransportException ttx) {
-            // Client died, just move on
-            LOGGER.debug("Client Transportation Exception", ttx);
-        } catch (TException tx) {
-            if (!stopped_) {
-                LOGGER.error("Thrift error occurred during processing of message.", tx);
-            }
-        } catch (Exception x) {
-            if (!stopped_) {
-                LOGGER.error("Error occurred during processing of message.", x);
-            }
-        }
     }
 
+    /**
+     * stop StandardIOServer listen.
+     */
     public void stop() {
         stopped_ = true;
         serverTransport_.interrupt();

@@ -10,6 +10,9 @@ import org.apache.thrift.transport.TTransportException;
  * SPDX-License-Identifier: Apache-2.0
  */
 
+/**
+ * StandardIOTransportServer is a TServerTransport implementation for stdin/stdout communication.
+ */
 public class StandardIOTransportServer extends TServerTransport {
 
     TTransport transport;

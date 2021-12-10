@@ -5,27 +5,20 @@
 
 package org.newrelic.nrjmx;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.logging.Logger;
-
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.thrift.TProcessor;
 import org.apache.thrift.protocol.TCompactProtocol;
-import org.apache.thrift.protocol.TJSONProtocol;
-import org.apache.thrift.server.TServer;
 import org.apache.thrift.server.TServer.Args;
-import org.apache.thrift.server.TSimpleServer;
-import org.apache.thrift.transport.*;
+import org.apache.thrift.transport.TServerTransport;
 import org.apache.thrift.transport.layered.TFramedTransport;
 import org.newrelic.nrjmx.v2.JMXServiceHandler;
 import org.newrelic.nrjmx.v2.StandardIOServer;
 import org.newrelic.nrjmx.v2.StandardIOTransportServer;
 import org.newrelic.nrjmx.v2.nrprotocol.JMXService;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.logging.Logger;
 
 public class Application {
 
@@ -51,7 +44,7 @@ public class Application {
         if (!cliArgs.isProtocolV2()) {
             runV1(cliArgs);
         } else {
-            runV2(cliArgs);
+            runV2();
         }
     }
 
@@ -96,29 +89,12 @@ public class Application {
         }
     }
 
-    public static void write(String message) {
-
-        try {
-            message += "\n";
-            Files.write(Paths.get("/Users/cciutea/workspace/nr/int/nrjmx/gojmx/cmd/out"), message.getBytes(), StandardOpenOption.APPEND);
-        } catch (IOException e) {
-            //exception handling left as an exercise for the reader
-        }
-
-    }
-
-    private static void runV2(Arguments cliArgs) throws Exception {
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            public void run() {
-                write("Shutdown Hook is running !");
-            }
-        });
-
+    private static void runV2() {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         org.newrelic.nrjmx.v2.JMXFetcher jmxFetcher = new org.newrelic.nrjmx.v2.JMXFetcher(executor);
 
         JMXServiceHandler handler = new JMXServiceHandler(jmxFetcher);
-        TProcessor processor = new JMXService.Processor<JMXServiceHandler>(handler);
+        TProcessor processor = new JMXService.Processor<>(handler);
 
         TServerTransport serverTransport = new StandardIOTransportServer();
         StandardIOServer server = new StandardIOServer(
@@ -126,7 +102,7 @@ public class Application {
                         .processor(processor)
                         .inputTransportFactory(new TFramedTransport.Factory(8192))
                         .outputTransportFactory(new TFramedTransport.Factory(8192))
-                        .protocolFactory(new TJSONProtocol.Factory()));
+                        .protocolFactory(new TCompactProtocol.Factory()));
 
         handler.addServer(server);
 
@@ -136,30 +112,9 @@ public class Application {
             e.printStackTrace();
             System.exit(1);
         } finally {
-            write("serving returned");
             serverTransport.close();
             executor.shutdownNow();
         }
-    }
-
-    private static void runV3(Arguments cliArgs) throws TTransportException {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        org.newrelic.nrjmx.v2.JMXFetcher jmxFetcher = new org.newrelic.nrjmx.v2.JMXFetcher(executor);
-
-        JMXServiceHandler handler = new JMXServiceHandler(jmxFetcher);
-        TProcessor processor = new JMXService.Processor<JMXServiceHandler>(handler);
-
-        TServerTransport serverTransport = new TServerSocket(9090);
-        TServer server = new StandardIOServer(
-                new Args(serverTransport).processor(processor)
-                        .inputTransportFactory(new TFramedTransport.Factory(8192))
-                        .outputTransportFactory(new TFramedTransport.Factory(8192))
-                        .protocolFactory(new TCompactProtocol.Factory()));
-
-        handler.addServer(server);
-        server.serve();
-
-        serverTransport.close();
     }
 
     private static void logTrace(Arguments cliArgs, Logger logger, Exception e) {

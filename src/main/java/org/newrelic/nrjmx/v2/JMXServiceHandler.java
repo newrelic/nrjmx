@@ -11,10 +11,14 @@ import org.newrelic.nrjmx.v2.nrprotocol.*;
  * SPDX-License-Identifier: Apache-2.0
  */
 
+/**
+ * JMXServiceHandler is the implementation for nrjmx thrift service.
+ */
 public class JMXServiceHandler implements JMXService.Iface {
 
-    private JMXFetcher jmxFetcher;
+    private final JMXFetcher jmxFetcher;
     private TServer server;
+    private long requestTimeoutMs = 0;
 
     public JMXServiceHandler(JMXFetcher jmxFetcher) {
         this.jmxFetcher = jmxFetcher;
@@ -22,12 +26,12 @@ public class JMXServiceHandler implements JMXService.Iface {
 
     @Override
     public void ping() throws TException {
-        return;
     }
 
     @Override
-    public void connect(JMXConfig config, long timeoutMs) throws TException {
-        jmxFetcher.connect(config, timeoutMs);
+    public void connect(JMXConfig config) throws TException {
+        this.requestTimeoutMs = config.requestTimoutMs;
+        jmxFetcher.connect(config, requestTimeoutMs);
     }
 
     @Override
@@ -39,18 +43,18 @@ public class JMXServiceHandler implements JMXService.Iface {
     }
 
     @Override
-    public List<String> getMBeanNames(String mBeanNamePattern, long timeoutMs) throws TException {
-        return jmxFetcher.getMBeanNames(mBeanNamePattern, timeoutMs);
+    public List<String> getMBeanNames(String mBeanNamePattern) throws TException {
+        return jmxFetcher.getMBeanNames(mBeanNamePattern, requestTimeoutMs);
     }
 
     @Override
-    public List<String> getMBeanAttrNames(String mBeanName, long timeoutMs) throws TException {
-        return jmxFetcher.getMBeanAttrNames(mBeanName, timeoutMs);
+    public List<String> getMBeanAttrNames(String mBeanName) throws TException {
+        return jmxFetcher.getMBeanAttrNames(mBeanName, requestTimeoutMs);
     }
 
     @Override
-    public JMXAttribute getMBeanAttr(String mBeanName, String attrName, long timeoutMs) throws TException {
-        return jmxFetcher.getMBeanAttr(mBeanName, attrName, timeoutMs);
+    public JMXAttribute getMBeanAttr(String mBeanName, String attrName) throws TException {
+        return jmxFetcher.getMBeanAttr(mBeanName, attrName, requestTimeoutMs);
     }
 
     public void addServer(TServer server) {

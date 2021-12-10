@@ -14,6 +14,7 @@ struct JMXConfig {
   11: bool isRemote,
   12: bool isJBossStandaloneMode
   13: bool useSSL
+  14: i64 requestTimoutMs
 }
 
 enum ValueType {
@@ -44,15 +45,15 @@ exception JMXConnectionError {
 }
 
 service JMXService {
-    void connect(1:JMXConfig config, 2:i64 timeoutMs) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr),
+    void connect(1:JMXConfig config) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr),
 
     void disconnect() throws (1:JMXError err),
 
     void ping() throws (1:JMXError err),
 
-    list<string> getMBeanNames(1:string mBeanNamePattern, 2:i64 timeoutMs) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr),
+    list<string> getMBeanNames(1:string mBeanNamePattern) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr),
 
-    list<string> getMBeanAttrNames(1:string mBeanName, 2:i64 timeoutMs) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr),
+    list<string> getMBeanAttrNames(1:string mBeanName) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr),
 
-    JMXAttribute getMBeanAttr(1:string mBeanName, 2:string attrName, 3:i64 timeoutMs) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr)
+    JMXAttribute getMBeanAttr(1:string mBeanName, 2:string attrName) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr)
 }

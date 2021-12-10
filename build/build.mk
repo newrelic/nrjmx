@@ -26,7 +26,7 @@ code-gen-deps:
 .PHONY : code-gen-deps, code-gen
 code-gen: 
 	@($(DOCKER_THRIFT) thrift -r --out src/main/java/ --gen java ./commons/nrjmx.thrift)
-	@($(DOCKER_THRIFT) thrift -r --out gojmx/ --gen go:package_prefix=github.com/newrelic/nrjmx/gojmx/,package=nrprotocol ./commons/nrjmx.thrift)
+	@($(DOCKER_THRIFT) thrift -r --out gojmx/internal/ --gen go:package_prefix=github.com/newrelic/nrjmx/gojmx/internal/,package=nrprotocol ./commons/nrjmx.thrift)
 
 TRACKED_GEN_DIR=src/main/java/nrprotocol \
 				gojmx/nrprotocol
