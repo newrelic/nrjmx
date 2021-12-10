@@ -1,6 +1,9 @@
 package gojmx
 
-import "github.com/newrelic/nrjmx/gojmx/internal/nrprotocol"
+import (
+	"fmt"
+	"github.com/newrelic/nrjmx/gojmx/internal/nrprotocol"
+)
 
 /*
  * We want to keep the generated thrift structures internal to avoid having a heavy API.
@@ -10,8 +13,24 @@ import "github.com/newrelic/nrjmx/gojmx/internal/nrprotocol"
 // JMXConfig exports internal nrprotocol.JMXConfig.
 type JMXConfig nrprotocol.JMXConfig
 
-// JMXAttribute exports internaln nrprotocol.JMXAttribute.
+// JMXAttribute exports internal nrprotocol.JMXAttribute.
 type JMXAttribute nrprotocol.JMXAttribute
+
+// GetValue extracts the value from nrprotocol.JMXAttribute.
+func (j *JMXAttribute) GetValue() interface{} {
+	switch j.ValueType {
+	case nrprotocol.ValueType_BOOL:
+		return j.BoolValue
+	case nrprotocol.ValueType_STRING:
+		return j.StringValue
+	case nrprotocol.ValueType_DOUBLE:
+		return j.DoubleValue
+	case nrprotocol.ValueType_INT:
+		return j.IntValue
+	default:
+		panic(fmt.Sprintf("unkown value type: %v", j.ValueType))
+	}
+}
 
 func (j *JMXConfig) toProtocol() *nrprotocol.JMXConfig {
 	return (*nrprotocol.JMXConfig)(j)
