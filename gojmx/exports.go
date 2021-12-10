@@ -10,6 +10,9 @@ import "github.com/newrelic/nrjmx/gojmx/internal/nrprotocol"
 // JMXConfig exports internal nrprotocol.JMXConfig.
 type JMXConfig nrprotocol.JMXConfig
 
+// JMXAttribute exports internaln nrprotocol.JMXAttribute.
+type JMXAttribute nrprotocol.JMXAttribute
+
 func (j *JMXConfig) toProtocol() *nrprotocol.JMXConfig {
 	return (*nrprotocol.JMXConfig)(j)
 }

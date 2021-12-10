@@ -88,12 +88,12 @@ func (c *Client) GetMBeanAttrNames(mBeanName string) ([]string, error) {
 }
 
 // GetMBeanAttr returns the JMX attribute value.
-func (c *Client) GetMBeanAttr(mBeanName, mBeanAttrName string) (*nrprotocol.JMXAttribute, error) {
+func (c *Client) GetMBeanAttr(mBeanName, mBeanAttrName string) (*JMXAttribute, error) {
 	if err := c.nrJMXProcess.Error(); err != nil {
 		return nil, err
 	}
 	result, err := c.jmxService.GetMBeanAttr(c.ctx, mBeanName, mBeanAttrName)
-	return result, c.handleTransportError(err)
+	return (*JMXAttribute)(result), c.handleTransportError(err)
 }
 
 // Close will stop the connection with the JMX endpoint.
