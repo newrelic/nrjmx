@@ -1232,7 +1232,7 @@ type JMXService interface {
   // Parameters:
   //  - MBeanName
   //  - AttrName
-  GetMBeanAttr(ctx context.Context, mBeanName string, attrName string) (r *JMXAttribute, err error)
+  GetMBeanAttrs(ctx context.Context, mBeanName string, attrName string) (r []*JMXAttribute, err error)
 }
 
 type JMXServiceClient struct {
@@ -1348,12 +1348,12 @@ func (p *JMXServiceClient) GetMBeanAttrNames(ctx context.Context, mBeanName stri
 // Parameters:
 //  - MBeanName
 //  - AttrName
-func (p *JMXServiceClient) GetMBeanAttr(ctx context.Context, mBeanName string, attrName string) (r *JMXAttribute, err error) {
-  var _args10 JMXServiceGetMBeanAttrArgs
+func (p *JMXServiceClient) GetMBeanAttrs(ctx context.Context, mBeanName string, attrName string) (r []*JMXAttribute, err error) {
+  var _args10 JMXServiceGetMBeanAttrsArgs
   _args10.MBeanName = mBeanName
   _args10.AttrName = attrName
-  var _result11 JMXServiceGetMBeanAttrResult
-  if err = p.Client_().Call(ctx, "getMBeanAttr", &_args10, &_result11); err != nil {
+  var _result11 JMXServiceGetMBeanAttrsResult
+  if err = p.Client_().Call(ctx, "getMBeanAttrs", &_args10, &_result11); err != nil {
     return
   }
   switch {
@@ -1392,7 +1392,7 @@ func NewJMXServiceProcessor(handler JMXService) *JMXServiceProcessor {
   self12.processorMap["ping"] = &jMXServiceProcessorPing{handler:handler}
   self12.processorMap["getMBeanNames"] = &jMXServiceProcessorGetMBeanNames{handler:handler}
   self12.processorMap["getMBeanAttrNames"] = &jMXServiceProcessorGetMBeanAttrNames{handler:handler}
-  self12.processorMap["getMBeanAttr"] = &jMXServiceProcessorGetMBeanAttr{handler:handler}
+  self12.processorMap["getMBeanAttrs"] = &jMXServiceProcessorGetMBeanAttrs{handler:handler}
 return self12
 }
 
@@ -1675,16 +1675,16 @@ var retval []string
   return true, err
 }
 
-type jMXServiceProcessorGetMBeanAttr struct {
+type jMXServiceProcessorGetMBeanAttrs struct {
   handler JMXService
 }
 
-func (p *jMXServiceProcessorGetMBeanAttr) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
-  args := JMXServiceGetMBeanAttrArgs{}
+func (p *jMXServiceProcessorGetMBeanAttrs) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+  args := JMXServiceGetMBeanAttrsArgs{}
   if err = args.Read(iprot); err != nil {
     iprot.ReadMessageEnd()
     x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
-    oprot.WriteMessageBegin("getMBeanAttr", thrift.EXCEPTION, seqId)
+    oprot.WriteMessageBegin("getMBeanAttrs", thrift.EXCEPTION, seqId)
     x.Write(oprot)
     oprot.WriteMessageEnd()
     oprot.Flush(ctx)
@@ -1692,18 +1692,18 @@ func (p *jMXServiceProcessorGetMBeanAttr) Process(ctx context.Context, seqId int
   }
 
   iprot.ReadMessageEnd()
-  result := JMXServiceGetMBeanAttrResult{}
-var retval *JMXAttribute
+  result := JMXServiceGetMBeanAttrsResult{}
+var retval []*JMXAttribute
   var err2 error
-  if retval, err2 = p.handler.GetMBeanAttr(ctx, args.MBeanName, args.AttrName); err2 != nil {
+  if retval, err2 = p.handler.GetMBeanAttrs(ctx, args.MBeanName, args.AttrName); err2 != nil {
   switch v := err2.(type) {
     case *JMXConnectionError:
   result.ConnErr = v
     case *JMXError:
   result.JmxErr = v
     default:
-    x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing getMBeanAttr: " + err2.Error())
-    oprot.WriteMessageBegin("getMBeanAttr", thrift.EXCEPTION, seqId)
+    x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing getMBeanAttrs: " + err2.Error())
+    oprot.WriteMessageBegin("getMBeanAttrs", thrift.EXCEPTION, seqId)
     x.Write(oprot)
     oprot.WriteMessageEnd()
     oprot.Flush(ctx)
@@ -1712,7 +1712,7 @@ var retval *JMXAttribute
   } else {
     result.Success = retval
 }
-  if err2 = oprot.WriteMessageBegin("getMBeanAttr", thrift.REPLY, seqId); err2 != nil {
+  if err2 = oprot.WriteMessageBegin("getMBeanAttrs", thrift.REPLY, seqId); err2 != nil {
     err = err2
   }
   if err2 = result.Write(oprot); err == nil && err2 != nil {
@@ -2881,24 +2881,24 @@ func (p *JMXServiceGetMBeanAttrNamesResult) String() string {
 // Attributes:
 //  - MBeanName
 //  - AttrName
-type JMXServiceGetMBeanAttrArgs struct {
+type JMXServiceGetMBeanAttrsArgs struct {
   MBeanName string `thrift:"mBeanName,1" db:"mBeanName" json:"mBeanName"`
   AttrName string `thrift:"attrName,2" db:"attrName" json:"attrName"`
 }
 
-func NewJMXServiceGetMBeanAttrArgs() *JMXServiceGetMBeanAttrArgs {
-  return &JMXServiceGetMBeanAttrArgs{}
+func NewJMXServiceGetMBeanAttrsArgs() *JMXServiceGetMBeanAttrsArgs {
+  return &JMXServiceGetMBeanAttrsArgs{}
 }
 
 
-func (p *JMXServiceGetMBeanAttrArgs) GetMBeanName() string {
+func (p *JMXServiceGetMBeanAttrsArgs) GetMBeanName() string {
   return p.MBeanName
 }
 
-func (p *JMXServiceGetMBeanAttrArgs) GetAttrName() string {
+func (p *JMXServiceGetMBeanAttrsArgs) GetAttrName() string {
   return p.AttrName
 }
-func (p *JMXServiceGetMBeanAttrArgs) Read(iprot thrift.TProtocol) error {
+func (p *JMXServiceGetMBeanAttrsArgs) Read(iprot thrift.TProtocol) error {
   if _, err := iprot.ReadStructBegin(); err != nil {
     return thrift.PrependError(fmt.Sprintf("%T read error: ", p), err)
   }
@@ -2946,7 +2946,7 @@ func (p *JMXServiceGetMBeanAttrArgs) Read(iprot thrift.TProtocol) error {
   return nil
 }
 
-func (p *JMXServiceGetMBeanAttrArgs)  ReadField1(iprot thrift.TProtocol) error {
+func (p *JMXServiceGetMBeanAttrsArgs)  ReadField1(iprot thrift.TProtocol) error {
   if v, err := iprot.ReadString(); err != nil {
   return thrift.PrependError("error reading field 1: ", err)
 } else {
@@ -2955,7 +2955,7 @@ func (p *JMXServiceGetMBeanAttrArgs)  ReadField1(iprot thrift.TProtocol) error {
   return nil
 }
 
-func (p *JMXServiceGetMBeanAttrArgs)  ReadField2(iprot thrift.TProtocol) error {
+func (p *JMXServiceGetMBeanAttrsArgs)  ReadField2(iprot thrift.TProtocol) error {
   if v, err := iprot.ReadString(); err != nil {
   return thrift.PrependError("error reading field 2: ", err)
 } else {
@@ -2964,8 +2964,8 @@ func (p *JMXServiceGetMBeanAttrArgs)  ReadField2(iprot thrift.TProtocol) error {
   return nil
 }
 
-func (p *JMXServiceGetMBeanAttrArgs) Write(oprot thrift.TProtocol) error {
-  if err := oprot.WriteStructBegin("getMBeanAttr_args"); err != nil {
+func (p *JMXServiceGetMBeanAttrsArgs) Write(oprot thrift.TProtocol) error {
+  if err := oprot.WriteStructBegin("getMBeanAttrs_args"); err != nil {
     return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err) }
   if p != nil {
     if err := p.writeField1(oprot); err != nil { return err }
@@ -2978,7 +2978,7 @@ func (p *JMXServiceGetMBeanAttrArgs) Write(oprot thrift.TProtocol) error {
   return nil
 }
 
-func (p *JMXServiceGetMBeanAttrArgs) writeField1(oprot thrift.TProtocol) (err error) {
+func (p *JMXServiceGetMBeanAttrsArgs) writeField1(oprot thrift.TProtocol) (err error) {
   if err := oprot.WriteFieldBegin("mBeanName", thrift.STRING, 1); err != nil {
     return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:mBeanName: ", p), err) }
   if err := oprot.WriteString(string(p.MBeanName)); err != nil {
@@ -2988,7 +2988,7 @@ func (p *JMXServiceGetMBeanAttrArgs) writeField1(oprot thrift.TProtocol) (err er
   return err
 }
 
-func (p *JMXServiceGetMBeanAttrArgs) writeField2(oprot thrift.TProtocol) (err error) {
+func (p *JMXServiceGetMBeanAttrsArgs) writeField2(oprot thrift.TProtocol) (err error) {
   if err := oprot.WriteFieldBegin("attrName", thrift.STRING, 2); err != nil {
     return thrift.PrependError(fmt.Sprintf("%T write field begin error 2:attrName: ", p), err) }
   if err := oprot.WriteString(string(p.AttrName)); err != nil {
@@ -2998,61 +2998,59 @@ func (p *JMXServiceGetMBeanAttrArgs) writeField2(oprot thrift.TProtocol) (err er
   return err
 }
 
-func (p *JMXServiceGetMBeanAttrArgs) String() string {
+func (p *JMXServiceGetMBeanAttrsArgs) String() string {
   if p == nil {
     return "<nil>"
   }
-  return fmt.Sprintf("JMXServiceGetMBeanAttrArgs(%+v)", *p)
+  return fmt.Sprintf("JMXServiceGetMBeanAttrsArgs(%+v)", *p)
 }
 
 // Attributes:
 //  - Success
 //  - ConnErr
 //  - JmxErr
-type JMXServiceGetMBeanAttrResult struct {
-  Success *JMXAttribute `thrift:"success,0" db:"success" json:"success,omitempty"`
+type JMXServiceGetMBeanAttrsResult struct {
+  Success []*JMXAttribute `thrift:"success,0" db:"success" json:"success,omitempty"`
   ConnErr *JMXConnectionError `thrift:"connErr,1" db:"connErr" json:"connErr,omitempty"`
   JmxErr *JMXError `thrift:"jmxErr,2" db:"jmxErr" json:"jmxErr,omitempty"`
 }
 
-func NewJMXServiceGetMBeanAttrResult() *JMXServiceGetMBeanAttrResult {
-  return &JMXServiceGetMBeanAttrResult{}
+func NewJMXServiceGetMBeanAttrsResult() *JMXServiceGetMBeanAttrsResult {
+  return &JMXServiceGetMBeanAttrsResult{}
 }
 
-var JMXServiceGetMBeanAttrResult_Success_DEFAULT *JMXAttribute
-func (p *JMXServiceGetMBeanAttrResult) GetSuccess() *JMXAttribute {
-  if !p.IsSetSuccess() {
-    return JMXServiceGetMBeanAttrResult_Success_DEFAULT
-  }
-return p.Success
+var JMXServiceGetMBeanAttrsResult_Success_DEFAULT []*JMXAttribute
+
+func (p *JMXServiceGetMBeanAttrsResult) GetSuccess() []*JMXAttribute {
+  return p.Success
 }
-var JMXServiceGetMBeanAttrResult_ConnErr_DEFAULT *JMXConnectionError
-func (p *JMXServiceGetMBeanAttrResult) GetConnErr() *JMXConnectionError {
+var JMXServiceGetMBeanAttrsResult_ConnErr_DEFAULT *JMXConnectionError
+func (p *JMXServiceGetMBeanAttrsResult) GetConnErr() *JMXConnectionError {
   if !p.IsSetConnErr() {
-    return JMXServiceGetMBeanAttrResult_ConnErr_DEFAULT
+    return JMXServiceGetMBeanAttrsResult_ConnErr_DEFAULT
   }
 return p.ConnErr
 }
-var JMXServiceGetMBeanAttrResult_JmxErr_DEFAULT *JMXError
-func (p *JMXServiceGetMBeanAttrResult) GetJmxErr() *JMXError {
+var JMXServiceGetMBeanAttrsResult_JmxErr_DEFAULT *JMXError
+func (p *JMXServiceGetMBeanAttrsResult) GetJmxErr() *JMXError {
   if !p.IsSetJmxErr() {
-    return JMXServiceGetMBeanAttrResult_JmxErr_DEFAULT
+    return JMXServiceGetMBeanAttrsResult_JmxErr_DEFAULT
   }
 return p.JmxErr
 }
-func (p *JMXServiceGetMBeanAttrResult) IsSetSuccess() bool {
+func (p *JMXServiceGetMBeanAttrsResult) IsSetSuccess() bool {
   return p.Success != nil
 }
 
-func (p *JMXServiceGetMBeanAttrResult) IsSetConnErr() bool {
+func (p *JMXServiceGetMBeanAttrsResult) IsSetConnErr() bool {
   return p.ConnErr != nil
 }
 
-func (p *JMXServiceGetMBeanAttrResult) IsSetJmxErr() bool {
+func (p *JMXServiceGetMBeanAttrsResult) IsSetJmxErr() bool {
   return p.JmxErr != nil
 }
 
-func (p *JMXServiceGetMBeanAttrResult) Read(iprot thrift.TProtocol) error {
+func (p *JMXServiceGetMBeanAttrsResult) Read(iprot thrift.TProtocol) error {
   if _, err := iprot.ReadStructBegin(); err != nil {
     return thrift.PrependError(fmt.Sprintf("%T read error: ", p), err)
   }
@@ -3066,7 +3064,7 @@ func (p *JMXServiceGetMBeanAttrResult) Read(iprot thrift.TProtocol) error {
     if fieldTypeId == thrift.STOP { break; }
     switch fieldId {
     case 0:
-      if fieldTypeId == thrift.STRUCT {
+      if fieldTypeId == thrift.LIST {
         if err := p.ReadField0(iprot); err != nil {
           return err
         }
@@ -3110,15 +3108,27 @@ func (p *JMXServiceGetMBeanAttrResult) Read(iprot thrift.TProtocol) error {
   return nil
 }
 
-func (p *JMXServiceGetMBeanAttrResult)  ReadField0(iprot thrift.TProtocol) error {
-  p.Success = &JMXAttribute{}
-  if err := p.Success.Read(iprot); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T error reading struct: ", p.Success), err)
+func (p *JMXServiceGetMBeanAttrsResult)  ReadField0(iprot thrift.TProtocol) error {
+  _, size, err := iprot.ReadListBegin()
+  if err != nil {
+    return thrift.PrependError("error reading list begin: ", err)
+  }
+  tSlice := make([]*JMXAttribute, 0, size)
+  p.Success =  tSlice
+  for i := 0; i < size; i ++ {
+    _elem16 := &JMXAttribute{}
+    if err := _elem16.Read(iprot); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T error reading struct: ", _elem16), err)
+    }
+    p.Success = append(p.Success, _elem16)
+  }
+  if err := iprot.ReadListEnd(); err != nil {
+    return thrift.PrependError("error reading list end: ", err)
   }
   return nil
 }
 
-func (p *JMXServiceGetMBeanAttrResult)  ReadField1(iprot thrift.TProtocol) error {
+func (p *JMXServiceGetMBeanAttrsResult)  ReadField1(iprot thrift.TProtocol) error {
   p.ConnErr = &JMXConnectionError{}
   if err := p.ConnErr.Read(iprot); err != nil {
     return thrift.PrependError(fmt.Sprintf("%T error reading struct: ", p.ConnErr), err)
@@ -3126,7 +3136,7 @@ func (p *JMXServiceGetMBeanAttrResult)  ReadField1(iprot thrift.TProtocol) error
   return nil
 }
 
-func (p *JMXServiceGetMBeanAttrResult)  ReadField2(iprot thrift.TProtocol) error {
+func (p *JMXServiceGetMBeanAttrsResult)  ReadField2(iprot thrift.TProtocol) error {
   p.JmxErr = &JMXError{}
   if err := p.JmxErr.Read(iprot); err != nil {
     return thrift.PrependError(fmt.Sprintf("%T error reading struct: ", p.JmxErr), err)
@@ -3134,8 +3144,8 @@ func (p *JMXServiceGetMBeanAttrResult)  ReadField2(iprot thrift.TProtocol) error
   return nil
 }
 
-func (p *JMXServiceGetMBeanAttrResult) Write(oprot thrift.TProtocol) error {
-  if err := oprot.WriteStructBegin("getMBeanAttr_result"); err != nil {
+func (p *JMXServiceGetMBeanAttrsResult) Write(oprot thrift.TProtocol) error {
+  if err := oprot.WriteStructBegin("getMBeanAttrs_result"); err != nil {
     return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err) }
   if p != nil {
     if err := p.writeField0(oprot); err != nil { return err }
@@ -3149,12 +3159,20 @@ func (p *JMXServiceGetMBeanAttrResult) Write(oprot thrift.TProtocol) error {
   return nil
 }
 
-func (p *JMXServiceGetMBeanAttrResult) writeField0(oprot thrift.TProtocol) (err error) {
+func (p *JMXServiceGetMBeanAttrsResult) writeField0(oprot thrift.TProtocol) (err error) {
   if p.IsSetSuccess() {
-    if err := oprot.WriteFieldBegin("success", thrift.STRUCT, 0); err != nil {
+    if err := oprot.WriteFieldBegin("success", thrift.LIST, 0); err != nil {
       return thrift.PrependError(fmt.Sprintf("%T write field begin error 0:success: ", p), err) }
-    if err := p.Success.Write(oprot); err != nil {
-      return thrift.PrependError(fmt.Sprintf("%T error writing struct: ", p.Success), err)
+    if err := oprot.WriteListBegin(thrift.STRUCT, len(p.Success)); err != nil {
+      return thrift.PrependError("error writing list begin: ", err)
+    }
+    for _, v := range p.Success {
+      if err := v.Write(oprot); err != nil {
+        return thrift.PrependError(fmt.Sprintf("%T error writing struct: ", v), err)
+      }
+    }
+    if err := oprot.WriteListEnd(); err != nil {
+      return thrift.PrependError("error writing list end: ", err)
     }
     if err := oprot.WriteFieldEnd(); err != nil {
       return thrift.PrependError(fmt.Sprintf("%T write field end error 0:success: ", p), err) }
@@ -3162,7 +3180,7 @@ func (p *JMXServiceGetMBeanAttrResult) writeField0(oprot thrift.TProtocol) (err 
   return err
 }
 
-func (p *JMXServiceGetMBeanAttrResult) writeField1(oprot thrift.TProtocol) (err error) {
+func (p *JMXServiceGetMBeanAttrsResult) writeField1(oprot thrift.TProtocol) (err error) {
   if p.IsSetConnErr() {
     if err := oprot.WriteFieldBegin("connErr", thrift.STRUCT, 1); err != nil {
       return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:connErr: ", p), err) }
@@ -3175,7 +3193,7 @@ func (p *JMXServiceGetMBeanAttrResult) writeField1(oprot thrift.TProtocol) (err 
   return err
 }
 
-func (p *JMXServiceGetMBeanAttrResult) writeField2(oprot thrift.TProtocol) (err error) {
+func (p *JMXServiceGetMBeanAttrsResult) writeField2(oprot thrift.TProtocol) (err error) {
   if p.IsSetJmxErr() {
     if err := oprot.WriteFieldBegin("jmxErr", thrift.STRUCT, 2); err != nil {
       return thrift.PrependError(fmt.Sprintf("%T write field begin error 2:jmxErr: ", p), err) }
@@ -3188,11 +3206,11 @@ func (p *JMXServiceGetMBeanAttrResult) writeField2(oprot thrift.TProtocol) (err 
   return err
 }
 
-func (p *JMXServiceGetMBeanAttrResult) String() string {
+func (p *JMXServiceGetMBeanAttrsResult) String() string {
   if p == nil {
     return "<nil>"
   }
-  return fmt.Sprintf("JMXServiceGetMBeanAttrResult(%+v)", *p)
+  return fmt.Sprintf("JMXServiceGetMBeanAttrsResult(%+v)", *p)
 }
 
 

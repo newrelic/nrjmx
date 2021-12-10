@@ -32,6 +32,15 @@ func (j *JMXAttribute) GetValue() interface{} {
 	}
 }
 
+// ConvertJMXAttributeArray converts a list of nrprotocol.JMXAttribute into a list of JMXAttribute.
+func ConvertJMXAttributeArray(attrs []*nrprotocol.JMXAttribute) (result []*JMXAttribute) {
+	result = make([]*JMXAttribute, len(attrs))
+	for i, attr := range attrs {
+		result[i] = (*JMXAttribute)(attr)
+	}
+	return
+}
+
 func (j *JMXConfig) toProtocol() *nrprotocol.JMXConfig {
 	return (*nrprotocol.JMXConfig)(j)
 }

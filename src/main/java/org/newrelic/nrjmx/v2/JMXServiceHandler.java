@@ -53,8 +53,8 @@ public class JMXServiceHandler implements JMXService.Iface {
     }
 
     @Override
-    public JMXAttribute getMBeanAttr(String mBeanName, String attrName) throws TException {
-        return jmxFetcher.getMBeanAttr(mBeanName, attrName, requestTimeoutMs);
+    public List<JMXAttribute> getMBeanAttrs(String mBeanName, String attrName) throws TException {
+        return jmxFetcher.getMBeanAttrs(mBeanName, attrName, requestTimeoutMs);
     }
 
     public void addServer(TServer server) {

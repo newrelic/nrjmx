@@ -16,7 +16,7 @@ func main() {
 	config := &gojmx.JMXConfig{
 		Hostname:        "localhost",
 		Port:            7199,
-		RequestTimoutMs: 10000,
+		//RequestTimoutMs: 10000,
 	}
 
 	client, err := gojmx.NewClient(context.Background()).Open(config)
@@ -28,7 +28,7 @@ func main() {
 	fmt.Println(err)
 
 
-	result, err := client.GetMBeanNames("*:*")
+	result, err := client.GetMBeanAttrs("java.lang:type=Memory", "HeapMemoryUsage")
 
 	j2, ok := gojmx.IsJMXError(err)
 	if ok {

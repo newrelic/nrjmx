@@ -55,5 +55,5 @@ service JMXService {
 
     list<string> getMBeanAttrNames(1:string mBeanName) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr),
 
-    JMXAttribute getMBeanAttr(1:string mBeanName, 2:string attrName) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr)
+    list<JMXAttribute> getMBeanAttrs(1:string mBeanName, 2:string attrName) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr)
 }

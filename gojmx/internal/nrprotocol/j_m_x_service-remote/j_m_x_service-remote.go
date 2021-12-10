@@ -28,7 +28,7 @@ func Usage() {
   fmt.Fprintln(os.Stderr, "  void ping()")
   fmt.Fprintln(os.Stderr, "   getMBeanNames(string mBeanNamePattern)")
   fmt.Fprintln(os.Stderr, "   getMBeanAttrNames(string mBeanName)")
-  fmt.Fprintln(os.Stderr, "  JMXAttribute getMBeanAttr(string mBeanName, string attrName)")
+  fmt.Fprintln(os.Stderr, "   getMBeanAttrs(string mBeanName, string attrName)")
   fmt.Fprintln(os.Stderr)
   os.Exit(0)
 }
@@ -155,19 +155,19 @@ func main() {
       fmt.Fprintln(os.Stderr, "Connect requires 1 args")
       flag.Usage()
     }
-    arg16 := flag.Arg(1)
-    mbTrans17 := thrift.NewTMemoryBufferLen(len(arg16))
-    defer mbTrans17.Close()
-    _, err18 := mbTrans17.WriteString(arg16)
-    if err18 != nil {
+    arg17 := flag.Arg(1)
+    mbTrans18 := thrift.NewTMemoryBufferLen(len(arg17))
+    defer mbTrans18.Close()
+    _, err19 := mbTrans18.WriteString(arg17)
+    if err19 != nil {
       Usage()
       return
     }
-    factory19 := thrift.NewTJSONProtocolFactory()
-    jsProt20 := factory19.GetProtocol(mbTrans17)
+    factory20 := thrift.NewTJSONProtocolFactory()
+    jsProt21 := factory20.GetProtocol(mbTrans18)
     argvalue0 := nrprotocol.NewJMXConfig()
-    err21 := argvalue0.Read(jsProt20)
-    if err21 != nil {
+    err22 := argvalue0.Read(jsProt21)
+    if err22 != nil {
       Usage()
       return
     }
@@ -211,16 +211,16 @@ func main() {
     fmt.Print(client.GetMBeanAttrNames(context.Background(), value0))
     fmt.Print("\n")
     break
-  case "getMBeanAttr":
+  case "getMBeanAttrs":
     if flag.NArg() - 1 != 2 {
-      fmt.Fprintln(os.Stderr, "GetMBeanAttr requires 2 args")
+      fmt.Fprintln(os.Stderr, "GetMBeanAttrs requires 2 args")
       flag.Usage()
     }
     argvalue0 := flag.Arg(1)
     value0 := argvalue0
     argvalue1 := flag.Arg(2)
     value1 := argvalue1
-    fmt.Print(client.GetMBeanAttr(context.Background(), value0, value1))
+    fmt.Print(client.GetMBeanAttrs(context.Background(), value0, value1))
     fmt.Print("\n")
     break
   case "":

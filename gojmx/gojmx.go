@@ -6,7 +6,6 @@ import (
 	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/newrelic/nrjmx/gojmx/internal/nrjmx"
 	"github.com/pkg/errors"
-
 	"time"
 
 	"github.com/newrelic/nrjmx/gojmx/internal/nrprotocol"
@@ -87,13 +86,13 @@ func (c *Client) GetMBeanAttrNames(mBeanName string) ([]string, error) {
 	return result, c.handleTransportError(err)
 }
 
-// GetMBeanAttr returns the JMX attribute value.
-func (c *Client) GetMBeanAttr(mBeanName, mBeanAttrName string) (*JMXAttribute, error) {
+// GetMBeanAttrs returns the JMX attribute value.
+func (c *Client) GetMBeanAttrs(mBeanName, mBeanAttrName string) ([]*JMXAttribute, error) {
 	if err := c.nrJMXProcess.Error(); err != nil {
 		return nil, err
 	}
-	result, err := c.jmxService.GetMBeanAttr(c.ctx, mBeanName, mBeanAttrName)
-	return (*JMXAttribute)(result), c.handleTransportError(err)
+	result, err := c.jmxService.GetMBeanAttrs(c.ctx, mBeanName, mBeanAttrName)
+	return ConvertJMXAttributeArray(result), c.handleTransportError(err)
 }
 
 // Close will stop the connection with the JMX endpoint.
