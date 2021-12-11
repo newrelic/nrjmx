@@ -107,6 +107,16 @@ func (c *Client) Close() error {
 	return err
 }
 
+// GetClientVersion returns nrjmx version.
+func (c *Client) GetClientVersion() (version string, err error) {
+	if err = c.nrJMXProcess.Error(); err != nil {
+		return "", err
+	}
+	version, err = c.jmxService.GetClientVersion(c.ctx)
+
+	return version, c.handleTransportError(err)
+}
+
 func (c *Client) WriteJunk() {
 	_, _ = fmt.Fprintf(c.nrJMXProcess.Stdin, "aa")
 }
@@ -129,7 +139,7 @@ func (c *Client) ping(timeout time.Duration) error {
 	done := make(chan struct{}, 1)
 	go func() {
 		for ctx.Err() == nil {
-			err := c.jmxService.Ping(ctx)
+			_, err := c.jmxService.GetClientVersion(ctx)
 			if err != nil {
 				continue
 			}

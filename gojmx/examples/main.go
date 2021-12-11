@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/newrelic/nrjmx/gojmx"
 	"os"
@@ -36,7 +37,9 @@ func main() {
 	} else {
 		//panic(err)
 	}
-	fmt.Println(result, err)
+	data := map[string]interface{} {"test": result[0].GetValue()}
+	b, _ := json.Marshal(data)
+	fmt.Println(string(b))
 	//time.Sleep(1*time.Hour)
 }
 

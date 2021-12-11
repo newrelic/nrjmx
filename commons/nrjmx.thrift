@@ -49,7 +49,7 @@ service JMXService {
 
     void disconnect() throws (1:JMXError err),
 
-    void ping() throws (1:JMXError err),
+    string getClientVersion() throws (1:JMXError err),
 
     list<string> getMBeanNames(1:string mBeanNamePattern) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr),
 

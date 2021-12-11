@@ -6,6 +6,7 @@ package org.newrelic.nrjmx.v2;
  */
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.newrelic.nrjmx.Application;
 import org.newrelic.nrjmx.v2.nrprotocol.*;
 
 import javax.management.*;
@@ -14,7 +15,10 @@ import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 import javax.rmi.ssl.SslRMIClientSocketFactory;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.*;
@@ -426,5 +430,20 @@ public class JMXFetcher {
             connectionEnv.put("com.sun.jndi.rmi.factory.socket", new SslRMIClientSocketFactory());
         }
         return connectionEnv;
+    }
+
+    public String getVersion() {
+        try {
+            InputStream inputStream = getClass().getClassLoader().getResourceAsStream("version");
+            InputStreamReader inputStreamReader = new InputStreamReader(Optional.ofNullable(inputStream).orElseThrow(IOException::new));
+            try (BufferedReader reader = new BufferedReader(inputStreamReader)) {
+                return reader.readLine();
+            } finally {
+                inputStream.close();
+                inputStreamReader.close();
+            }
+        } catch (Exception e) {
+            return "unknown";
+        }
     }
 }

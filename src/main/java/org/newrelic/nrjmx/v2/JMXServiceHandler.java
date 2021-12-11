@@ -25,7 +25,8 @@ public class JMXServiceHandler implements JMXService.Iface {
     }
 
     @Override
-    public void ping() throws TException {
+    public String getClientVersion() {
+        return jmxFetcher.getVersion();
     }
 
     @Override

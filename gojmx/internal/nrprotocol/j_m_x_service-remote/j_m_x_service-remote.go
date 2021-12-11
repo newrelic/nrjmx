@@ -25,7 +25,7 @@ func Usage() {
   fmt.Fprintln(os.Stderr, "\nFunctions:")
   fmt.Fprintln(os.Stderr, "  void connect(JMXConfig config)")
   fmt.Fprintln(os.Stderr, "  void disconnect()")
-  fmt.Fprintln(os.Stderr, "  void ping()")
+  fmt.Fprintln(os.Stderr, "  string getClientVersion()")
   fmt.Fprintln(os.Stderr, "   getMBeanNames(string mBeanNamePattern)")
   fmt.Fprintln(os.Stderr, "   getMBeanAttrNames(string mBeanName)")
   fmt.Fprintln(os.Stderr, "   getMBeanAttrs(string mBeanName, string attrName)")
@@ -183,12 +183,12 @@ func main() {
     fmt.Print(client.Disconnect(context.Background()))
     fmt.Print("\n")
     break
-  case "ping":
+  case "getClientVersion":
     if flag.NArg() - 1 != 0 {
-      fmt.Fprintln(os.Stderr, "Ping requires 0 args")
+      fmt.Fprintln(os.Stderr, "GetClientVersion requires 0 args")
       flag.Usage()
     }
-    fmt.Print(client.Ping(context.Background()))
+    fmt.Print(client.GetClientVersion(context.Background()))
     fmt.Print("\n")
     break
   case "getMBeanNames":
