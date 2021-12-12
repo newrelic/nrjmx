@@ -49,12 +49,12 @@ jobs:
       - name: Running unit tests
         run: make go-test
 
-    check-gen-code:
-      name: Checking generated code
-      runs-on: ubuntu-20.04
+  check-gen-code:
+    name: Checking generated code
+    runs-on: ubuntu-20.04
 
-      steps:
-        run: make ci/check-gen-code
+    steps:
+      run: make ci/check-gen-code
 
   test-build:
     name: Test jar compilation
