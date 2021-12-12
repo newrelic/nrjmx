@@ -10,10 +10,10 @@ import (
 
 func init() {
 	// Uncomment this when you want use the nrjmx.jar build from the project bin directory.
-	os.Setenv("NR_JMX_TOOL", filepath.Join("..", "bin", "nrjmx"))
+	_ = os.Setenv("NR_JMX_TOOL", filepath.Join("..", "bin", "nrjmx"))
 
 	// Uncomment this when you want to run both: golang debugger and java debugger.
-	//os.Setenv("NRIA_NRJMX_DEBUG", "true")
+	//_ = os.Setenv("NRIA_NRJMX_DEBUG", "true")
 }
 
 func main() {
@@ -52,7 +52,7 @@ func main() {
 }
 
 func printAttr(jmxAttr *gojmx.JMXAttribute) {
-	fmt.Fprintf(
+	_, _ = fmt.Fprintf(
 		os.Stdout,
 		"Attribute Name: %s\nAttribute Value: %v\nAttribute Value Type: %v\n\n",
 		jmxAttr.Attribute,
