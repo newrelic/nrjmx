@@ -76,6 +76,12 @@
         </dependency>
     </dependencies>
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
@@ -103,7 +109,7 @@
             </plugin>
             <plugin>
                 <groupId>com.coderplus.maven.plugins</groupId>
-                    <artifactId>copy-rename-maven-plugin</artifactId>
+                <artifactId>copy-rename-maven-plugin</artifactId>
                 <version>1.0</version>
                 <executions>
                     <execution>

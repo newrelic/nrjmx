@@ -1,11 +1,12 @@
 package org.newrelic.nrjmx.v2;
 
 /*
- * Copyright 2020 New Relic Corporation. All rights reserved.
+ * Copyright 2021 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.newrelic.nrjmx.Application;
 import org.newrelic.nrjmx.v2.nrprotocol.*;
 
 import javax.management.*;
@@ -14,54 +15,55 @@ import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 import javax.rmi.ssl.SslRMIClientSocketFactory;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
- * JMXFetcher class reads queries from an InputStream (usually stdin) and sends
- * the results to an OutputStream (usually stdout)
+ * JMXFetcher class executes requests to an JMX endpoint.
  */
 public class JMXFetcher {
     public static final String defaultURIPath = "jmxrmi";
 
-    private static final Logger logger = Logger.getLogger("nrjmx");
+    /* ExecutorService is required to run JMX requests with timeout. */
+    private final ExecutorService executor;
 
-    private ExecutorService executor;
-
+    /* MBeanServerConnection is the connection to JMX endpoint. */
     private MBeanServerConnection connection;
-
-    private Map<String, Object> connectionEnv = new HashMap<>();
 
     public JMXFetcher(ExecutorService executor) {
         this.executor = executor;
     }
 
-    public void connect(JMXConfig jmxConfig, long timeoutMs) throws JMXError {
+    /**
+     * connect performs the connection to the JMX endpoint.
+     *
+     * @param jmxConfig JMX configuration.
+     * @param timeoutMs long timeout for the request in milliseconds
+     * @throws JMXError           JMX related Exception
+     * @throws JMXConnectionError JMX connection related exception
+     */
+    public void connect(JMXConfig jmxConfig, long timeoutMs) throws JMXError, JMXConnectionError {
         withTimeout(executor.submit((Callable<Void>) () -> {
-            this.connect(jmxConfig);
+            connect(jmxConfig);
             return null;
         }), timeoutMs);
     }
 
+    /**
+     * connect performs the connection to the JMX endpoint.
+     *
+     * @param jmxConfig JMX configuration.
+     * @throws JMXConnectionError JMX connection related exception
+     */
     public void connect(JMXConfig jmxConfig) throws JMXConnectionError {
         String connectionString = buildConnectionString(jmxConfig);
-
-        if (!"".equals(jmxConfig.username)) {
-            connectionEnv.put(JMXConnector.CREDENTIALS, new String[]{jmxConfig.username, jmxConfig.password});
-        }
-
-        if (!"".equals(jmxConfig.keyStore) && !"".equals(jmxConfig.trustStore)) {
-            Properties p = System.getProperties();
-            p.put("javax.net.ssl.keyStore", jmxConfig.keyStore);
-            p.put("javax.net.ssl.keyStorePassword", jmxConfig.keyStorePassword);
-            p.put("javax.net.ssl.trustStore", jmxConfig.trustStore);
-            p.put("javax.net.ssl.trustStorePassword", jmxConfig.trustStorePassword);
-            connectionEnv.put("com.sun.jndi.rmi.factory.socket", new SslRMIClientSocketFactory());
-        }
+        Map<String, Object> connectionEnv = buildConnectionEnvConfig(jmxConfig);
 
         try {
             JMXServiceURL address = new JMXServiceURL(connectionString);
@@ -76,15 +78,31 @@ public class JMXFetcher {
         }
     }
 
-    public List<String> getMBeanNames(String beanName, long timeoutMs) throws JMXError {
+    /**
+     * getMBeanNames returns all founded mBeans that match the provided pattern.
+     *
+     * @param mBeanGlobPattern String glob pattern DOMAIN:BEAN e.g *:* or jboss.as:subsystem=remoting,configuration=endpoint
+     * @param timeoutMs        long timeout for the request in milliseconds
+     * @return List<String> containing all mBean names that were found
+     * @throws JMXError           JMX related Exception
+     * @throws JMXConnectionError JMX connection related exception
+     */
+    public List<String> getMBeanNames(String mBeanGlobPattern, long timeoutMs) throws JMXError, JMXConnectionError {
         return this.withTimeout(
-                executor.submit(() -> this.getMBeanNames(beanName)),
+                executor.submit(() -> this.getMBeanNames(mBeanGlobPattern)),
                 timeoutMs
         );
     }
 
-    public List<String> getMBeanNames(String mBeanNamePattern) throws JMXError {
-        ObjectName objectName = this.getObjectName(mBeanNamePattern);
+    /**
+     * getMBeanNames returns all founded mBeans that match the provided pattern.
+     *
+     * @param mBeanGlobPattern String glob pattern DOMAIN:BEAN e.g *:* or jboss.as:subsystem=remoting,configuration=endpoint
+     * @return List<String> containing all mBean names that were found
+     * @throws JMXError JMX related Exception
+     */
+    public List<String> getMBeanNames(String mBeanGlobPattern) throws JMXError {
+        ObjectName objectName = this.getObjectName(mBeanGlobPattern);
         try {
             return getConnection().queryMBeans(objectName, null)
                     .stream()
@@ -93,19 +111,35 @@ public class JMXFetcher {
                     .collect(Collectors.toList());
         } catch (IOException ioe) {
             throw new JMXError()
-                    .setMessage("can't get beans for query: " + mBeanNamePattern)
+                    .setMessage("can't get beans for query: " + mBeanGlobPattern)
                     .setCauseMessage(ioe.getMessage())
                     .setStacktrace(ExceptionUtils.getStackTrace(ioe));
         }
     }
 
-    public List<String> getMBeanAttrNames(String mBeanName, long timeoutMs) throws JMXError {
+    /**
+     * getMBeanAttrNames returns all the available JMX attribute names for a given mBeanName.
+     *
+     * @param mBeanName of which we want to retrieve attributes
+     * @param timeoutMs long timeout for the request in milliseconds
+     * @return List<String> containing all mBean attribute names that were found
+     * @throws JMXError           JMX related Exception
+     * @throws JMXConnectionError JMX connection related exception
+     */
+    public List<String> getMBeanAttrNames(String mBeanName, long timeoutMs) throws JMXError, JMXConnectionError {
         return this.withTimeout(
                 executor.submit(() -> this.getMBeanAttrNames(mBeanName)),
                 timeoutMs
         );
     }
 
+    /**
+     * getMBeanAttrNames returns all the available JMX attribute names for a given mBeanName.
+     *
+     * @param mBeanName of which we want to retrieve attributes
+     * @return List<String> containing all mBean attribute names that were found
+     * @throws JMXError JMX related Exception
+     */
     public List<String> getMBeanAttrNames(String mBeanName) throws JMXError {
         ObjectName objectName = this.getObjectName(mBeanName);
         MBeanInfo info;
@@ -125,14 +159,32 @@ public class JMXFetcher {
                 .collect(Collectors.toList());
     }
 
-    public JMXAttribute getMBeanAttr(String mBeanName, String attrName, long timeoutMs) throws JMXError {
+    /**
+     * getMBeanAttr returns the attribute value for an mBeanName.
+     *
+     * @param mBeanName of which we want to retrieve the attribute value
+     * @param attrName  of which we want to retrieve the attribute value
+     * @param timeoutMs long timeout for the request in milliseconds
+     * @return JMXAttribute representing the mBean attribute value
+     * @throws JMXError           JMX related Exception
+     * @throws JMXConnectionError JMX connection related exception
+     */
+    public List<JMXAttribute> getMBeanAttrs(String mBeanName, String attrName, long timeoutMs) throws JMXError, JMXConnectionError {
         return this.withTimeout(
-                executor.submit(() -> this.getMBeanAttr(mBeanName, attrName)),
+                executor.submit(() -> this.getMBeanAttrs(mBeanName, attrName)),
                 timeoutMs
         );
     }
 
-    public JMXAttribute getMBeanAttr(String mBeanName, String attrName) throws JMXError {
+    /**
+     * getMBeanAttr returns the attribute value for an mBeanName.
+     *
+     * @param mBeanName of which we want to retrieve the attribute value
+     * @param attrName  of which we want to retrieve the attribute value
+     * @return JMXAttribute representing the mBean attribute value
+     * @throws JMXError JMX related Exception
+     */
+    public List<JMXAttribute> getMBeanAttrs(String mBeanName, String attrName) throws JMXError {
         Object value;
         ObjectName objectName = this.getObjectName(mBeanName);
         try {
@@ -152,6 +204,13 @@ public class JMXFetcher {
         return parseValue(name, value);
     }
 
+    /**
+     * getObjectName returns the ObjectName for an mBeanName required on performing JMX requests.
+     *
+     * @param mBeanName to build the ObjectName
+     * @return ObjectName for the mBeanName
+     * @throws JMXError JMX related Exception
+     */
     private ObjectName getObjectName(String mBeanName) throws JMXError {
         try {
             return new ObjectName(mBeanName);
@@ -163,7 +222,17 @@ public class JMXFetcher {
         }
     }
 
-    private <T> T withTimeout(Future<T> future, long timeoutMs) throws JMXError {
+    /**
+     * withTimeout executes a task with timeout.
+     *
+     * @param future    is the task that has to be executed
+     * @param timeoutMs timeout in milliseconds after which we terminate the task
+     * @param <T>       Generic type for the task
+     * @return Task result
+     * @throws JMXError           JMX related Exception
+     * @throws JMXConnectionError JMX connection related exception
+     */
+    private <T> T withTimeout(Future<T> future, long timeoutMs) throws JMXError, JMXConnectionError {
         try {
             if (timeoutMs <= 0) {
                 return future.get();
@@ -184,6 +253,8 @@ public class JMXFetcher {
         } catch (ExecutionException e) {
             if (e.getCause() instanceof JMXError) {
                 throw (JMXError) e.getCause();
+            } else if (e.getCause() instanceof JMXConnectionError) {
+                throw (JMXConnectionError) e.getCause();
             }
             throw new JMXError()
                     .setMessage("failed to execute operation, error: " + e.getMessage())
@@ -191,59 +262,74 @@ public class JMXFetcher {
         }
     }
 
-    private JMXAttribute parseValue(String name, Object value) throws JMXError {
+    /**
+     * parseValue converts the received value from JMX into an JMXAttribute object.
+     *
+     * @param mBeanAttributeName of the value
+     * @param value              that has to be converted
+     * @return JMXAttribute containing the mBeanAttributeName and the converted value.
+     * @throws JMXError JMX related Exception
+     */
+    private List<JMXAttribute> parseValue(String mBeanAttributeName, Object value) throws JMXError {
         JMXAttribute attr = new JMXAttribute();
-        attr.attribute = name;
+        attr.attribute = mBeanAttributeName;
 
         if (value == null) {
             throw new JMXError()
-                    .setMessage("found a null value for bean: " + name);
+                    .setMessage("found a null value for bean: " + mBeanAttributeName);
         } else if (value instanceof java.lang.Double) {
             attr.doubleValue = parseDouble((Double) value);
             attr.valueType = ValueType.DOUBLE;
-            return attr;
+            return Arrays.asList(attr);
         } else if (value instanceof java.lang.Float) {
             attr.doubleValue = parseFloatToDouble((Float) value);
             attr.valueType = ValueType.DOUBLE;
-            return attr;
+            return Arrays.asList(attr);
         } else if (value instanceof Number) {
             attr.intValue = ((Number) value).longValue();
             attr.valueType = ValueType.INT;
-            return attr;
+            return Arrays.asList(attr);
         } else if (value instanceof String) {
             attr.stringValue = (String) value;
             attr.valueType = ValueType.STRING;
-            return attr;
+            return Arrays.asList(attr);
         } else if (value instanceof Boolean) {
             attr.boolValue = (Boolean) value;
             attr.valueType = ValueType.BOOL;
-            return attr;
+            return Arrays.asList(attr);
         } else if (value instanceof CompositeData) {
+            List<JMXAttribute> result = new ArrayList<>();
             CompositeData cdata = (CompositeData) value;
             Set<String> fieldKeys = cdata.getCompositeType().keySet();
+            JMXError jmxError = null;
 
             for (String field : fieldKeys) {
                 if (field.length() < 1)
                     continue;
 
                 String fieldKey = field.substring(0, 1).toUpperCase() + field.substring(1);
-                parseValue(String.format("%s.%s", name, fieldKey), cdata.get(field));
+                try {
+                    result.addAll(parseValue(String.format("%s.%s", mBeanAttributeName, fieldKey), cdata.get(field)));
+                } catch (JMXError e) {
+                    jmxError = e;
+                }
             }
-        } else if (value instanceof HashMap) {
-            // TODO: Process hashmaps
-            // logger.fine("HashMaps are not supported yet: " + name);
-            return null;
-        } else if (value instanceof ArrayList || value.getClass().isArray()) {
-            // TODO: Process arrays
-            // logger.fine("Arrays are not supported yet: " + name);
-            return null;
+            if (result.size() == 0 && jmxError != null) {
+                throw jmxError;
+            }
+            return result;
         } else {
             throw new JMXError()
-                    .setMessage("unsuported data type (" + value.getClass() + ") for bean " + name);
+                    .setMessage("unsuported data type (" + value.getClass() + ") for bean " + mBeanAttributeName);
         }
-        return null;
     }
 
+    /**
+     * getConnection returns the connection the the JMX endpoint.
+     *
+     * @return MBeanServerConnection the connection to the JMX endpoint
+     * @throws JMXError JMX related Exception
+     */
     private MBeanServerConnection getConnection() throws JMXError {
         if (this.connection == null) {
             throw new JMXError()
@@ -253,8 +339,12 @@ public class JMXFetcher {
     }
 
     /**
-     * XXX: JSON does not support NaN, Infinity, or -Infinity as they come back from
+     * parseDouble ensures the value has the expected format.
+     * We do not support NaN, Infinity, or -Infinity as they come back from
      * JMX. So we parse them out to 0, Max Double, and Min Double respectively.
+     *
+     * @param value to be parsed
+     * @return Double parsed value.
      */
     private Double parseDouble(Double value) {
         if (value.isNaN()) {
@@ -269,8 +359,12 @@ public class JMXFetcher {
     }
 
     /**
-     * XXX: JSON does not support NaN, Infinity, or -Infinity as they come back from
+     * parseFloatToDouble ensures the value has the expected format.
+     * We do not support NaN, Infinity, or -Infinity as they come back from
      * JMX. So we parse them out to 0, Max Double, and Min Double respectively.
+     *
+     * @param value to be parsed
+     * @return Double parsed value.
      */
     private Double parseFloatToDouble(Float value) {
         if (value.isNaN()) {
@@ -284,10 +378,12 @@ public class JMXFetcher {
         return new BigDecimal(value.toString()).doubleValue();
     }
 
-    public boolean StringIsNullOrEmpty(String value) {
-        return value == null || value.equals("");
-    }
-
+    /**
+     * buildConnectionString is used to build the connection URL using the JMXConfig.
+     *
+     * @param jmxConfig JMX configuration.
+     * @return String containing the connection URL.
+     */
     public static String buildConnectionString(JMXConfig jmxConfig) {
         if (jmxConfig.connectionURL != null && !jmxConfig.connectionURL.equals("")) {
             return jmxConfig.connectionURL;
@@ -318,5 +414,44 @@ public class JMXFetcher {
             return String.format("service:jmx:%s://%s:%s%s", remoteProtocol, jmxConfig.hostname, jmxConfig.port, uriPath);
         }
         return String.format("service:jmx:rmi:///jndi/rmi://%s:%s/%s", jmxConfig.hostname, jmxConfig.port, uriPath);
+    }
+
+    /**
+     * buildConnectionEnvConfig creates a Map containing the environment options required for JMX.
+     * based on received JMXConfig
+     *
+     * @param jmxConfig JMX configuration.
+     * @return Map<String, Object> containing the environment options required for JMX
+     */
+    private static Map<String, Object> buildConnectionEnvConfig(JMXConfig jmxConfig) {
+        Map<String, Object> connectionEnv = new HashMap<>();
+        if (!"".equals(jmxConfig.username)) {
+            connectionEnv.put(JMXConnector.CREDENTIALS, new String[]{jmxConfig.username, jmxConfig.password});
+        }
+
+        if (!"".equals(jmxConfig.keyStore) && !"".equals(jmxConfig.trustStore)) {
+            Properties p = System.getProperties();
+            p.put("javax.net.ssl.keyStore", jmxConfig.keyStore);
+            p.put("javax.net.ssl.keyStorePassword", jmxConfig.keyStorePassword);
+            p.put("javax.net.ssl.trustStore", jmxConfig.trustStore);
+            p.put("javax.net.ssl.trustStorePassword", jmxConfig.trustStorePassword);
+            connectionEnv.put("com.sun.jndi.rmi.factory.socket", new SslRMIClientSocketFactory());
+        }
+        return connectionEnv;
+    }
+
+    public String getVersion() {
+        try {
+            InputStream inputStream = getClass().getClassLoader().getResourceAsStream("version");
+            InputStreamReader inputStreamReader = new InputStreamReader(Optional.ofNullable(inputStream).orElseThrow(IOException::new));
+            try (BufferedReader reader = new BufferedReader(inputStreamReader)) {
+                return reader.readLine();
+            } finally {
+                inputStream.close();
+                inputStreamReader.close();
+            }
+        } catch (Exception e) {
+            return "unknown";
+        }
     }
 }

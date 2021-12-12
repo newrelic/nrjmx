@@ -30,8 +30,8 @@ jobs:
       - name: Running unit tests
         run: make ci/test
 
-  test-go-module-linux:  
-    name: Linux tests for the Go module
+  test-go-linux:
+    name: Linux unit tests for Go
     runs-on: ubuntu-20.04
 
     steps:
@@ -48,6 +48,13 @@ jobs:
 
       - name: Running unit tests
         run: make go-test
+
+    check-gen-code:
+      name: Checking generated code
+      runs-on: ubuntu-20.04
+
+      steps:
+        run: make ci/check-gen-code
 
   test-build:
     name: Test jar compilation
