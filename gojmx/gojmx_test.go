@@ -18,6 +18,10 @@ import (
 	"time"
 )
 
+func init() {
+	_ = os.Setenv("NR_JMX_TOOL", filepath.Join(testutils.PrjDir, "bin", "nrjmx"))
+}
+
 func Test_Query_Success_LargeAmountOfData(t *testing.T) {
 	ctx := context.Background()
 	//
@@ -47,7 +51,7 @@ func Test_Query_Success_LargeAmountOfData(t *testing.T) {
 
 	defer testutils.CleanMBeans(ctx, container)
 
-	jmxHost, jmxPort, err := testutils.GetContainerHostAndPort(ctx, container)
+	jmxHost, jmxPort, err := testutils.GetContainerMappedPort(ctx, container, testutils.TestServerJMXPort)
 	require.NoError(t, err)
 
 	// THEN JMX connection can be oppened
@@ -56,24 +60,23 @@ func Test_Query_Success_LargeAmountOfData(t *testing.T) {
 		Port:     int32(jmxPort.Int()),
 	}
 	client, err := NewClient(ctx).Open(config)
-	defer client.Close()
-
 	assert.NoError(t, err)
+	defer assertCloseClientNoError(t, client)
 
 	// AND query returns at least 5Mb of data.
 	mBeanNames, err := client.GetMBeanNames("test:type=Cat,*")
 	assert.NoError(t, err)
 
-	var result []*nrprotocol.JMXAttribute
+	var result []*JMXAttribute
 
 	for _, mBeanName := range mBeanNames {
 		mBeanAttrNames, err := client.GetMBeanAttrNames(mBeanName)
 		assert.NoError(t, err)
 
 		for _, mBeanAttrName := range mBeanAttrNames {
-			jmxAttr, err := client.GetMBeanAttr(mBeanName, mBeanAttrName)
+			jmxAttrs, err := client.GetMBeanAttrs(mBeanName, mBeanAttrName)
 			assert.NoError(t, err)
-			result = append(result, jmxAttr)
+			result = append(result, jmxAttrs...)
 		}
 
 	}
@@ -102,7 +105,7 @@ func Test_Query_Success(t *testing.T) {
 
 	defer testutils.CleanMBeans(ctx, container)
 
-	jmxHost, jmxPort, err := testutils.GetContainerHostAndPort(ctx, container)
+	jmxHost, jmxPort, err := testutils.GetContainerMappedPort(ctx, container, testutils.TestServerJMXPort)
 	require.NoError(t, err)
 
 	// THEN JMX connection can be oppened
@@ -113,8 +116,8 @@ func Test_Query_Success(t *testing.T) {
 	}
 
 	client, err := NewClient(ctx).Open(config)
-	defer client.Close()
 	assert.NoError(t, err)
+	defer assertCloseClientNoError(t, client)
 
 	// AND Query returns expected data
 	expectedMBeanNames := []string{
@@ -132,46 +135,117 @@ func Test_Query_Success(t *testing.T) {
 	require.ElementsMatch(t, expectedMBeanAttrNames, actualMBeanAttrNames)
 
 	// AND Query returns expected data
-	expected := []*nrprotocol.JMXAttribute{
+	expected := []*JMXAttribute{
 		{
 			Attribute: "test:type=Cat,name=tomas,attr=FloatValue",
 
-			ValueType:   nrprotocol.ValueType_DOUBLE,
+			ValueType:   ValueTypeDouble,
 			DoubleValue: 2.222222,
 		},
 		{
 			Attribute: "test:type=Cat,name=tomas,attr=NumberValue",
 
-			ValueType: nrprotocol.ValueType_INT,
+			ValueType: ValueTypeInt,
 			IntValue:  3,
 		},
 		{
 			Attribute: "test:type=Cat,name=tomas,attr=BoolValue",
 
-			ValueType: nrprotocol.ValueType_BOOL,
+			ValueType: ValueTypeBool,
 			BoolValue: true,
 		},
 		{
 			Attribute: "test:type=Cat,name=tomas,attr=DoubleValue",
 
-			ValueType:   nrprotocol.ValueType_DOUBLE,
+			ValueType:   ValueTypeDouble,
 			DoubleValue: 1.2,
 		},
 		{
 			Attribute: "test:type=Cat,name=tomas,attr=Name",
 
-			ValueType:   nrprotocol.ValueType_STRING,
+			ValueType:   ValueTypeString,
 			StringValue: "tomas",
 		},
 	}
 
-	var actual []*nrprotocol.JMXAttribute
+	var actual []*JMXAttribute
 	for _, mBeanAttrName := range expectedMBeanAttrNames {
-		jmxAttribute, err := client.GetMBeanAttr("test:type=Cat,name=tomas", mBeanAttrName)
+		jmxAttrs, err := client.GetMBeanAttrs("test:type=Cat,name=tomas", mBeanAttrName)
 		assert.NoError(t, err)
-		actual = append(actual, jmxAttribute)
+		actual = append(actual, jmxAttrs...)
+	}
+	assert.ElementsMatch(t, expected, actual)
+}
+
+func Test_Query_CompositeData(t *testing.T) {
+	ctx := context.Background()
+
+	// GIVEN a JMX Server running inside a container
+	container, err := testutils.RunJMXServiceContainer(ctx)
+	require.NoError(t, err)
+	defer container.Terminate(ctx)
+
+	// Populate the JMX Server with mbeans
+	resp, err := testutils.AddMCompositeDataBeans(ctx, container, map[string]interface{}{
+		"name":        "tomas",
+		"doubleValue": 1.2,
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, "ok!\n", string(resp))
+
+	defer testutils.CleanMBeans(ctx, container)
+
+	jmxHost, jmxPort, err := testutils.GetContainerMappedPort(ctx, container, testutils.TestServerJMXPort)
+	require.NoError(t, err)
+
+	// THEN JMX connection can be oppened
+	config := &JMXConfig{
+		Hostname:        jmxHost,
+		Port:            int32(jmxPort.Int()),
+		RequestTimoutMs: testutils.DefaultTimeoutMs,
 	}
 
+	client, err := NewClient(ctx).Open(config)
+	assert.NoError(t, err)
+	defer assertCloseClientNoError(t, client)
+
+	// AND Query returns expected data
+	expectedMBeanNames := []string{
+		"test:type=CompositeDataCat,name=tomas",
+	}
+	actualMBeanNames, err := client.GetMBeanNames("test:type=CompositeDataCat,*")
+	require.NoError(t, err)
+	require.ElementsMatch(t, expectedMBeanNames, actualMBeanNames)
+
+	expectedMBeanAttrNames := []string{
+		"CatInfo",
+	}
+	actualMBeanAttrNames, err := client.GetMBeanAttrNames("test:name=tomas,type=CompositeDataCat")
+	require.NoError(t, err)
+	require.ElementsMatch(t, expectedMBeanAttrNames, actualMBeanAttrNames)
+
+	// AND Query returns expected data
+	expected := []*JMXAttribute{
+		{
+			Attribute: "test:type=CompositeDataCat,name=tomas,attr=CatInfo.Double",
+
+			ValueType:   ValueTypeDouble,
+			DoubleValue: 1.2,
+		},
+		{
+			Attribute: "test:type=CompositeDataCat,name=tomas,attr=CatInfo.Name",
+
+			ValueType:   ValueTypeString,
+			StringValue: "tomas",
+		},
+	}
+
+	var actual []*JMXAttribute
+	//for _, mBeanAttrName := range expectedMBeanAttrNames {
+	jmxAttrs, err := client.GetMBeanAttrs("test:type=CompositeDataCat,name=tomas", "CatInfo")
+	assert.NoError(t, err)
+	actual = append(actual, jmxAttrs...)
+	//}
 	assert.ElementsMatch(t, expected, actual)
 }
 
@@ -183,7 +257,7 @@ func Test_Query_Timeout(t *testing.T) {
 	require.NoError(t, err)
 	defer container.Terminate(ctx)
 
-	jmxHost, jmxPort, err := testutils.GetContainerHostAndPort(ctx, container)
+	jmxHost, jmxPort, err := testutils.GetContainerMappedPort(ctx, container, testutils.TestServerJMXPort)
 	require.NoError(t, err)
 
 	// THEN JMX connection fails
@@ -193,9 +267,9 @@ func Test_Query_Timeout(t *testing.T) {
 		RequestTimoutMs: 1,
 	}
 	client, err := NewClient(ctx).Open(config)
-	defer client.Close()
 	assert.NotNil(t, client)
 	assert.Error(t, err)
+	defer assertCloseClientError(t, client)
 
 	// AND Query returns expected error
 	actual, err := client.GetMBeanAttrNames("*:*")
@@ -203,7 +277,7 @@ func Test_Query_Timeout(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func Test_URL_Success(t *testing.T) {
+func Test_ConnectionURL_Success(t *testing.T) {
 	ctx := context.Background()
 
 	// GIVEN a JMX Server running inside a container
@@ -223,7 +297,7 @@ func Test_URL_Success(t *testing.T) {
 	assert.Equal(t, "ok!\n", string(resp))
 	defer testutils.CleanMBeans(ctx, container)
 
-	jmxHost, jmxPort, err := testutils.GetContainerHostAndPort(ctx, container)
+	jmxHost, jmxPort, err := testutils.GetContainerMappedPort(ctx, container, testutils.TestServerJMXPort)
 	require.NoError(t, err)
 
 	// THEN JMX connection can be oppened
@@ -232,24 +306,25 @@ func Test_URL_Success(t *testing.T) {
 		RequestTimoutMs: testutils.DefaultTimeoutMs,
 	}
 	client, err := NewClient(ctx).Open(config)
-	defer client.Close()
-
 	assert.NoError(t, err)
+	defer assertCloseClientNoError(t, client)
 
 	// AND Query returns expected data
-	actual, err := client.GetMBeanAttr("test:type=Cat,name=tomas", "FloatValue")
+	actual, err := client.GetMBeanAttrs("test:type=Cat,name=tomas", "FloatValue")
 	assert.NoError(t, err)
 
-	expected := &nrprotocol.JMXAttribute{
-		Attribute:   "test:type=Cat,name=tomas,attr=FloatValue",
-		ValueType:   nrprotocol.ValueType_DOUBLE,
-		DoubleValue: 2.2,
+	expected := []*JMXAttribute{
+		{
+			Attribute:   "test:type=Cat,name=tomas,attr=FloatValue",
+			ValueType:   ValueTypeDouble,
+			DoubleValue: 2.2,
+		},
 	}
 
 	assert.Equal(t, expected, actual)
 }
 
-func Test_JavaNotInstalled(t *testing.T) {
+func Test_JavaNotInstalledError(t *testing.T) {
 	// GIVEN a wrong Java Home
 	os.Setenv("NRIA_JAVA_HOME", "/wrong/path")
 	defer os.Unsetenv("NRIA_JAVA_HOME")
@@ -261,6 +336,7 @@ func Test_JavaNotInstalled(t *testing.T) {
 	}
 	// THEN connect fails with expected error
 	client, err := NewClient(ctx).Open(config)
+	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "/wrong/path/bin/java")
 
 	// AND Query fails with expected error
@@ -269,7 +345,7 @@ func Test_JavaNotInstalled(t *testing.T) {
 	assert.ErrorIs(t, err, nrjmx.ErrProcessNotRunning)
 }
 
-func Test_WrongMbeanFormat(t *testing.T) {
+func Test_WrongMBeanFormatError(t *testing.T) {
 	ctx := context.Background()
 
 	// GIVEN a JMX Server running inside a container
@@ -277,7 +353,7 @@ func Test_WrongMbeanFormat(t *testing.T) {
 	require.NoError(t, err)
 	defer container.Terminate(ctx)
 
-	jmxHost, jmxPort, err := testutils.GetContainerHostAndPort(ctx, container)
+	jmxHost, jmxPort, err := testutils.GetContainerMappedPort(ctx, container, testutils.TestServerJMXPort)
 	require.NoError(t, err)
 
 	// THEN JMX connection can be oppened
@@ -287,8 +363,8 @@ func Test_WrongMbeanFormat(t *testing.T) {
 	}
 
 	client, err := NewClient(ctx).Open(config)
-	defer client.Close()
 	assert.NoError(t, err)
+	defer assertCloseClientNoError(t, client)
 
 	// AND Query returns expected error
 	actual, err := client.GetMBeanNames("wrong_format")
@@ -311,8 +387,9 @@ func Test_Wrong_Connection(t *testing.T) {
 
 	// THEN open fails with expected error
 	client, err := NewClient(ctx).Open(config)
-	defer client.Close()
+	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Connection refused to host: localhost;")
+	defer assertCloseClientError(t, client)
 
 	// AND query returns expected error
 	assert.Contains(t, err.Error(), "Connection refused to host: localhost;") // TODO: fix this, doesn't return the correct error
@@ -342,7 +419,7 @@ func Test_SSLQuery_Success(t *testing.T) {
 	assert.Equal(t, "ok!\n", string(resp))
 	defer testutils.CleanMBeans(ctx, container)
 
-	jmxHost, jmxPort, err := testutils.GetContainerHostAndPort(ctx, container)
+	jmxHost, jmxPort, err := testutils.GetContainerMappedPort(ctx, container, testutils.TestServerJMXPort)
 	require.NoError(t, err)
 
 	// THEN SSL JMX connection can be opened
@@ -358,8 +435,8 @@ func Test_SSLQuery_Success(t *testing.T) {
 		RequestTimoutMs:    testutils.DefaultTimeoutMs,
 	}
 	client, err := NewClient(ctx).Open(config)
-	defer client.Close()
 	assert.NoError(t, err)
+	defer assertCloseClientNoError(t, client)
 
 	// AND Query returns expected data
 	expectedMBeanNames := []string{
@@ -377,44 +454,44 @@ func Test_SSLQuery_Success(t *testing.T) {
 	require.ElementsMatch(t, expectedMBeanAttrNames, actualMBeanAttrNames)
 
 	// AND Query returns expected data
-	expected := []*nrprotocol.JMXAttribute{
+	expected := []*JMXAttribute{
 		{
 			Attribute: "test:type=Cat,name=tomas,attr=FloatValue",
 
-			ValueType:   nrprotocol.ValueType_DOUBLE,
+			ValueType:   ValueTypeDouble,
 			DoubleValue: 2.222222,
 		},
 		{
 			Attribute: "test:type=Cat,name=tomas,attr=NumberValue",
 
-			ValueType: nrprotocol.ValueType_INT,
+			ValueType: ValueTypeInt,
 			IntValue:  3,
 		},
 		{
 			Attribute: "test:type=Cat,name=tomas,attr=BoolValue",
 
-			ValueType: nrprotocol.ValueType_BOOL,
+			ValueType: ValueTypeBool,
 			BoolValue: true,
 		},
 		{
 			Attribute: "test:type=Cat,name=tomas,attr=DoubleValue",
 
-			ValueType:   nrprotocol.ValueType_DOUBLE,
+			ValueType:   ValueTypeDouble,
 			DoubleValue: 1.2,
 		},
 		{
 			Attribute: "test:type=Cat,name=tomas,attr=Name",
 
-			ValueType:   nrprotocol.ValueType_STRING,
+			ValueType:   ValueTypeString,
 			StringValue: "tomas",
 		},
 	}
 
-	var actual []*nrprotocol.JMXAttribute
+	var actual []*JMXAttribute
 	for _, mBeanAttrName := range expectedMBeanAttrNames {
-		jmxAttribute, err := client.GetMBeanAttr("test:type=Cat,name=tomas", mBeanAttrName)
+		jmxAttrs, err := client.GetMBeanAttrs("test:type=Cat,name=tomas", mBeanAttrName)
 		assert.NoError(t, err)
-		actual = append(actual, jmxAttribute)
+		actual = append(actual, jmxAttrs...)
 	}
 
 	assert.ElementsMatch(t, expected, actual)
@@ -428,7 +505,7 @@ func Test_Wrong_Credentials(t *testing.T) {
 	require.NoError(t, err)
 	defer container.Terminate(ctx)
 
-	jmxHost, jmxPort, err := testutils.GetContainerHostAndPort(ctx, container)
+	jmxHost, jmxPort, err := testutils.GetContainerMappedPort(ctx, container, testutils.TestServerJMXPort)
 	require.NoError(t, err)
 
 	// WHEN wrong jmx username and password is provided
@@ -446,8 +523,9 @@ func Test_Wrong_Credentials(t *testing.T) {
 
 	// THEN open fails with expected error
 	client, err := NewClient(ctx).Open(config)
-	defer client.Close()
+	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Authentication failed! Invalid username or password")
+	defer assertCloseClientError(t, client)
 
 	// AND Query returns expected error
 	actual, err := client.GetMBeanNames("test:type=Cat,*")
@@ -463,7 +541,7 @@ func Test_Wrong_Certificate_password(t *testing.T) {
 	require.NoError(t, err)
 	defer container.Terminate(ctx)
 
-	jmxHost, jmxPort, err := testutils.GetContainerHostAndPort(ctx, container)
+	jmxHost, jmxPort, err := testutils.GetContainerMappedPort(ctx, container, testutils.TestServerJMXPort)
 	require.NoError(t, err)
 
 	// WHEN wrong jmx username and password is provided
@@ -481,8 +559,9 @@ func Test_Wrong_Certificate_password(t *testing.T) {
 
 	// THEN open returns expected error
 	client, err := NewClient(ctx).Open(config)
-	defer client.Close()
-	assert.Contains(t, err.Error(), "SSLContext") // TODO: improve this error from java
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "SSLContext")
+	defer assertCloseClientError(t, client)
 
 	// AND Query returns expected error
 	actual, err := client.GetMBeanNames("test:type=Cat,*")
@@ -505,7 +584,7 @@ func Test_Connector_Success(t *testing.T) {
 
 	defer os.Remove(dstFile)
 
-	jmxHost, jmxPort, err := testutils.GetContainerHostAndPort(ctx, container)
+	jmxHost, jmxPort, err := testutils.GetContainerMappedPort(ctx, container, testutils.JbossJMXPort)
 	require.NoError(t, err)
 
 	// THEN JMX connection can be opened
@@ -519,8 +598,8 @@ func Test_Connector_Success(t *testing.T) {
 		RequestTimoutMs:       testutils.DefaultTimeoutMs,
 	}
 	client, err := NewClient(ctx).Open(config)
-	defer client.Close()
 	assert.NoError(t, err)
+	defer assertCloseClientNoError(t, client)
 
 	// AND Query returns expected data
 	expectedMbeanNames := []string{
@@ -553,92 +632,92 @@ func Test_Connector_Success(t *testing.T) {
 	actualMBeanAttrNames, err := client.GetMBeanAttrNames("jboss.as:subsystem=remoting,configuration=endpoint")
 	assert.ElementsMatch(t, expectedMBeanAttrNames, actualMBeanAttrNames)
 
-	expected := []*nrprotocol.JMXAttribute{
+	expected := []*JMXAttribute{
 		{
 			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=authenticationRetries",
-			ValueType: nrprotocol.ValueType_INT,
+			ValueType: ValueTypeInt,
 			IntValue:  3,
 		},
 		{
 			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=heartbeatInterval",
-			ValueType: nrprotocol.ValueType_INT,
+			ValueType: ValueTypeInt,
 			IntValue:  60000,
 		},
 		{
 			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=maxInboundChannels",
-			ValueType: nrprotocol.ValueType_INT,
+			ValueType: ValueTypeInt,
 			IntValue:  40,
 		},
 		{
 			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=maxInboundMessageSize",
-			ValueType: nrprotocol.ValueType_INT,
+			ValueType: ValueTypeInt,
 			IntValue:  9223372036854775807,
 		},
 		{
 			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=maxInboundMessages",
-			ValueType: nrprotocol.ValueType_INT,
+			ValueType: ValueTypeInt,
 			IntValue:  80,
 		},
 		{
 			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=maxOutboundChannels",
-			ValueType: nrprotocol.ValueType_INT,
+			ValueType: ValueTypeInt,
 			IntValue:  40,
 		},
 		{
 			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=maxOutboundMessageSize",
-			ValueType: nrprotocol.ValueType_INT,
+			ValueType: ValueTypeInt,
 			IntValue:  9223372036854775807,
 		},
 		{
 			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=maxOutboundMessages",
-			ValueType: nrprotocol.ValueType_INT,
+			ValueType: ValueTypeInt,
 			IntValue:  65535,
 		},
 		{
 			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=receiveBufferSize",
-			ValueType: nrprotocol.ValueType_INT,
+			ValueType: ValueTypeInt,
 			IntValue:  8192,
 		},
 		{
 			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=receiveWindowSize",
-			ValueType: nrprotocol.ValueType_INT,
+			ValueType: ValueTypeInt,
 			IntValue:  131072,
 		},
 		{
 			Attribute:   "jboss.as:subsystem=remoting,configuration=endpoint,attr=saslProtocol",
-			ValueType:   nrprotocol.ValueType_STRING,
+			ValueType:   ValueTypeString,
 			StringValue: "remote",
 		},
 		{
 			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=sendBufferSize",
-			ValueType: nrprotocol.ValueType_INT,
+			ValueType: ValueTypeInt,
 			IntValue:  8192,
 		},
 		{
 			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=transmitWindowSize",
-			ValueType: nrprotocol.ValueType_INT,
+			ValueType: ValueTypeInt,
 			IntValue:  131072,
 		},
 		{
 			Attribute:   "jboss.as:subsystem=remoting,configuration=endpoint,attr=worker",
-			ValueType:   nrprotocol.ValueType_STRING,
+			ValueType:   ValueTypeString,
 			StringValue: "default",
 		},
 	}
 
-	var actual []*nrprotocol.JMXAttribute
+	var actual []*JMXAttribute
 	for _, mBeanAttrName := range expectedMBeanAttrNames {
-		jmxAttribute, err := client.GetMBeanAttr("jboss.as:subsystem=remoting,configuration=endpoint", mBeanAttrName)
+		jmxAttrs, err := client.GetMBeanAttrs("jboss.as:subsystem=remoting,configuration=endpoint", mBeanAttrName)
 		if err != nil {
 			continue
 		}
-		actual = append(actual, jmxAttribute)
+		actual = append(actual, jmxAttrs...)
 	}
 
 	assert.ElementsMatch(t, expected, actual)
 }
 
-func TestJMXServiceClose(t *testing.T) {
+func TestClientClose(t *testing.T) {
 	ctx := context.Background()
 
 	// GIVEN a JMX Server running inside a container
@@ -646,8 +725,8 @@ func TestJMXServiceClose(t *testing.T) {
 	require.NoError(t, err)
 	defer container.Terminate(ctx)
 
-	jmxHost, jmxPort, err := testutils.GetContainerHostAndPort(ctx, container)
-	assert.NoError(t, err)
+	jmxHost, jmxPort, err := testutils.GetContainerMappedPort(ctx, container, testutils.TestServerJMXPort)
+	require.NoError(t, err)
 
 	// THEN JMX connection can be opened.
 	config := &JMXConfig{
@@ -658,18 +737,19 @@ func TestJMXServiceClose(t *testing.T) {
 
 	client, err := NewClient(ctx).Open(config)
 	assert.NoError(t, err)
-	err = client.Close()
-	assert.NoError(t, err)
+
+	// WHEN closing the client there is no error
+	assertCloseClientNoError(t, client)
 
 	// AND Query returns expected error
 	actual, err := client.GetMBeanNames("*:*")
 	assert.Nil(t, actual)
-	assert.ErrorIs(t, err, nrjmx.ErrProcessNotRunning) // TODO: Get valid error message
+	assert.ErrorIs(t, err, nrjmx.ErrProcessNotRunning)
 
 	assert.True(t, client.nrJMXProcess.GetOSProcessState().Success())
 }
 
-func TestJavaProcessExits(t *testing.T) {
+func TestProcessExits(t *testing.T) {
 	// gojmx starts nrjmx bash script which stats a java process.
 	// We want to make sure that if gojmx process dies, java process stops also.
 	// To reproduce this scenario, we run the current test twice:
@@ -683,7 +763,7 @@ func TestJavaProcessExits(t *testing.T) {
 		require.NoError(t, err)
 		defer container.Terminate(ctx)
 
-		jmxHost, jmxPort, err := testutils.GetContainerHostAndPort(ctx, container)
+		jmxHost, jmxPort, err := testutils.GetContainerMappedPort(ctx, container, testutils.TestServerJMXPort)
 		require.NoError(t, err)
 
 		// THEN JMX connection can be opened
@@ -757,4 +837,14 @@ func TestJavaProcessExits(t *testing.T) {
 		// assert is not running
 		return !up
 	}, 5*time.Second, 50*time.Millisecond)
+}
+
+func assertCloseClientNoError(t *testing.T, client *Client) {
+	assert.NotNil(t, client)
+	assert.NoError(t, client.Close())
+}
+
+func assertCloseClientError(t *testing.T, client *Client) {
+	assert.NotNil(t, client)
+	assert.Error(t, client.Close())
 }

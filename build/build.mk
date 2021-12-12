@@ -7,11 +7,14 @@ test:
 	@($(MAVEN_BIN) clean test -P test)
 
 CUR_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
-GOMODULE_DIR:=$(CUR_DIR)/gojmx/
+	GOMODULE_DIR:=$(CUR_DIR)/gojmx/
 
 go-test: godeps build
 	@echo $(GOMODULE_DIR)
-	@cd $(GOMODULE_DIR); go clean -testcache; go test -v -timeout 300s github.com/newrelic/nrjmx/gojmx
+	@cd $(GOMODULE_DIR); \
+	go vet .; \
+	go clean -testcache; \
+	go test -v -timeout 300s github.com/newrelic/nrjmx/gojmx
 
 DOCKER_THRIFT=$(DOCKER_BIN) run --rm -t \
 					--name "nrjmx-code-generator" \

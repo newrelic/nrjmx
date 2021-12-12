@@ -28,7 +28,6 @@ public class Cat implements CatMBean, MBeanRegistration {
         final Logger log = LoggerFactory.getLogger("org.newrelic");
 
         if (this.timeout == null) {
-            log.info("no delay");
             return;
         }
         try {
@@ -91,5 +90,4 @@ public class Cat implements CatMBean, MBeanRegistration {
     @Override
     public void postDeregister() {
     }
-
 }

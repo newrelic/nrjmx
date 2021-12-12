@@ -16,11 +16,6 @@ import org.newrelic.nrjmx.v2.StandardIOServer;
 import org.newrelic.nrjmx.v2.StandardIOTransportServer;
 import org.newrelic.nrjmx.v2.nrprotocol.JMXService;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;

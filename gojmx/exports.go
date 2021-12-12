@@ -3,6 +3,7 @@ package gojmx
 import (
 	"fmt"
 	"github.com/newrelic/nrjmx/gojmx/internal/nrprotocol"
+	"unsafe"
 )
 
 /*
@@ -16,29 +17,31 @@ type JMXConfig nrprotocol.JMXConfig
 // JMXAttribute exports internal nrprotocol.JMXAttribute.
 type JMXAttribute nrprotocol.JMXAttribute
 
+func (j *JMXAttribute) String() string {
+	if j == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("JMXAttribute(%+v)", *j)
+}
+
+func toJMXAttributeList(in []*nrprotocol.JMXAttribute) []*JMXAttribute {
+	return *(*[]*JMXAttribute)(unsafe.Pointer(&in))
+}
+
 // GetValue extracts the value from nrprotocol.JMXAttribute.
 func (j *JMXAttribute) GetValue() interface{} {
-	switch j.ValueType {
-	case nrprotocol.ValueType_BOOL:
+	switch (*j).ValueType {
+	case ValueTypeBool:
 		return j.BoolValue
-	case nrprotocol.ValueType_STRING:
+	case ValueTypeString:
 		return j.StringValue
-	case nrprotocol.ValueType_DOUBLE:
+	case ValueTypeDouble:
 		return j.DoubleValue
-	case nrprotocol.ValueType_INT:
+	case ValueTypeInt:
 		return j.IntValue
 	default:
 		panic(fmt.Sprintf("unkown value type: %v", j.ValueType))
 	}
-}
-
-// ConvertJMXAttributeArray converts a list of nrprotocol.JMXAttribute into a list of JMXAttribute.
-func ConvertJMXAttributeArray(attrs []*nrprotocol.JMXAttribute) (result []*JMXAttribute) {
-	result = make([]*JMXAttribute, len(attrs))
-	for i, attr := range attrs {
-		result[i] = (*JMXAttribute)(attr)
-	}
-	return
 }
 
 func (j *JMXConfig) toProtocol() *nrprotocol.JMXConfig {
@@ -62,3 +65,17 @@ func IsJMXConnectionError(err error) (JMXConnectionError, bool) {
 	e, ok := err.(*nrprotocol.JMXConnectionError)
 	return e, ok
 }
+
+// ValueType exports internal nrprotocol.ValueType.
+type ValueType nrprotocol.ValueType
+
+var (
+	// ValueTypeBool JMXAttribute of bool value
+	ValueTypeBool = nrprotocol.ValueType_BOOL
+	// ValueTypeString JMXAttribute of string value
+	ValueTypeString = nrprotocol.ValueType_STRING
+	// ValueTypeDouble JMXAttribute of double value
+	ValueTypeDouble = nrprotocol.ValueType_DOUBLE
+	// ValueTypeInt JMXAttribute of int value
+	ValueTypeInt = nrprotocol.ValueType_INT
+)

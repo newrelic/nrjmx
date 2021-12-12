@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/newrelic/nrjmx/gojmx"
 	"os"
@@ -26,10 +25,12 @@ func main() {
 		fmt.Println("here", jmxErr.Message)
 	}
 
+	err = client.Close()
 	fmt.Println(err)
 
 
-	result, err := client.GetMBeanAttrs("java.lang:type=Memory", "HeapMemoryUsage")
+	//result, err := client.GetMBeanAttrs("java.lang:type=Memory", "HeapMemoryUsage")
+
 
 	j2, ok := gojmx.IsJMXError(err)
 	if ok {
@@ -37,9 +38,9 @@ func main() {
 	} else {
 		//panic(err)
 	}
-	data := map[string]interface{} {"test": result[0].GetValue()}
-	b, _ := json.Marshal(data)
-	fmt.Println(string(b))
+	//data := map[string]interface{} {"test": result[0]}
+	//b, _ := json.Marshal(data)
+	//fmt.Println(string(b))
 	//time.Sleep(1*time.Hour)
 }
 

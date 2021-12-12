@@ -7,7 +7,6 @@ import (
 )
 
 func Test_JMXAttribute_GetValue(t *testing.T) {
-
 	testCases := []struct {
 		name     string
 		jmxAttr  *JMXAttribute

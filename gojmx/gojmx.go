@@ -2,7 +2,6 @@ package gojmx
 
 import (
 	"context"
-	"fmt"
 	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/newrelic/nrjmx/gojmx/internal/nrjmx"
 	"github.com/pkg/errors"
@@ -48,7 +47,6 @@ func (c *Client) Open(config *JMXConfig) (client *Client, err error) {
 
 	defer func() {
 		if err != nil {
-			// TODO: test this
 			_ = c.nrJMXProcess.Terminate()
 		}
 	}()
@@ -91,8 +89,9 @@ func (c *Client) GetMBeanAttrs(mBeanName, mBeanAttrName string) ([]*JMXAttribute
 	if err := c.nrJMXProcess.Error(); err != nil {
 		return nil, err
 	}
+
 	result, err := c.jmxService.GetMBeanAttrs(c.ctx, mBeanName, mBeanAttrName)
-	return ConvertJMXAttributeArray(result), c.handleTransportError(err)
+	return toJMXAttributeList(result), err
 }
 
 // Close will stop the connection with the JMX endpoint.
@@ -102,7 +101,7 @@ func (c *Client) Close() error {
 	}
 	err := c.jmxService.Disconnect(c.ctx)
 	if waitErr := c.nrJMXProcess.WaitExit(nrJMXExitTimeout); waitErr != nil {
-		err = errors.Wrap(err, waitErr.Error()) // TODO: test this
+		err = errors.Wrap(err, waitErr.Error())
 	}
 	return err
 }
@@ -115,10 +114,6 @@ func (c *Client) GetClientVersion() (version string, err error) {
 	version, err = c.jmxService.GetClientVersion(c.ctx)
 
 	return version, c.handleTransportError(err)
-}
-
-func (c *Client) WriteJunk() {
-	_, _ = fmt.Fprintf(c.nrJMXProcess.Stdin, "aa")
 }
 
 // connect will pass the JMXConfig to nrjmx subprocess and establish the

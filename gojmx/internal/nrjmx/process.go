@@ -13,6 +13,7 @@ import (
 
 const (
 	nrJMXEnvVar = "NR_JMX_TOOL"
+	nrJMXV2Flag = "-v2"
 )
 
 var (
@@ -47,7 +48,7 @@ func (n *Process) Start() (*Process, error) {
 		return n, ErrProcessAlreadyRunning
 	}
 
-	n.cmd = exec.CommandContext(n.ctx, filepath.Clean(getNRJMXExec()), "-v2")
+	n.cmd = exec.CommandContext(n.ctx, filepath.Clean(getNRJMXExec()), nrJMXV2Flag)
 
 	var err error
 
@@ -121,7 +122,7 @@ func (n *Process) WaitExit(timeout time.Duration) error {
 	case <-time.After(timeout):
 		err := n.Terminate()
 		return fmt.Errorf(
-			"timeout exceeded while waiting for nrjmx Process to exit gracefully, attempting to Stop the Process, status: %w",
+			"timeout exceeded while waiting for nrjmx Process to exit gracefully, attempting to Terminate the Process, error: %w",
 			err,
 		)
 	}

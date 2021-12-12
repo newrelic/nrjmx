@@ -20,19 +20,20 @@ import (
 )
 
 const (
-	TestServerPort                 = "4567"
-	TestServerJMXPort              = "7199"
-	JbossJMXPort                   = "9990"
-	JbossJMXUsername               = "admin1234"
-	JbossJMXPassword               = "Password1!"
-	TestServerAddDataEndpoint      = "/cat"
-	TestServerAddDataBatchEndpoint = "/cat_batch"
-	TestServerCleanDataEndpoint    = "/clear"
-	KeystorePassword               = "password"
-	TruststorePassword             = "password"
-	JmxUsername                    = "testuser"
-	JmxPassword                    = "testpassword"
-	DefaultTimeoutMs               = 5000
+	TestServerPort                     = "4567"
+	TestServerJMXPort                  = "7199"
+	JbossJMXPort                       = "9990"
+	JbossJMXUsername                   = "admin1234"
+	JbossJMXPassword                   = "Password1!"
+	TestServerAddDataEndpoint          = "/cat"
+	TestServerAddDataBatchEndpoint     = "/cat_batch"
+	TestServerAddCompositeDataEndpoint = "/composite_data_cat"
+	TestServerCleanDataEndpoint        = "/clear"
+	KeystorePassword                   = "password"
+	TruststorePassword                 = "password"
+	JmxUsername                        = "testuser"
+	JmxPassword                        = "testpassword"
+	DefaultTimeoutMs                   = 5000
 )
 
 var (
@@ -51,8 +52,6 @@ func init() {
 	PrjDir = filepath.Join(path, "..")
 	KeystorePath = filepath.Join(PrjDir, "test-server", "keystore")
 	TruststorePath = filepath.Join(PrjDir, "test-server", "truststore")
-
-	os.Setenv("NR_JMX_TOOL", filepath.Join(PrjDir, "bin", "nrjmx"))
 }
 
 // RunJMXServiceContainer will start a container running test-server with JMX.
@@ -154,20 +153,21 @@ func CleanMBeans(ctx context.Context, container testcontainers.Container) ([]byt
 
 // AddMBeansBatch will add new MBeans to the test-server.
 func AddMBeansBatch(ctx context.Context, container testcontainers.Container, body []map[string]interface{}) ([]byte, error) {
-	url, err := GetContainerServiceURL(ctx, container, TestServerPort, TestServerAddDataBatchEndpoint)
-	if err != nil {
-		return nil, err
-	}
-	json, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	return DoHttpRequest(http.MethodPost, url, json)
+	return addMBeans(ctx, container, body, TestServerAddDataBatchEndpoint)
+}
+// AddMBeans will add new MBeans to the test-server.
+func AddMBeans(ctx context.Context, container testcontainers.Container, body map[string]interface{}) ([]byte, error) {
+	return addMBeans(ctx, container, body, TestServerAddDataEndpoint)
 }
 
 // AddMBeans will add new MBeans to the test-server.
-func AddMBeans(ctx context.Context, container testcontainers.Container, body map[string]interface{}) ([]byte, error) {
-	url, err := GetContainerServiceURL(ctx, container, TestServerPort, TestServerAddDataEndpoint)
+func AddMCompositeDataBeans(ctx context.Context, container testcontainers.Container, body map[string]interface{}) ([]byte, error) {
+	return addMBeans(ctx, container, body, TestServerAddCompositeDataEndpoint)
+}
+
+// addMBeans will add new MBeans to the test-server.
+func addMBeans(ctx context.Context, container testcontainers.Container, body interface{}, endpointPath string) ([]byte, error) {
+	url, err := GetContainerServiceURL(ctx, container, TestServerPort, endpointPath)
 	if err != nil {
 		return nil, err
 	}
@@ -275,14 +275,14 @@ func ReadFirstLine(filename string) (string, error) {
 	return strings.TrimSpace(output), nil
 }
 
-// GetContainerHostAndPort returns the hostname and the port for a given container.
-func GetContainerHostAndPort(ctx context.Context, container testcontainers.Container) (host string, port nat.Port, err error) {
+// GetContainerMappedPort returns the hostname and the port for a given container.
+func GetContainerMappedPort(ctx context.Context, container testcontainers.Container, targetPort nat.Port) (host string, port nat.Port, err error) {
 	host, err = container.Host(ctx)
 	if err != nil {
 		return
 	}
 
-	port, err = container.MappedPort(ctx, TestServerJMXPort)
+	port, err = container.MappedPort(ctx, targetPort)
 	if err != nil {
 		return
 	}

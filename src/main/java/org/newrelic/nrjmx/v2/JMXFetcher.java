@@ -301,13 +301,21 @@ public class JMXFetcher {
             List<JMXAttribute> result = new ArrayList<>();
             CompositeData cdata = (CompositeData) value;
             Set<String> fieldKeys = cdata.getCompositeType().keySet();
+            JMXError jmxError = null;
 
             for (String field : fieldKeys) {
                 if (field.length() < 1)
                     continue;
 
                 String fieldKey = field.substring(0, 1).toUpperCase() + field.substring(1);
-                result.addAll(parseValue(String.format("%s.%s", mBeanAttributeName, fieldKey), cdata.get(field)));
+                try {
+                    result.addAll(parseValue(String.format("%s.%s", mBeanAttributeName, fieldKey), cdata.get(field)));
+                } catch (JMXError e) {
+                    jmxError = e;
+                }
+            }
+            if (result.size() == 0 && jmxError != null) {
+                throw jmxError;
             }
             return result;
         } else {
