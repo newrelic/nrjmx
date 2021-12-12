@@ -15,11 +15,6 @@ DOCKER_CMD 		?= $(DOCKER_BIN) run --rm -t \
 deps:
 	@($(DOCKER_BIN) build -t nrjmx_builder ./build/.)
 
-.PHONY : godeps
-godeps:
-	@($(DOCKER_BIN) build -t test-server $(CUR_DIR)/test-server/.)
-	@($(DOCKER_BIN) build -t test_jboss -f $(CUR_DIR)/jboss.dockerfile $(CUR_DIR))
-
 .PHONY : ci/build
 ci/build: deps
 	@($(DOCKER_CMD) make build)
@@ -35,3 +30,14 @@ ci/test: deps
 .PHONY : ci/release
 ci/release: deps
 	@($(DOCKER_CMD) make release)
+
+TRACKED_GEN_DIR=src/main/java/org/newrelic/nrjmx/v2/nrprotocol \
+				gojmx/internal/nrprotocol
+.PHONY : ci/check-gen-code
+ci/check-gen-code: code-gen
+	@echo "Checking the generated code..." ; \
+	if [ `git status --porcelain --untracked-files=no $(TRACKED_GEN_DIR) | wc -l` -gt 0 ]; then \
+		echo "Code generator produced different code, make sure you pushed the latest changes!"; \
+		exit 1;	\
+	fi ; \
+	echo "Success!"

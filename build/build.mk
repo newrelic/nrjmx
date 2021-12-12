@@ -7,9 +7,15 @@ test:
 	@($(MAVEN_BIN) clean test -P test)
 
 CUR_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
-	GOMODULE_DIR:=$(CUR_DIR)/gojmx/
+GOMODULE_DIR:=$(CUR_DIR)/gojmx/
 
-go-test: godeps build
+.PHONY : go-test-utils
+go-test-utils:
+	@($(DOCKER_BIN) build -t test-server $(CUR_DIR)/test-server/.)
+	@($(DOCKER_BIN) build -t test_jboss -f $(CUR_DIR)/jboss.dockerfile $(CUR_DIR))
+
+.PHONY : go-test
+go-test: go-test-utils build
 	@echo $(GOMODULE_DIR)
 	@cd $(GOMODULE_DIR); \
 	go vet .; \
@@ -22,22 +28,14 @@ DOCKER_THRIFT=$(DOCKER_BIN) run --rm -t \
 					-w /src/nrjmx \
 					nrjmx-code-generator
 
-.PHONY : code-gen-deps
-code-gen-deps:
+.PHONY : code-gen-utils
+code-gen-utils:
 		@($(DOCKER_BIN) build -t nrjmx-code-generator ./commons/.)
 
-.PHONY : code-gen-deps, code-gen
-code-gen: 
+.PHONY : code-gen
+code-gen: code-gen-utils
 	@($(DOCKER_THRIFT) thrift -r --out src/main/java/ --gen java ./commons/nrjmx.thrift)
 	@($(DOCKER_THRIFT) thrift -r --out gojmx/internal/ --gen go:package_prefix=github.com/newrelic/nrjmx/gojmx/internal/,package=nrprotocol ./commons/nrjmx.thrift)
 
-TRACKED_GEN_DIR=src/main/java/nrprotocol \
-				gojmx/nrprotocol
-.PHONY : check-gen-code
-check-gen-code: code-gen
-	@echo "Checking the generated code..." ; \
-	if [ `git status --porcelain --untracked-files=no $(TRACKED_GEN_DIR) | wc -l` -gt 0 ]; then \
-		echo "Code generator produced different code, make sure you pushed the latest changes!"; \
-		exit 1;	\
-	fi
+
 
