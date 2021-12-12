@@ -54,7 +54,8 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-      run: make ci/check-gen-code
+      - name: Checking generated code
+        run: make ci/check-gen-code
 
   test-build:
     name: Test jar compilation
