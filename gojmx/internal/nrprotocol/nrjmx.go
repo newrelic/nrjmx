@@ -1087,21 +1087,15 @@ func (p *JMXError) Error() string {
 }
 
 // Attributes:
-//  - Code
 //  - Message
 type JMXConnectionError struct {
-  Code int32 `thrift:"code,1" db:"code" json:"code"`
-  Message string `thrift:"message,2" db:"message" json:"message"`
+  Message string `thrift:"message,1" db:"message" json:"message"`
 }
 
 func NewJMXConnectionError() *JMXConnectionError {
   return &JMXConnectionError{}
 }
 
-
-func (p *JMXConnectionError) GetCode() int32 {
-  return p.Code
-}
 
 func (p *JMXConnectionError) GetMessage() string {
   return p.Message
@@ -1120,18 +1114,8 @@ func (p *JMXConnectionError) Read(iprot thrift.TProtocol) error {
     if fieldTypeId == thrift.STOP { break; }
     switch fieldId {
     case 1:
-      if fieldTypeId == thrift.I32 {
-        if err := p.ReadField1(iprot); err != nil {
-          return err
-        }
-      } else {
-        if err := iprot.Skip(fieldTypeId); err != nil {
-          return err
-        }
-      }
-    case 2:
       if fieldTypeId == thrift.STRING {
-        if err := p.ReadField2(iprot); err != nil {
+        if err := p.ReadField1(iprot); err != nil {
           return err
         }
       } else {
@@ -1155,17 +1139,8 @@ func (p *JMXConnectionError) Read(iprot thrift.TProtocol) error {
 }
 
 func (p *JMXConnectionError)  ReadField1(iprot thrift.TProtocol) error {
-  if v, err := iprot.ReadI32(); err != nil {
-  return thrift.PrependError("error reading field 1: ", err)
-} else {
-  p.Code = v
-}
-  return nil
-}
-
-func (p *JMXConnectionError)  ReadField2(iprot thrift.TProtocol) error {
   if v, err := iprot.ReadString(); err != nil {
-  return thrift.PrependError("error reading field 2: ", err)
+  return thrift.PrependError("error reading field 1: ", err)
 } else {
   p.Message = v
 }
@@ -1177,7 +1152,6 @@ func (p *JMXConnectionError) Write(oprot thrift.TProtocol) error {
     return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err) }
   if p != nil {
     if err := p.writeField1(oprot); err != nil { return err }
-    if err := p.writeField2(oprot); err != nil { return err }
   }
   if err := oprot.WriteFieldStop(); err != nil {
     return thrift.PrependError("write field stop error: ", err) }
@@ -1187,22 +1161,12 @@ func (p *JMXConnectionError) Write(oprot thrift.TProtocol) error {
 }
 
 func (p *JMXConnectionError) writeField1(oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin("code", thrift.I32, 1); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:code: ", p), err) }
-  if err := oprot.WriteI32(int32(p.Code)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.code (1) field write error: ", p), err) }
-  if err := oprot.WriteFieldEnd(); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 1:code: ", p), err) }
-  return err
-}
-
-func (p *JMXConnectionError) writeField2(oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin("message", thrift.STRING, 2); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 2:message: ", p), err) }
+  if err := oprot.WriteFieldBegin("message", thrift.STRING, 1); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:message: ", p), err) }
   if err := oprot.WriteString(string(p.Message)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.message (2) field write error: ", p), err) }
+  return thrift.PrependError(fmt.Sprintf("%T.message (1) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 2:message: ", p), err) }
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 1:message: ", p), err) }
   return err
 }
 

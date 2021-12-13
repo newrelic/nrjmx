@@ -6,7 +6,6 @@ package org.newrelic.nrjmx.v2;
  */
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.newrelic.nrjmx.Application;
 import org.newrelic.nrjmx.v2.nrprotocol.*;
 
 import javax.management.*;
@@ -74,7 +73,7 @@ public class JMXFetcher {
         } catch (Exception e) {
             String message = String.format("Can't connect to JMX server: '%s', error: '%s'", connectionString,
                     e.getMessage());
-            throw new JMXConnectionError(1, message);
+            throw new JMXConnectionError(message);
         }
     }
 
@@ -201,7 +200,7 @@ public class JMXFetcher {
         }
 
         String name = String.format("%s,attr=%s", mBeanName, attrName);
-        return parseValue(name, value);
+        return parseValue(name, value, null);
     }
 
     /**
@@ -270,7 +269,10 @@ public class JMXFetcher {
      * @return JMXAttribute containing the mBeanAttributeName and the converted value.
      * @throws JMXError JMX related Exception
      */
-    private List<JMXAttribute> parseValue(String mBeanAttributeName, Object value) throws JMXError {
+    private List<JMXAttribute> parseValue(String mBeanAttributeName, Object value, List<JMXAttribute> output) throws JMXError {
+        if (output == null) {
+            output = new ArrayList<>();
+        }
         JMXAttribute attr = new JMXAttribute();
         attr.attribute = mBeanAttributeName;
 
@@ -280,48 +282,48 @@ public class JMXFetcher {
         } else if (value instanceof java.lang.Double) {
             attr.doubleValue = parseDouble((Double) value);
             attr.valueType = ValueType.DOUBLE;
-            return Arrays.asList(attr);
+            output.add(attr);
         } else if (value instanceof java.lang.Float) {
             attr.doubleValue = parseFloatToDouble((Float) value);
             attr.valueType = ValueType.DOUBLE;
-            return Arrays.asList(attr);
+            output.add(attr);
         } else if (value instanceof Number) {
             attr.intValue = ((Number) value).longValue();
             attr.valueType = ValueType.INT;
-            return Arrays.asList(attr);
+            output.add(attr);
         } else if (value instanceof String) {
             attr.stringValue = (String) value;
             attr.valueType = ValueType.STRING;
-            return Arrays.asList(attr);
+            output.add(attr);
         } else if (value instanceof Boolean) {
             attr.boolValue = (Boolean) value;
             attr.valueType = ValueType.BOOL;
-            return Arrays.asList(attr);
+            output.add(attr);
         } else if (value instanceof CompositeData) {
-            List<JMXAttribute> result = new ArrayList<>();
             CompositeData cdata = (CompositeData) value;
             Set<String> fieldKeys = cdata.getCompositeType().keySet();
             JMXError jmxError = null;
 
             for (String field : fieldKeys) {
-                if (field.length() < 1)
+                if (field.length() < 1) {
                     continue;
+                }
 
                 String fieldKey = field.substring(0, 1).toUpperCase() + field.substring(1);
                 try {
-                    result.addAll(parseValue(String.format("%s.%s", mBeanAttributeName, fieldKey), cdata.get(field)));
+                    parseValue(String.format("%s.%s", mBeanAttributeName, fieldKey), cdata.get(field), output);
                 } catch (JMXError e) {
                     jmxError = e;
                 }
             }
-            if (result.size() == 0 && jmxError != null) {
+            if (output.size() == 0 && jmxError != null) {
                 throw jmxError;
             }
-            return result;
         } else {
             throw new JMXError()
                     .setMessage("unsuported data type (" + value.getClass() + ") for bean " + mBeanAttributeName);
         }
+        return output;
     }
 
     /**

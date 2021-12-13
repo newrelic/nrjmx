@@ -19,9 +19,7 @@ const (
 )
 
 // errPingTimeout returned if pingTimeout exceeded.
-var errPingTimeout = &nrprotocol.JMXError{
-	Message: "could not establish communication with nrjmx process: ping timeout",
-}
+var errPingTimeout = nrjmx.NewJMXConnectionError("could not establish communication with nrjmx process: ping timeout")
 
 // Client to connect with a JMX endpoint.
 type Client struct {
@@ -109,7 +107,7 @@ func (c *Client) Close() error {
 // GetClientVersion returns nrjmx version.
 func (c *Client) GetClientVersion() (version string, err error) {
 	if err = c.nrJMXProcess.Error(); err != nil {
-		return "", err
+		return "<nil>", err
 	}
 	version, err = c.jmxService.GetClientVersion(c.ctx)
 

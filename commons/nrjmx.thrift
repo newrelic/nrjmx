@@ -40,8 +40,7 @@ exception JMXError {
 }
 
 exception JMXConnectionError {
-  1: i32 code,
-  2: string message
+  1: string message
 }
 
 service JMXService {
