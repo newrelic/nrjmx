@@ -38,6 +38,7 @@ ci/check-gen-code: code-gen
 	@echo "Checking the generated code..." ; \
 	if [ `git status --porcelain --untracked-files=no $(TRACKED_GEN_DIR) | wc -l` -gt 0 ]; then \
 		echo "Code generator produced different code, make sure you pushed the latest changes!"; \
+		git --no-pager diff; \
 		exit 1;	\
 	fi ; \
 	echo "Success!"
