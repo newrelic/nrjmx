@@ -143,7 +143,10 @@ func (c *Client) ping(timeout time.Duration) error {
 	select {
 	case <-time.After(timeout):
 		return errPingTimeout
-	case err := <-c.nrJMXProcess.ErrorC():
+	case err, open := <-c.nrJMXProcess.ErrorC():
+		if err == nil && !open {
+			return nrjmx.ErrProcessNotRunning
+		}
 		return err
 	case <-done:
 		return nil
