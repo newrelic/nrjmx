@@ -1,9 +1,9 @@
-package org.newrelic.nrjmx.v2;
-
 /*
  * Copyright 2021 New Relic Corporation. All rights reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
+
+package org.newrelic.nrjmx.v2;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.newrelic.nrjmx.v2.nrprotocol.*;

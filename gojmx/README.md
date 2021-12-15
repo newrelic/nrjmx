@@ -30,33 +30,45 @@ docker run -d -p 7199:7199 nrjmx/test-server
 ```
 
 ```go
-func main() {
-	ctx := context.Background()
+// JMX Client configuration.
+config := &gojmx.JMXConfig{
+    Hostname:        "localhost",
+    Port:            7199,
+    RequestTimoutMs: 10000,
+}
 
-	// Start the nrjmx process
-	client, err := gojmx.NewJMXServiceClient(ctx)
-	if err != nil {
-		panic(err)
-	}
+// Connect to JMX endpoint.
+client, err := gojmx.NewClient(context.Background()).Open(config)
+handleError(err)
 
-	// Connect to the JMX endpoint
-	err = client.Connect(ctx, &nrprotocol.JMXConfig{
-		Hostname: "localhost",
-		Port:     7199,
-		UriPath:  "jmxrmi",
-	})
-	if err != nil {
-		panic(err)
-	}
-	defer client.Disconnect(ctx)
+// Query the mBean names.
+mBeanNames, err := client.GetMBeanNames("java.lang:type=*")
+handleError(err)
 
-	// Query for the mbeans. The library also supports
-	// using `*` as a wildcard
-	result, err := client.QueryMbean(ctx, "*:*")
-	if err != nil {
-		panic(err)
-	}
+// Query the Attribute names for each mBeanName.
+for _, mBeanName := range mBeanNames {
+    mBeanAttrNames, err := client.GetMBeanAttrNames(mBeanName)
+    handleError(err)
 
-	fmt.Println(result)
+    for _, mBeanAttrName := range mBeanAttrNames {
+        // Query the attribute value for each mBeanName and mBeanAttributeName.
+        jmxAttrs, err := client.GetMBeanAttrs(mBeanName, mBeanAttrName)
+        if err != nil {
+            fmt.Println(err)
+            continue
+        }
+        for _, jmxAttr := range jmxAttrs {
+            printAttr(jmxAttr)
+        }
+    }
 }
 ```
+
+You can find the full example in the examples directory.
+
+# Custom connectors
+JMX allows the use of custom connectors to communicate with the application. In order to use a custom connector, you have to include the custom connectors in the nrjmx classpath.
+
+By default, the sub-folder connectors is in the classpath. If this folder does not exist, create it under the folder where nrjmx is installed.
+
+For example, to add support for JBoss, create a folder named connectors under the default (Linux) library path /usr/lib/nrjmx/ (/usr/lib/nrjmx/connectors/) and copy the custom connector jar ($JBOSS_HOME/bin/client/jboss-cli-client.jar) into it. You can now execute JMX queries against JBoss.

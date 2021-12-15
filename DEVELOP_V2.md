@@ -78,8 +78,6 @@ Choose from your Java IDE `Remote JVM debug` and configure it to `Listen to a re
 
 ![](./docs/img/IDE_Java_Debug.png)
 
-Then from the Application.java function run Main in `debug` mode.
-
 Make sure you select the new remote configuration:
 ![](./docs/img/IDE_Java_Debug2.png)
 

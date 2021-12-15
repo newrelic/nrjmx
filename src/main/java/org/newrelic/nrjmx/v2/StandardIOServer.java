@@ -1,3 +1,8 @@
+/*
+ * Copyright 2021 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.newrelic.nrjmx.v2;
 
 import org.apache.thrift.TProcessor;
@@ -7,11 +12,6 @@ import org.apache.thrift.transport.TTransport;
 import org.apache.thrift.transport.TTransportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-/*
- * Copyright 2021 New Relic Corporation. All rights reserved.
- * SPDX-License-Identifier: Apache-2.0
- */
 
 /**
  * Simple single-threaded server standard io implementation.

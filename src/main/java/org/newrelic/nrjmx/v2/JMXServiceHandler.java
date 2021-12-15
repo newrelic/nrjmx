@@ -1,3 +1,8 @@
+/*
+ * Copyright 2021 New Relic Corporation. All rights reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.newrelic.nrjmx.v2;
 
 import java.util.List;
@@ -5,11 +10,6 @@ import java.util.List;
 import org.apache.thrift.TException;
 import org.apache.thrift.server.TServer;
 import org.newrelic.nrjmx.v2.nrprotocol.*;
-
-/*
- * Copyright 2021 New Relic Corporation. All rights reserved.
- * SPDX-License-Identifier: Apache-2.0
- */
 
 /**
  * JMXServiceHandler is the implementation for nrjmx thrift service.
