@@ -8,7 +8,7 @@ import (
 )
 
 var outputTpl = `
-{{ range $mBean, $attrs := . }}
+{{- range $mBean, $attrs := . }}
 -------------------------------------------------------
     MBean:
       Domain: {{ $mBean.Domain }}
