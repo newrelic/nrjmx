@@ -241,12 +241,12 @@ public class JMXFetcher {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new JMXError()
-                    .setMessage("operation was interrupted " + e.getMessage())
+                    .setMessage("request was interrupted " + e.getMessage())
                     .setCauseMessage(e.getMessage())
                     .setStacktrace(ExceptionUtils.getStackTrace(e));
         } catch (TimeoutException e) {
             throw new JMXError()
-                    .setMessage("operation timeout exceeded: " + timeoutMs + "ms")
+                    .setMessage("request timeout exceeded: " + timeoutMs + "ms")
                     .setCauseMessage(e.getMessage())
                     .setStacktrace(ExceptionUtils.getStackTrace(e));
         } catch (ExecutionException e) {
