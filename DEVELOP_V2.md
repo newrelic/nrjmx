@@ -153,7 +153,7 @@ For example, to add support for JBoss, create a folder named connectors under th
 
 For developing, if you use `NR_JMX_TOOL` variable, place the connectors directory inside ./bin
 
-You can finde some examples [here](https://github.com/newrelic/nri-jmx/tree/master/docs)
+You can find some examples [here](https://github.com/newrelic/nri-jmx/tree/master/docs)
 # Scripts
 You can use the following scripts to help with development:
 
