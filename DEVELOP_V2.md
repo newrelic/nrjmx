@@ -1,12 +1,18 @@
 # About `nrjmx`
 
-`nrjmx` is a Java tool that can be used to collect metrics from any application that exposes JMX endpoint. In `nrjmx v1`
+`nrjmx` is a Java tool that can be used to collect metrics from any application that has exposesd the JMX endpoint. In `nrjmx v1`
 , the tool will output to stdout all the collected metrics in JSON format.
 
 `nrjmx v2` implements a new communication protocol to ease data transfer to another language. Currently, `nrjmx v2`
 provides support for Go using `gojmx` module from this repo.
 
 To switch from `v1` to `v2` just pass `-v2` flag when running `nrjmx` command. Communication is handled by thrift.
+For testing you can configure the `gojmx` module to point to this repository bin directory and use nrjmx.jar from there:
+```go 
+func init() {
+	_ = os.Setenv("NR_JMX_TOOL", filepath.Join(testutils.PrjDir, "bin", "nrjmx"))
+}
+```
 
 When calling `gojmx` module from a golang application, `nrjmx` library should be installed on the system.
 
