@@ -1,4 +1,4 @@
-# About
+# About `nrjmx`
 
 `nrjmx` is a Java tool that can be used to collect metrics from any application that exposes JMX endpoint. In `nrjmx v1`
 , the tool will output to stdout all the collected metrics in JSON format.
