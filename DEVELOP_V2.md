@@ -143,3 +143,41 @@ In order to update the thrift version, you need to change the version in the fol
 1. ./commons/Dockerfile
 2. pom.xml
 3. go.mod using `go get` command
+
+# Custom connectors
+JMX allows the use of custom connectors to communicate with the application. In order to use a custom connector, you have to include the custom connectors in the nrjmx classpath.
+
+By default, the sub-folder connectors is in the classpath. If this folder does not exist, create it under the folder where nrjmx is installed.
+
+For example, to add support for JBoss, create a folder named connectors under the default (Linux) library path /usr/lib/nrjmx/ (/usr/lib/nrjmx/connectors/) and copy the custom connector jar ($JBOSS_HOME/bin/client/jboss-cli-client.jar) into it. You can now execute JMX queries against JBoss.
+
+For developing, if you use `NR_JMX_TOOL` variable, place the connectors directory inside ./bin
+
+You can finde some examples [here](https://github.com/newrelic/nri-jmx/tree/master/docs)
+# Scripts
+You can use the following scripts to help with development:
+
+```bash
+# build the nrjmx Java tool.
+make build
+```
+```bash
+# build docker images for gojmx.
+make go-test-utils
+```
+
+```bash
+# run gojmx unit tests.
+make go-test
+```
+
+```bash
+# generate inside the container the thrift code.
+# (Will build also the docker image)
+make code-gen
+```
+
+```bash
+# build rpm, deb, msi and tarball packages.
+make release/package
+```
