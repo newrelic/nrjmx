@@ -7,14 +7,15 @@
 provides support for Go using `gojmx` module from this repo.
 
 To switch from `v1` to `v2` just pass `-v2` flag when running `nrjmx` command. Communication is handled by thrift.
+
+When calling `gojmx` module from a golang application, `nrjmx` library should be installed on the system.
+
 For testing you can configure the `gojmx` module to point to this repository bin directory and use nrjmx.jar from there:
 ```go 
 func init() {
 	_ = os.Setenv("NR_JMX_TOOL", filepath.Join(testutils.PrjDir, "bin", "nrjmx"))
 }
 ```
-
-When calling `gojmx` module from a golang application, `nrjmx` library should be installed on the system.
 
 To install `nrjmx` library on your system, packages are available on this repository in the release assets or on our
 package manager repositories stored [here](https://download.newrelic.com/infrastructure_agent/). You can follow
@@ -48,7 +49,7 @@ Requirements:
 - Maven (If running the Java project from IDE is required)
 - Docker (for tests and build)
 
-If you want to contribute to `nrjmx v2` you can follow the following steps to configure you're environment.
+If you want to contribute to `nrjmx v2` you can follow those steps to configure you're environment.
 
 1. For Go module, import the path .nrjmx/gojmx into your IDE.
 2. For the Java project, open an existing project and choose this repository root path where the pom.xml file is

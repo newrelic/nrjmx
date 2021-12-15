@@ -20,6 +20,7 @@ import (
 
 func init() {
 	_ = os.Setenv("NR_JMX_TOOL", filepath.Join(testutils.PrjDir, "bin", "nrjmx"))
+	//_ = os.Setenv("NRIA_NRJMX_DEBUG", "true")
 }
 
 func Test_Query_Success_LargeAmountOfData(t *testing.T) {
