@@ -78,7 +78,7 @@ Choose from your Java IDE `Remote JVM debug` and configure it to `Listen to a re
 
 ![](./docs/img/IDE_Java_Debug.png)
 
-Make sure you select the new remote configuration:
+Make sure you build the code with `make build` and select the new remote configuration:
 ![](./docs/img/IDE_Java_Debug2.png)
 
 From the Go IDE, choose a test from gojmx_test.go to run, make sure you uncomment the following line from the init
