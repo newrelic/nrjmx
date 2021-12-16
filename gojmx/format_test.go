@@ -88,7 +88,8 @@ func Test_FormatJMXAttributes(t *testing.T) {
 	// Nil attributes
 	assert.Equal(t, "", FormatJMXAttributes(nil))
 
-	expected := `=======================================================
+	expected := `
+=======================================================
   - domain: abc
     beans:
 -------------------------------------------------------

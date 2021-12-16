@@ -12,7 +12,8 @@ import (
 	"text/template"
 )
 
-var outputTpl = `{{- range $domain, $queryFormat := . -}}
+var outputTpl = `
+{{- range $domain, $queryFormat := . }}
 =======================================================
   - domain: {{ $domain }}
     beans:
