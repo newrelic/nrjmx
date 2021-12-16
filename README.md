@@ -49,6 +49,11 @@ $ echo | set /p="org.apache.cassandra.metrics:type=Table,keyspace=*,scope=*,name
 
 Additional options are listed below.
 
+## Golang library
+
+Starting from `v2` you can call nrjmx from Go applications by using our [gojmx](https://github.com/newrelic/nrjmx/tree/master/gojmx) module.
+If you want to read more about or to contribute you can check our develop [docs](https://github.com/newrelic/nrjmx/blob/jmx_improvements/DEVELOP_V2.md).
+
 ## Custom protocols
 
 JMX allows use of custom protocols to communicate with the application. To use a custom protocol you have to include the custom connectors in the `nrjmx` classpath.
@@ -93,7 +98,7 @@ $ ./bin/nrjmx -hostname localhost -port 1689 -uriPath "org.opends.server.protoco
 
 ### Troubleshooting
 
-If you are having difficulties with `nrjmx` to get data out of your JMX service, we provide a CLI tool (`jmxterm`) to help you [troubleshoot](./TROUBLESHOOT.md).
+If you are having difficulties with `nrjmx` to get data out of your JMX service, You can check our [troubleshoot](./TROUBLESHOOT.md) guide.
 
 
 ## Building

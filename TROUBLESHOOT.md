@@ -5,9 +5,7 @@ If you are having difficulties with `nrjmx` to get data out of your JMX service,
 
 ## Install
 
-Since `nrjmx` version 1.5.0 `jmxterm` comes bundled within the `nrjmx` package installer.
-
-For previous versions you can easily get it from https://docs.cyclopsgroup.org/jmxterm
+You can get it from https://docs.cyclopsgroup.org/jmxterm
 
 Or via your usual package manager. Ie, for Mac:
 ```
