@@ -49,8 +49,39 @@ func Test_FormatConfig(t *testing.T) {
 	actual = FormatConfig(config, hideSecrets)
 	assert.Equal(t, expected, actual)
 
+	config.UriPath = nil
+	expected = "Hostname: 'test_hostname', Port: '123', IsJBossStandaloneMode: 'true', IsRemote: 'true', UseSSL: 'true', Username: '<EMPTY>', Password: '<EMPTY>', Truststore: 'test_truststore', TruststorePassword: '<EMPTY>', Keystore: 'test_keystore', KeystorePassword: '<EMPTY>', RequestTimeoutMs: '4567'"
+	actual = FormatConfig(config, hideSecrets)
+	assert.Equal(t, expected, actual)
+
 	// Nil Config.
-	assert.Equal(t, "", FormatConfig(nil, false))
+	assert.Equal(t, "", FormatConfig(nil, hideSecrets))
+}
+
+func Test_FormatConfig_ConnectionURL(t *testing.T) {
+	testURIPath := "test_URI_PATH"
+
+	config := &JMXConfig{
+		ConnectionURL:         "service:jmx:rmi:///jndi/rmi://localhost:123/jmxrmi",
+		Hostname:              "test_hostname",
+		Port:                  int32(123),
+		UriPath:               &testURIPath,
+		Username:              "test_username",
+		Password:              "test_password",
+		KeyStore:              "test_keystore",
+		KeyStorePassword:      "test_keystore_password",
+		TrustStore:            "test_truststore",
+		TrustStorePassword:    "test_truststore_password",
+		IsRemote:              true,
+		IsJBossStandaloneMode: true,
+		UseSSL:                true,
+		RequestTimoutMs:       4567,
+	}
+
+	hideSecrets := true
+	expected := "ConnectionURL: 'service:jmx:rmi:///jndi/rmi://localhost:123/jmxrmi', Username: '<HIDDEN>', Password: '<HIDDEN>', Truststore: 'test_truststore', TruststorePassword: '<HIDDEN>', Keystore: 'test_keystore', KeystorePassword: '<HIDDEN>', RequestTimeoutMs: '4567', URIPath: 'test_URI_PATH'"
+	actual := FormatConfig(config, hideSecrets)
+	assert.Equal(t, expected, actual)
 }
 
 func Test_FormatJMXAttributes(t *testing.T) {

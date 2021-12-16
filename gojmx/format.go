@@ -117,7 +117,10 @@ func FormatConfig(config *JMXConfig, hideSecrets bool) string {
 		obfuscate(config.KeyStorePassword),
 	))
 
-	sb.WriteString(fmt.Sprintf(", RequestTimeoutMs: '%d', URIPath: '%v'", config.RequestTimoutMs, *config.UriPath))
+	sb.WriteString(fmt.Sprintf(", RequestTimeoutMs: '%d'", config.RequestTimoutMs))
+	if config.UriPath != nil {
+		sb.WriteString(fmt.Sprintf(", URIPath: '%v'", *config.UriPath))
+	}
 
 	return sb.String()
 }
