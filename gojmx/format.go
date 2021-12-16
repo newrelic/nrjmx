@@ -12,19 +12,22 @@ import (
 	"text/template"
 )
 
-var outputTpl = `
-{{- range $domain, $queryFormat := . }}
--------------------------------------------------------
+var outputTpl = `{{- range $domain, $queryFormat := . -}}
+=======================================================
   - domain: {{ $domain }}
     beans:
+-------------------------------------------------------
       {{- range $query, $attrs := $queryFormat }}
       - query: {{ $query }}
         attributes:
 	    {{- range $attr := $attrs }}
-          - {{ $attr.Attribute }} # Value[{{ $attr.ValueType }}]: {{ $attr.Value }}
+          # Value[{{ $attr.ValueType }}]: {{ $attr.Value }}
+          - {{ $attr.Attribute }}
         {{- end }}
+-------------------------------------------------------
       {{- end }}
-{{- end }}`
+=======================================================
+{{ end -}}`
 
 type queryFormat map[string][]attributeFormat
 

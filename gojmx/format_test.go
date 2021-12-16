@@ -88,23 +88,35 @@ func Test_FormatJMXAttributes(t *testing.T) {
 	// Nil attributes
 	assert.Equal(t, "", FormatJMXAttributes(nil))
 
-	expected := `
--------------------------------------------------------
+	expected := `=======================================================
   - domain: abc
     beans:
+-------------------------------------------------------
       - query: def
         attributes:
-          - xyz # Value[INT]: 3
-          - xyz # Value[DOUBLE]: 3.2
+          # Value[INT]: 3
+          - xyz
+          # Value[DOUBLE]: 3.2
+          - xyz
+-------------------------------------------------------
       - query: ghi
         attributes:
-          - xyz # Value[DOUBLE]: 3.2
+          # Value[DOUBLE]: 3.2
+          - xyz
 -------------------------------------------------------
+=======================================================
+
+=======================================================
   - domain: jlk
     beans:
+-------------------------------------------------------
       - query: mno
         attributes:
-          - xyz # Value[BOOL]: true`
+          # Value[BOOL]: true
+          - xyz
+-------------------------------------------------------
+=======================================================
+`
 
 	wrongAttributeFormat := []*JMXAttribute{
 		{
