@@ -13,22 +13,20 @@ import (
 )
 
 var outputTpl = `
-{{- range $mBean, $attrs := . }}
+{{- range $domain, $queryFormat := . }}
 -------------------------------------------------------
-    MBean:
-      Domain: {{ $mBean.Domain }}
-      Query: {{ $mBean.Query }}
-	Attributes:
-	{{- range $i, $attr := $attrs }}
-        {{ $i }}: {{ $attr.Attribute }}
-           Value [{{ $attr.ValueType }}]: {{ $attr.Value }}
-    {{- end }}
+  - domain: {{ $domain }}
+    beans:
+      {{- range $query, $attrs := $queryFormat }}
+      - query: {{ $query }}
+        attributes:
+	    {{- range $attr := $attrs }}
+          - {{ $attr.Attribute }} # Value[{{ $attr.ValueType }}]: {{ $attr.Value }}
+        {{- end }}
+      {{- end }}
 {{- end }}`
 
-type mBeanFormat struct {
-	Domain string
-	Query  string
-}
+type queryFormat map[string][]attributeFormat
 
 type attributeFormat struct {
 	Attribute string
@@ -38,8 +36,7 @@ type attributeFormat struct {
 
 // FormatJMXAttributes will prettify JMXAttributes.
 func FormatJMXAttributes(attrs []*JMXAttribute) string {
-	result := map[mBeanFormat][]attributeFormat{}
-
+	result := map[string]queryFormat{}
 	separator := ",attr="
 
 	for _, attr := range attrs {
@@ -48,17 +45,18 @@ func FormatJMXAttributes(attrs []*JMXAttribute) string {
 			continue
 		}
 
-		split := strings.SplitAfterN(attr.Attribute[:i], ":", 2)
+		split := strings.SplitN(attr.Attribute[:i], ":", 2)
 		if len(split) != 2 {
 			continue
 		}
 
-		key := mBeanFormat{
-			Domain: split[0],
-			Query:  split[1],
+		domain, query := split[0], split[1]
+
+		if _, exists := result[domain]; !exists {
+			result[domain] = queryFormat{}
 		}
 
-		result[key] = append(result[key], attributeFormat{
+		result[domain][query] = append(result[domain][query], attributeFormat{
 			Attribute: attr.Attribute[i+len(separator):],
 			Value:     attr.GetValue(),
 			ValueType: fmt.Sprintf("%v", attr.ValueType),
@@ -119,7 +117,7 @@ func FormatConfig(config *JMXConfig, hideSecrets bool) string {
 		obfuscate(config.KeyStorePassword),
 	))
 
-	sb.WriteString(fmt.Sprintf(", RequestTimeoutMs: '%d', URIPath: '%v'", config.RequestTimoutMs, config.UriPath))
+	sb.WriteString(fmt.Sprintf(", RequestTimeoutMs: '%d', URIPath: '%v'", config.RequestTimoutMs, *config.UriPath))
 
 	return sb.String()
 }
