@@ -24,20 +24,58 @@ env:
   AWS_REGION: "us-east-1"
 
 jobs:
-  test:
-    name: Test
+  unit-test-linux:
+    name: Linux unit tests
     runs-on: ubuntu-20.04
 
     steps:
       - uses: actions/checkout@v2
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ env.DOCKER_HUB_ID }}
+          password: ${{ env.DOCKER_HUB_PASSWORD }}
 
       - name: Running unit tests
         run: make ci/test
 
+  test-go-linux:
+    name: Linux unit tests for Go
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{env.GO_VERSION}}
+      - uses: actions/checkout@v2
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ env.DOCKER_HUB_ID }}
+          password: ${{ env.DOCKER_HUB_PASSWORD }}
+
+      - name: Running unit tests
+        run: make go-test
+
+  check-gen-code:
+    name: Checking generated code
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ env.DOCKER_HUB_ID }}
+          password: ${{ env.DOCKER_HUB_PASSWORD }}
+      - name: Checking generated code
+        run: make ci/check-gen-code
+
   packaging:
     name: Build and upload artifacts into GH Release assets
     runs-on: ubuntu-20.04
-    needs: [test]
+    needs: [unit-test-linux, test-go-linux, check-gen-code]
 
     steps:
       - uses: actions/checkout@v2

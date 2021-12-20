@@ -16,8 +16,15 @@ fi ;
 
 if [ -f /usr/lib/nrjmx/nrjmx.jar ]; then
     CLASSPATH=/usr/lib/nrjmx/*:/usr/lib/nrjmx/connectors/*
+elif [ -f /usr/local/lib/nrjmx/nrjmx.jar ]; then
+    CLASSPATH=/usr/local/lib/nrjmx/connectors/*:/usr/local/lib/nrjmx/*
 else
     CLASSPATH=${path}/*:./connectors/*
 fi
 
-${java_tool} -cp ${CLASSPATH} org.newrelic.nrjmx.Application $@
+if [ ! -z "${NRIA_NRJMX_DEBUG}" ]; then
+  JAVA_OPTS="-agentlib:jdwp=transport=dt_socket,server=n,address=localhost:5005,suspend=y"
+fi
+
+${java_tool} ${JAVA_OPTS} -cp ${CLASSPATH} org.newrelic.nrjmx.Application $@
+
