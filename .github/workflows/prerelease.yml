@@ -22,6 +22,7 @@ env:
   AWS_S3_BUCKET_NAME: "nr-downloads-ohai-staging"
   AWS_S3_LOCK_BUCKET_NAME: "onhost-ci-lock-staging"
   AWS_REGION: "us-east-1"
+  GO_VERSION: '1.16.10'
 
 jobs:
   unit-test-linux:
