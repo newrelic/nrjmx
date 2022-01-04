@@ -107,7 +107,7 @@ func (p *Process) Error() error {
 	select {
 	case err, open := <-p.ErrorC():
 		if err == nil && !open {
-			// When the process exited with success but we call this function we report an error
+			// When the process exited with success, but we call this function we report an error
 			// to signal that a new query cannot be performed.
 			return ErrProcessNotRunning
 		}
