@@ -33,6 +33,10 @@ jobs:
         with:
           username: ${{ env.DOCKER_HUB_ID }}
           password: ${{ env.DOCKER_HUB_PASSWORD }}
+      # This is required to fix connection reset issues.
+      - name: iptables
+        run: sudo iptables -A INPUT -i eth0 -m state --state INVALID -j DROP
+        
       - name: Publish all to S3 action
         uses: newrelic/infrastructure-publish-action@v1
         env:
