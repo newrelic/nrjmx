@@ -7,6 +7,7 @@ package gojmx
 
 import (
 	"context"
+	"fmt"
 	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/newrelic/nrjmx/gojmx/internal/nrjmx"
 	"github.com/pkg/errors"
@@ -87,7 +88,7 @@ func (c *Client) GetMBeanAttrNames(mBeanName string) ([]string, error) {
 	return result, c.handleTransportError(err)
 }
 
-// GetMBeanAttrs returns the JMX attribute value.
+// GetMBeanAttrs returns the JMX attribute values.
 func (c *Client) GetMBeanAttrs(mBeanName, mBeanAttrName string) ([]*JMXAttribute, error) {
 	if err := c.nrJMXProcess.Error(); err != nil {
 		return nil, err
@@ -117,6 +118,99 @@ func (c *Client) GetClientVersion() (version string, err error) {
 	version, err = c.jmxService.GetClientVersion(c.ctx)
 
 	return version, c.handleTransportError(err)
+}
+
+// ResponseStatus for QueryResponse
+type ResponseStatus int
+
+const (
+	// QueryResponseStatusSuccess is returned when JMXAttribute was successfully retrieved.
+	QueryResponseStatusSuccess ResponseStatus = iota
+	// QueryResponseStatusError is returned when gojmx fails to retrieve the JMXAttribute.
+	QueryResponseStatusError
+)
+
+// QueryAttrResponse wraps the JMXAttribute with the status and status message for the request.
+type QueryAttrResponse struct {
+	Attribute *JMXAttribute
+	Status    ResponseStatus
+	StatusMsg string
+}
+
+type QueryResponse []*QueryAttrResponse
+
+// GetValidAttributes returns all the valid JMXAttribute from the QueryResponse by checking the query status.
+func (qr *QueryResponse) GetValidAttributes() (result []*JMXAttribute) {
+	if qr == nil {
+		return
+	}
+	for _, attr := range *qr {
+		if attr.Status != QueryResponseStatusSuccess {
+			continue
+		}
+		result = append(result, attr.Attribute)
+	}
+	return
+}
+
+// QueryMBean performs all calls necessary for retrieving all MBeanAttrs values for the mBeanNamePattern:
+// 1. GetMBeanNames
+// 2. GetMBeanAttrNames
+// 3. GetMBeanAttrs
+// If an error occur it checks if it's a collection error (it can recover) or a connection error (that blocks all the collection).
+func (c *Client) QueryMBean(mBeanNamePattern string) (QueryResponse, error) {
+	var result QueryResponse
+
+	mBeanNames, err := c.GetMBeanNames(mBeanNamePattern)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, mBeanName := range mBeanNames {
+		mBeanAttrNames, err := c.GetMBeanAttrNames(mBeanName)
+		if jmxErr, isJMXErr := IsJMXError(err); isJMXErr {
+			result = append(result, &QueryAttrResponse{
+				Status: QueryResponseStatusError,
+				StatusMsg: fmt.Sprintf("error while querying mBean name: '%s', error message: %s, error cause: %s, stacktrace: %q",
+					mBeanName,
+					jmxErr.Message,
+					jmxErr.CauseMessage,
+					jmxErr.Stacktrace,
+				),
+			})
+			continue
+		} else if err != nil {
+			return nil, err
+		}
+
+		for _, mBeanAttrName := range mBeanAttrNames {
+			jmxAttributes, err := c.GetMBeanAttrs(mBeanName, mBeanAttrName)
+			if jmxErr, isJMXErr := IsJMXError(err); isJMXErr {
+				result = append(result, &QueryAttrResponse{
+					Status: QueryResponseStatusError,
+					StatusMsg: fmt.Sprintf("error while querying mBean '%s', attribute: '%s', error message: %s, error cause: %s, stacktrace: %q",
+						mBeanName,
+						mBeanAttrName,
+						jmxErr.Message,
+						jmxErr.CauseMessage,
+						jmxErr.Stacktrace,
+					),
+				})
+				continue
+			} else if err != nil {
+				return nil, err
+			}
+
+			for _, attr := range jmxAttributes {
+				result = append(result, &QueryAttrResponse{
+					Attribute: attr,
+					Status:    QueryResponseStatusSuccess,
+					StatusMsg: "success",
+				})
+			}
+		}
+	}
+	return result, nil
 }
 
 // connect will pass the JMXConfig to nrjmx subprocess and establish the

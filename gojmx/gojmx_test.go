@@ -183,6 +183,101 @@ func Test_Query_Success(t *testing.T) {
 	assert.ElementsMatch(t, expected, actual)
 }
 
+func Test_QueryMBean_Success(t *testing.T) {
+	ctx := context.Background()
+
+	// GIVEN a JMX Server running inside a container
+	container, err := testutils.RunJMXServiceContainer(ctx)
+	require.NoError(t, err)
+	defer container.Terminate(ctx)
+
+	// Populate the JMX Server with mbeans
+	resp, err := testutils.AddMBeans(ctx, container, map[string]interface{}{
+		"name":        "tomas",
+		"doubleValue": 1.2,
+		"floatValue":  2.2222222,
+		"numberValue": 3,
+		"boolValue":   true,
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, "ok!\n", string(resp))
+
+	defer testutils.CleanMBeans(ctx, container)
+
+	jmxHost, jmxPort, err := testutils.GetContainerMappedPort(ctx, container, testutils.TestServerJMXPort)
+	require.NoError(t, err)
+
+	// THEN JMX connection can be oppened
+	config := &JMXConfig{
+		Hostname:        jmxHost,
+		Port:            int32(jmxPort.Int()),
+		RequestTimoutMs: testutils.DefaultTimeoutMs,
+	}
+
+	client, err := NewClient(ctx).Open(config)
+	assert.NoError(t, err)
+	defer assertCloseClientNoError(t, client)
+
+	// AND Query returns expected data
+	actualResponse, err := client.QueryMBean("test:type=Cat,name=tomas")
+	require.NoError(t, err)
+
+	expectedResponse := QueryResponse{
+		{
+			Attribute: &JMXAttribute{
+				Attribute: "test:type=Cat,name=tomas,attr=FloatValue",
+
+				ValueType:   ValueTypeDouble,
+				DoubleValue: 2.222222,
+			},
+			Status:    QueryResponseStatusSuccess,
+			StatusMsg: "success",
+		},
+		{
+			Attribute: &JMXAttribute{
+				Attribute: "test:type=Cat,name=tomas,attr=NumberValue",
+
+				ValueType: ValueTypeInt,
+				IntValue:  3,
+			},
+			Status:    QueryResponseStatusSuccess,
+			StatusMsg: "success",
+		},
+		{
+			Attribute: &JMXAttribute{
+				Attribute: "test:type=Cat,name=tomas,attr=BoolValue",
+
+				ValueType: ValueTypeBool,
+				BoolValue: true,
+			},
+			Status:    QueryResponseStatusSuccess,
+			StatusMsg: "success",
+		},
+		{
+			Attribute: &JMXAttribute{
+				Attribute: "test:type=Cat,name=tomas,attr=DoubleValue",
+
+				ValueType:   ValueTypeDouble,
+				DoubleValue: 1.2,
+			},
+			Status:    QueryResponseStatusSuccess,
+			StatusMsg: "success",
+		},
+		{
+			Attribute: &JMXAttribute{
+				Attribute: "test:type=Cat,name=tomas,attr=Name",
+
+				ValueType:   ValueTypeString,
+				StringValue: "tomas",
+			},
+			Status:    QueryResponseStatusSuccess,
+			StatusMsg: "success",
+		},
+	}
+
+	assert.ElementsMatch(t, expectedResponse, actualResponse)
+}
+
 func Test_Query_CompositeData(t *testing.T) {
 	ctx := context.Background()
 
