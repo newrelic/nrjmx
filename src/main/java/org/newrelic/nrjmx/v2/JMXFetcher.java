@@ -280,11 +280,11 @@ public class JMXFetcher {
             throw new JMXError()
                     .setMessage("found a null value for bean: " + mBeanAttributeName);
         } else if (value instanceof java.lang.Double) {
-            attr.doubleValue = parseDouble((Double) value);
+            attr.doubleValue = (Double) value;
             attr.valueType = ValueType.DOUBLE;
             output.add(attr);
         } else if (value instanceof java.lang.Float) {
-            attr.doubleValue = parseFloatToDouble((Float) value);
+            attr.doubleValue = new BigDecimal(value.toString()).doubleValue();
             attr.valueType = ValueType.DOUBLE;
             output.add(attr);
         } else if (value instanceof Number) {
@@ -338,46 +338,6 @@ public class JMXFetcher {
                     .setMessage("connection to JMX endpoint is not established");
         }
         return this.connection;
-    }
-
-    /**
-     * parseDouble ensures the value has the expected format.
-     * We do not support NaN, Infinity, or -Infinity as they come back from
-     * JMX. So we parse them out to 0, Max Double, and Min Double respectively.
-     *
-     * @param value to be parsed
-     * @return Double parsed value.
-     */
-    private Double parseDouble(Double value) {
-        if (value.isNaN()) {
-            return 0.0;
-        } else if (value == Double.NEGATIVE_INFINITY) {
-            return Double.MIN_VALUE;
-        } else if (value == Double.POSITIVE_INFINITY) {
-            return Double.MAX_VALUE;
-        }
-
-        return value;
-    }
-
-    /**
-     * parseFloatToDouble ensures the value has the expected format.
-     * We do not support NaN, Infinity, or -Infinity as they come back from
-     * JMX. So we parse them out to 0, Max Double, and Min Double respectively.
-     *
-     * @param value to be parsed
-     * @return Double parsed value.
-     */
-    private Double parseFloatToDouble(Float value) {
-        if (value.isNaN()) {
-            return 0.0d;
-        } else if (value == Double.NEGATIVE_INFINITY) {
-            return Double.MIN_VALUE;
-        } else if (value == Double.POSITIVE_INFINITY) {
-            return Double.MAX_VALUE;
-        }
-
-        return new BigDecimal(value.toString()).doubleValue();
     }
 
     /**
