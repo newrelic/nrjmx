@@ -19,7 +19,7 @@ if [ -f /usr/lib/nrjmx/nrjmx.jar ]; then
 elif [ -f /usr/local/lib/nrjmx/nrjmx.jar ]; then
     CLASSPATH=/usr/local/lib/nrjmx/connectors/*:/usr/local/lib/nrjmx/*
 else
-    CLASSPATH=${path}/*:./connectors/*
+    CLASSPATH=${path}/*:${path}/connectors/*
 fi
 
 if [ ! -z "${NRIA_NRJMX_DEBUG}" ]; then

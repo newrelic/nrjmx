@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
+import java.text.DateFormat;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
@@ -34,6 +35,8 @@ public class JMXFetcher {
 
     /* MBeanServerConnection is the connection to JMX endpoint. */
     private MBeanServerConnection connection;
+
+    private DateFormat dateFormat = DateFormat.getDateTimeInstance(2, 2, Locale.US);
 
     public JMXFetcher(ExecutorService executor) {
         this.executor = executor;
@@ -298,6 +301,10 @@ public class JMXFetcher {
         } else if (value instanceof Boolean) {
             attr.boolValue = (Boolean) value;
             attr.valueType = ValueType.BOOL;
+            output.add(attr);
+        } else if (value instanceof java.util.Date) {
+            attr.stringValue = dateFormat.format(value);
+            attr.valueType = ValueType.STRING;
             output.add(attr);
         } else if (value instanceof CompositeData) {
             CompositeData cdata = (CompositeData) value;
