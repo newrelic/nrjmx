@@ -111,10 +111,6 @@ jobs:
         shell: pwsh
         run: build\windows\package_msi.ps1 -arch amd64 -tag ${{env.TAG}}
 
-      # This is required to fix connection reset issues.
-      - name: iptables
-        run: sudo iptables -A INPUT -i eth0 -m state --state INVALID -j DROP
-
       - name: Upload MSI to GH
         shell: bash
         run: build/upload_artifacts_gh.sh
@@ -131,12 +127,8 @@ jobs:
           username: ${{ env.DOCKER_HUB_ID }}
           password: ${{ env.DOCKER_HUB_PASSWORD }}
 
-      # This is required to fix connection reset issues.
-      - name: iptables
-        run: sudo iptables -A INPUT -i eth0 -m state --state INVALID -j DROP
-
       - name: Publish all to S3 action
-        uses: newrelic/infrastructure-publish-action@v1
+        uses: newrelic/infrastructure-publish-action@v1.1.0
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.OHAI_AWS_ACCESS_KEY_ID_STAGING }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.OHAI_AWS_SECRET_ACCESS_KEY_STAGING }}
