@@ -13,21 +13,25 @@ import (
 )
 
 var outputTpl = `
+---
+collect:
 {{- range $domain, $queryFormat := . }}
-=======================================================
+##############################################
+### BEGIN Beans for domain: "{{ $domain }}"
+##############################################
   - domain: {{ $domain }}
     beans:
--------------------------------------------------------
       {{- range $query, $attrs := $queryFormat }}
       - query: {{ $query }}
         attributes:
 	    {{- range $attr := $attrs }}
-          # Value[{{ $attr.ValueType }}]: {{ $attr.Value }}
+          # Attribute: "{{ $attr.Attribute }}", Sample[{{ $attr.ValueType }}]: {{ $attr.Value }}
           - {{ $attr.Attribute }}
         {{- end }}
--------------------------------------------------------
-      {{- end }}
-=======================================================
+      {{ end }}
+##############################################
+### END Beans for domain: "{{ $domain }}"
+##############################################
 {{ end -}}`
 
 type queryFormat map[string][]attributeFormat

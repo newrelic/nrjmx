@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import javax.management.MBeanRegistration;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
+import java.util.Date;
 
 public class Cat implements CatMBean, MBeanRegistration {
     private String name;
@@ -14,14 +15,16 @@ public class Cat implements CatMBean, MBeanRegistration {
     private Boolean boolValue;
     private Number numberValue;
     private Integer timeout;
+    private long dateValue;
 
-    public Cat(String name, Double doubleValue, Float floatValue, Boolean boolValue, Number numberValue, Integer timeout) {
+    public Cat(String name, Double doubleValue, Float floatValue, Boolean boolValue, Number numberValue, Integer timeout, long dateValue) {
         this.name = name;
         this.doubleValue = doubleValue;
         this.floatValue = floatValue;
         this.boolValue = boolValue;
         this.numberValue = numberValue;
         this.timeout = timeout;
+        this.dateValue = dateValue;
     }
 
     private void delay() {
@@ -41,6 +44,14 @@ public class Cat implements CatMBean, MBeanRegistration {
     @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public Date getDateValue() {
+        if (this.dateValue == 0) {
+            return null;
+        }
+        return new Date(this.dateValue);
     }
 
     @Override

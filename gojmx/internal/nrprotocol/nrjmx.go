@@ -94,6 +94,7 @@ return int64(*p), nil
 //  - IsJBossStandaloneMode
 //  - UseSSL
 //  - RequestTimoutMs
+//  - Verbose
 type JMXConfig struct {
   ConnectionURL string `thrift:"connectionURL,1" db:"connectionURL" json:"connectionURL"`
   Hostname string `thrift:"hostname,2" db:"hostname" json:"hostname"`
@@ -109,6 +110,7 @@ type JMXConfig struct {
   IsJBossStandaloneMode bool `thrift:"isJBossStandaloneMode,12" db:"isJBossStandaloneMode" json:"isJBossStandaloneMode"`
   UseSSL bool `thrift:"useSSL,13" db:"useSSL" json:"useSSL"`
   RequestTimoutMs int64 `thrift:"requestTimoutMs,14" db:"requestTimoutMs" json:"requestTimoutMs"`
+  Verbose bool `thrift:"verbose,15" db:"verbose" json:"verbose"`
 }
 
 func NewJMXConfig() *JMXConfig {
@@ -173,6 +175,10 @@ func (p *JMXConfig) GetUseSSL() bool {
 
 func (p *JMXConfig) GetRequestTimoutMs() int64 {
   return p.RequestTimoutMs
+}
+
+func (p *JMXConfig) GetVerbose() bool {
+  return p.Verbose
 }
 func (p *JMXConfig) IsSetUriPath() bool {
   return p.UriPath != nil
@@ -331,6 +337,16 @@ func (p *JMXConfig) Read(iprot thrift.TProtocol) error {
           return err
         }
       }
+    case 15:
+      if fieldTypeId == thrift.BOOL {
+        if err := p.ReadField15(iprot); err != nil {
+          return err
+        }
+      } else {
+        if err := iprot.Skip(fieldTypeId); err != nil {
+          return err
+        }
+      }
     default:
       if err := iprot.Skip(fieldTypeId); err != nil {
         return err
@@ -472,6 +488,15 @@ func (p *JMXConfig)  ReadField14(iprot thrift.TProtocol) error {
   return nil
 }
 
+func (p *JMXConfig)  ReadField15(iprot thrift.TProtocol) error {
+  if v, err := iprot.ReadBool(); err != nil {
+  return thrift.PrependError("error reading field 15: ", err)
+} else {
+  p.Verbose = v
+}
+  return nil
+}
+
 func (p *JMXConfig) Write(oprot thrift.TProtocol) error {
   if err := oprot.WriteStructBegin("JMXConfig"); err != nil {
     return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err) }
@@ -490,6 +515,7 @@ func (p *JMXConfig) Write(oprot thrift.TProtocol) error {
     if err := p.writeField12(oprot); err != nil { return err }
     if err := p.writeField13(oprot); err != nil { return err }
     if err := p.writeField14(oprot); err != nil { return err }
+    if err := p.writeField15(oprot); err != nil { return err }
   }
   if err := oprot.WriteFieldStop(); err != nil {
     return thrift.PrependError("write field stop error: ", err) }
@@ -637,6 +663,16 @@ func (p *JMXConfig) writeField14(oprot thrift.TProtocol) (err error) {
   return thrift.PrependError(fmt.Sprintf("%T.requestTimoutMs (14) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(); err != nil {
     return thrift.PrependError(fmt.Sprintf("%T write field end error 14:requestTimoutMs: ", p), err) }
+  return err
+}
+
+func (p *JMXConfig) writeField15(oprot thrift.TProtocol) (err error) {
+  if err := oprot.WriteFieldBegin("verbose", thrift.BOOL, 15); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 15:verbose: ", p), err) }
+  if err := oprot.WriteBool(bool(p.Verbose)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.verbose (15) field write error: ", p), err) }
+  if err := oprot.WriteFieldEnd(); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 15:verbose: ", p), err) }
   return err
 }
 

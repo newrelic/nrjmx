@@ -15,6 +15,7 @@ struct JMXConfig {
   12: bool isJBossStandaloneMode
   13: bool useSSL
   14: i64 requestTimoutMs
+  15: bool verbose
 }
 
 enum ValueType {

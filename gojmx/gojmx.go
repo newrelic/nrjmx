@@ -9,7 +9,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/apache/thrift/lib/go/thrift"
-	"github.com/newrelic/nrjmx/gojmx/internal/nrjmx"
 	"github.com/pkg/errors"
 	"time"
 
@@ -25,13 +24,13 @@ const (
 )
 
 // errPingTimeout returned if pingTimeout exceeded.
-var errPingTimeout = nrjmx.NewJMXConnectionError("could not establish communication with nrjmx process: ping timeout")
+var errPingTimeout = newJMXConnectionError("could not establish communication with nrjmx process: ping timeout")
 
 // Client to connect with a JMX endpoint.
 type Client struct {
 	// jmxService is the thrift implementation to communicate with nrjmx subprocess.
 	jmxService   nrprotocol.JMXService
-	nrJMXProcess *nrjmx.Process
+	nrJMXProcess *process
 	ctx          context.Context
 }
 
@@ -44,14 +43,14 @@ func NewClient(ctx context.Context) *Client {
 
 // Open will create the connection the the JMX endpoint.
 func (c *Client) Open(config *JMXConfig) (client *Client, err error) {
-	c.nrJMXProcess, err = nrjmx.NewProcess(c.ctx).Start()
+	c.nrJMXProcess, err = newProcess(c.ctx).start()
 	if err != nil {
 		return c, err
 	}
 
 	defer func() {
 		if err != nil {
-			_ = c.nrJMXProcess.Terminate()
+			c.Close()
 		}
 	}()
 
@@ -71,40 +70,40 @@ func (c *Client) Open(config *JMXConfig) (client *Client, err error) {
 // GetMBeanNames returns all the mbeans that match the glob pattern DOMAIN:BEAN.
 // e.g *:* or jboss.as:subsystem=remoting,configuration=endpoint
 func (c *Client) GetMBeanNames(mBeanGlobPattern string) ([]string, error) {
-	if err := c.nrJMXProcess.Error(); err != nil {
+	if err := c.nrJMXProcess.error(); err != nil {
 		return nil, err
 	}
 	result, err := c.jmxService.GetMBeanNames(c.ctx, mBeanGlobPattern)
 
-	return result, c.handleTransportError(err)
+	return result, c.handleError(err)
 }
 
 // GetMBeanAttrNames returns all the available JMX attribute names for a given mBeanName.
 func (c *Client) GetMBeanAttrNames(mBeanName string) ([]string, error) {
-	if err := c.nrJMXProcess.Error(); err != nil {
+	if err := c.nrJMXProcess.error(); err != nil {
 		return nil, err
 	}
 	result, err := c.jmxService.GetMBeanAttrNames(c.ctx, mBeanName)
-	return result, c.handleTransportError(err)
+	return result, c.handleError(err)
 }
 
 // GetMBeanAttrs returns the JMX attribute values.
 func (c *Client) GetMBeanAttrs(mBeanName, mBeanAttrName string) ([]*JMXAttribute, error) {
-	if err := c.nrJMXProcess.Error(); err != nil {
+	if err := c.nrJMXProcess.error(); err != nil {
 		return nil, err
 	}
 
 	result, err := c.jmxService.GetMBeanAttrs(c.ctx, mBeanName, mBeanAttrName)
-	return toJMXAttributeList(result), err
+	return toJMXAttributeList(result), c.handleError(err)
 }
 
 // Close will stop the connection with the JMX endpoint.
 func (c *Client) Close() error {
-	if err := c.nrJMXProcess.Error(); err != nil {
+	if err := c.nrJMXProcess.error(); err != nil {
 		return err
 	}
 	err := c.jmxService.Disconnect(c.ctx)
-	if waitErr := c.nrJMXProcess.WaitExit(nrJMXExitTimeout); waitErr != nil {
+	if waitErr := c.nrJMXProcess.waitExit(nrJMXExitTimeout); waitErr != nil {
 		err = errors.Wrap(err, waitErr.Error())
 	}
 	return err
@@ -112,45 +111,12 @@ func (c *Client) Close() error {
 
 // GetClientVersion returns nrjmx version.
 func (c *Client) GetClientVersion() (version string, err error) {
-	if err = c.nrJMXProcess.Error(); err != nil {
+	if err = c.nrJMXProcess.error(); err != nil {
 		return "<nil>", err
 	}
 	version, err = c.jmxService.GetClientVersion(c.ctx)
 
-	return version, c.handleTransportError(err)
-}
-
-// ResponseStatus for QueryResponse
-type ResponseStatus int
-
-const (
-	// QueryResponseStatusSuccess is returned when JMXAttribute was successfully retrieved.
-	QueryResponseStatusSuccess ResponseStatus = iota
-	// QueryResponseStatusError is returned when gojmx fails to retrieve the JMXAttribute.
-	QueryResponseStatusError
-)
-
-// QueryAttrResponse wraps the JMXAttribute with the status and status message for the request.
-type QueryAttrResponse struct {
-	Attribute *JMXAttribute
-	Status    ResponseStatus
-	StatusMsg string
-}
-
-type QueryResponse []*QueryAttrResponse
-
-// GetValidAttributes returns all the valid JMXAttribute from the QueryResponse by checking the query status.
-func (qr *QueryResponse) GetValidAttributes() (result []*JMXAttribute) {
-	if qr == nil {
-		return
-	}
-	for _, attr := range *qr {
-		if attr.Status != QueryResponseStatusSuccess {
-			continue
-		}
-		result = append(result, attr.Attribute)
-	}
-	return
+	return version, c.handleError(err)
 }
 
 // QueryMBean performs all calls necessary for retrieving all MBeanAttrs values for the mBeanNamePattern:
@@ -216,12 +182,12 @@ func (c *Client) QueryMBean(mBeanNamePattern string) (QueryResponse, error) {
 // connect will pass the JMXConfig to nrjmx subprocess and establish the
 // connection with the JMX endpoint.
 func (c *Client) connect(config *JMXConfig) (err error) {
-	if err = c.nrJMXProcess.Error(); err != nil {
+	if err = c.nrJMXProcess.error(); err != nil {
 		return err
 	}
-	err = c.jmxService.Connect(c.ctx, config.toProtocol())
+	err = c.jmxService.Connect(c.ctx, config.convertToProtocol())
 
-	return c.handleTransportError(err)
+	return c.handleError(err)
 }
 
 // ping will test the communication with nrjmx subprocess.
@@ -242,9 +208,9 @@ func (c *Client) ping(timeout time.Duration) error {
 	select {
 	case <-time.After(timeout):
 		return errPingTimeout
-	case err, open := <-c.nrJMXProcess.ErrorC():
+	case err, open := <-c.nrJMXProcess.state.ErrorC():
 		if err == nil && !open {
-			return nrjmx.ErrProcessNotRunning
+			return errProcessNotRunning
 		}
 		return err
 	case <-done:
@@ -279,11 +245,15 @@ func (c *Client) configureJMXServiceClient() (*nrprotocol.JMXServiceClient, erro
 
 // handleTransportError will check if the error is TTransportException
 // and if required will terminate nrjmx subprocess.
-func (c *Client) handleTransportError(err error) error {
+func (c *Client) handleError(err error) error {
 	if _, ok := err.(thrift.TTransportException); ok {
 		// TTransportException means that interprocess communication
-		// failed and it cannot be restored. We make sure nrJMX subprocess stops.
-		return c.nrJMXProcess.WaitExit(nrJMXExitTimeout)
+		// failed, and it cannot be restored. We make sure nrJMX subprocess stops.
+		return c.nrJMXProcess.waitExit(nrJMXExitTimeout)
+	} else if jmxErr, ok := err.(*nrprotocol.JMXError); ok {
+		return (*JMXError)(jmxErr)
+	} else if jmxConnErr, ok := err.(*nrprotocol.JMXConnectionError); ok {
+		return (*JMXConnectionError)(jmxConnErr)
 	}
 	return err
 }

@@ -33,7 +33,7 @@ jobs:
         with:
           username: ${{ env.DOCKER_HUB_ID }}
           password: ${{ env.DOCKER_HUB_PASSWORD }}
-          
+
       - name: Publish all to S3 action
         uses: newrelic/infrastructure-publish-action@v1.1.0
         env:

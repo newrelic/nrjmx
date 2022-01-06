@@ -17,7 +17,7 @@ func TestWriteString_LengthGreaterThanMaxCap(t *testing.T) {
 	// WHEN a value that exceeded the capacity is added
 	n, err := buff.WriteString("12345")
 
-	// THEN no Error is returned and expected value is stored
+	// THEN no error is returned and expected value is stored
 	assert.NoError(t, err)
 	assert.Equal(t, 4, n)
 

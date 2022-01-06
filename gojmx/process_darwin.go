@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package nrjmx
+package gojmx
 
 const (
 	// defaultNRJMXExec default nrjmx tool executable path.
-	defaultNRJMXExec = "/usr/bin/nrjmx"
+	defaultNRJMXExec = "/usr/local/bin/nrjmx"
 )

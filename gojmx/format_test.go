@@ -3,9 +3,14 @@ package gojmx
 import (
 	"bytes"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v3"
 	"testing"
 	"text/template"
 )
+
+var noAttributesFormat = `
+---
+collect:`
 
 func Test_FormatConfig(t *testing.T) {
 	testURIPath := "test_URI_PATH"
@@ -86,40 +91,48 @@ func Test_FormatConfig_ConnectionURL(t *testing.T) {
 
 func Test_FormatJMXAttributes(t *testing.T) {
 	// Nil attributes
-	assert.Equal(t, "", FormatJMXAttributes(nil))
+	assert.Equal(t, noAttributesFormat, FormatJMXAttributes(nil))
 
 	expected := `
-=======================================================
+---
+collect:
+##############################################
+### BEGIN Beans for domain: "abc"
+##############################################
   - domain: abc
     beans:
--------------------------------------------------------
       - query: def
         attributes:
-          # Value[INT]: 3
+          # Attribute: "xyz", Sample[INT]: 3
           - xyz
-          # Value[DOUBLE]: 3.2
+          # Attribute: "xyz", Sample[DOUBLE]: 3.2
           - xyz
--------------------------------------------------------
+      
       - query: ghi
         attributes:
-          # Value[DOUBLE]: 3.2
+          # Attribute: "xyz", Sample[DOUBLE]: 3.2
           - xyz
--------------------------------------------------------
-=======================================================
+      
+##############################################
+### END Beans for domain: "abc"
+##############################################
 
-=======================================================
+##############################################
+### BEGIN Beans for domain: "jlk"
+##############################################
   - domain: jlk
     beans:
--------------------------------------------------------
       - query: mno
         attributes:
-          # Value[BOOL]: true
+          # Attribute: "xyz", Sample[BOOL]: true
           - xyz
--------------------------------------------------------
-=======================================================
+      
+##############################################
+### END Beans for domain: "jlk"
+##############################################
 `
 
-	wrongAttributeFormat := []*JMXAttribute{
+	attributes := []*JMXAttribute{
 		{
 			Attribute: "abc:def,attr=xyz",
 			ValueType: ValueTypeInt,
@@ -142,12 +155,20 @@ func Test_FormatJMXAttributes(t *testing.T) {
 		},
 	}
 
-	assert.Equal(t, expected, FormatJMXAttributes(wrongAttributeFormat))
+	// WHEN FormatJMXAttributes
+	formatted := FormatJMXAttributes(attributes)
+
+	// THEN output is YAML format
+	out := map[string]interface{}{}
+	assert.NoError(t, yaml.Unmarshal([]byte(formatted), out))
+
+	// AND has the expected format.
+	assert.Equal(t, expected, formatted)
 }
 
 func Test_FormatJMXAttributes_WrongFormat(t *testing.T) {
 	// Nil attributes
-	assert.Equal(t, "", FormatJMXAttributes(nil))
+	assert.Equal(t, noAttributesFormat, FormatJMXAttributes(nil))
 
 	wrongAttributeFormat := []*JMXAttribute{
 		{
@@ -157,7 +178,7 @@ func Test_FormatJMXAttributes_WrongFormat(t *testing.T) {
 		},
 	}
 
-	assert.Equal(t, "", FormatJMXAttributes(wrongAttributeFormat))
+	assert.Equal(t, noAttributesFormat, FormatJMXAttributes(wrongAttributeFormat))
 }
 
 func Test_CanParseTemplate(t *testing.T) {
@@ -168,5 +189,5 @@ func Test_CanParseTemplate(t *testing.T) {
 	buf := new(bytes.Buffer)
 	err = tpl.Execute(buf, nil)
 	assert.NoError(t, err)
-	assert.Equal(t, "", buf.String())
+	assert.Equal(t, noAttributesFormat, buf.String())
 }
