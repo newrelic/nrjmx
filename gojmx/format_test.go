@@ -30,17 +30,18 @@ func Test_FormatConfig(t *testing.T) {
 		IsJBossStandaloneMode: true,
 		UseSSL:                true,
 		RequestTimoutMs:       4567,
+		Verbose:               true,
 	}
 
 	// Exposed credentials.
 	hideSecrets := false
-	expected := "Hostname: 'test_hostname', Port: '123', IsJBossStandaloneMode: 'true', IsRemote: 'true', UseSSL: 'true', Username: 'test_username', Password: 'test_password', Truststore: 'test_truststore', TruststorePassword: 'test_truststore_password', Keystore: 'test_keystore', KeystorePassword: 'test_keystore_password', RequestTimeoutMs: '4567', URIPath: 'test_URI_PATH'"
+	expected := "Hostname: 'test_hostname', Port: '123', IsJBossStandaloneMode: 'true', IsRemote: 'true', UseSSL: 'true', Username: 'test_username', Password: 'test_password', Truststore: 'test_truststore', TruststorePassword: 'test_truststore_password', Keystore: 'test_keystore', KeystorePassword: 'test_keystore_password', RequestTimeoutMs: '4567', URIPath: 'test_URI_PATH', Verbose: 'true'"
 	actual := FormatConfig(config, hideSecrets)
 	assert.Equal(t, expected, actual)
 
 	// Hidden credentials.
 	hideSecrets = true
-	expected = "Hostname: 'test_hostname', Port: '123', IsJBossStandaloneMode: 'true', IsRemote: 'true', UseSSL: 'true', Username: '<HIDDEN>', Password: '<HIDDEN>', Truststore: 'test_truststore', TruststorePassword: '<HIDDEN>', Keystore: 'test_keystore', KeystorePassword: '<HIDDEN>', RequestTimeoutMs: '4567', URIPath: 'test_URI_PATH'"
+	expected = "Hostname: 'test_hostname', Port: '123', IsJBossStandaloneMode: 'true', IsRemote: 'true', UseSSL: 'true', Username: '<HIDDEN>', Password: '<HIDDEN>', Truststore: 'test_truststore', TruststorePassword: '<HIDDEN>', Keystore: 'test_keystore', KeystorePassword: '<HIDDEN>', RequestTimeoutMs: '4567', URIPath: 'test_URI_PATH', Verbose: 'true'"
 	actual = FormatConfig(config, hideSecrets)
 	assert.Equal(t, expected, actual)
 
@@ -50,12 +51,12 @@ func Test_FormatConfig(t *testing.T) {
 	config.KeyStorePassword = ""
 	config.TrustStorePassword = ""
 
-	expected = "Hostname: 'test_hostname', Port: '123', IsJBossStandaloneMode: 'true', IsRemote: 'true', UseSSL: 'true', Username: '<EMPTY>', Password: '<EMPTY>', Truststore: 'test_truststore', TruststorePassword: '<EMPTY>', Keystore: 'test_keystore', KeystorePassword: '<EMPTY>', RequestTimeoutMs: '4567', URIPath: 'test_URI_PATH'"
+	expected = "Hostname: 'test_hostname', Port: '123', IsJBossStandaloneMode: 'true', IsRemote: 'true', UseSSL: 'true', Username: '<EMPTY>', Password: '<EMPTY>', Truststore: 'test_truststore', TruststorePassword: '<EMPTY>', Keystore: 'test_keystore', KeystorePassword: '<EMPTY>', RequestTimeoutMs: '4567', URIPath: 'test_URI_PATH', Verbose: 'true'"
 	actual = FormatConfig(config, hideSecrets)
 	assert.Equal(t, expected, actual)
 
 	config.UriPath = nil
-	expected = "Hostname: 'test_hostname', Port: '123', IsJBossStandaloneMode: 'true', IsRemote: 'true', UseSSL: 'true', Username: '<EMPTY>', Password: '<EMPTY>', Truststore: 'test_truststore', TruststorePassword: '<EMPTY>', Keystore: 'test_keystore', KeystorePassword: '<EMPTY>', RequestTimeoutMs: '4567'"
+	expected = "Hostname: 'test_hostname', Port: '123', IsJBossStandaloneMode: 'true', IsRemote: 'true', UseSSL: 'true', Username: '<EMPTY>', Password: '<EMPTY>', Truststore: 'test_truststore', TruststorePassword: '<EMPTY>', Keystore: 'test_keystore', KeystorePassword: '<EMPTY>', RequestTimeoutMs: '4567', Verbose: 'true'"
 	actual = FormatConfig(config, hideSecrets)
 	assert.Equal(t, expected, actual)
 
@@ -84,7 +85,7 @@ func Test_FormatConfig_ConnectionURL(t *testing.T) {
 	}
 
 	hideSecrets := true
-	expected := "ConnectionURL: 'service:jmx:rmi:///jndi/rmi://localhost:123/jmxrmi', Username: '<HIDDEN>', Password: '<HIDDEN>', Truststore: 'test_truststore', TruststorePassword: '<HIDDEN>', Keystore: 'test_keystore', KeystorePassword: '<HIDDEN>', RequestTimeoutMs: '4567', URIPath: 'test_URI_PATH'"
+	expected := "ConnectionURL: 'service:jmx:rmi:///jndi/rmi://localhost:123/jmxrmi', Username: '<HIDDEN>', Password: '<HIDDEN>', Truststore: 'test_truststore', TruststorePassword: '<HIDDEN>', Keystore: 'test_keystore', KeystorePassword: '<HIDDEN>', RequestTimeoutMs: '4567', URIPath: 'test_URI_PATH', Verbose: 'false'"
 	actual := FormatConfig(config, hideSecrets)
 	assert.Equal(t, expected, actual)
 }

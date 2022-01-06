@@ -22,6 +22,8 @@ import (
 	"time"
 )
 
+var timeStamp = time.Date(2022, time.January, 1, 01, 23, 45, 0, time.Local).UnixNano() / 1000000
+
 func init() {
 	_ = os.Setenv("NR_JMX_TOOL", filepath.Join(testutils.PrjDir, "bin", "nrjmx"))
 	//_ = os.Setenv("NRIA_NRJMX_DEBUG", "true")
@@ -46,7 +48,7 @@ func Test_Query_Success_LargeAmountOfData(t *testing.T) {
 			"floatValue":  2.2,
 			"numberValue": 3,
 			"boolValue":   true,
-			"dateValue":   1641429296000,
+			"dateValue":   timeStamp,
 		})
 	}
 
@@ -105,7 +107,7 @@ func Test_Query_Success(t *testing.T) {
 		"floatValue":  2.2222222,
 		"numberValue": 3,
 		"boolValue":   true,
-		"dateValue":   1641429296000,
+		"dateValue":   timeStamp,
 	})
 	assert.NoError(t, err)
 	assert.Equal(t, "ok!\n", string(resp))
@@ -159,7 +161,7 @@ func Test_Query_Success(t *testing.T) {
 			Attribute: "test:type=Cat,name=tomas,attr=DateValue",
 
 			ValueType:   ValueTypeString,
-			StringValue: "Jan 6, 2022 1:34:56 AM",
+			StringValue: "Jan 1, 2022 1:23:45 AM",
 		},
 		{
 			Attribute: "test:type=Cat,name=tomas,attr=BoolValue",

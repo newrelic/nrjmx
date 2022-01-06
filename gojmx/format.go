@@ -130,5 +130,7 @@ func FormatConfig(config *JMXConfig, hideSecrets bool) string {
 		sb.WriteString(fmt.Sprintf(", URIPath: '%v'", *config.UriPath))
 	}
 
+	sb.WriteString(fmt.Sprintf(", Verbose: '%t'", config.Verbose))
+
 	return sb.String()
 }
