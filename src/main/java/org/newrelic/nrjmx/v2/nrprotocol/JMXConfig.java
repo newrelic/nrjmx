@@ -24,6 +24,7 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
   private static final org.apache.thrift.protocol.TField IS_JBOSS_STANDALONE_MODE_FIELD_DESC = new org.apache.thrift.protocol.TField("isJBossStandaloneMode", org.apache.thrift.protocol.TType.BOOL, (short)12);
   private static final org.apache.thrift.protocol.TField USE_SSL_FIELD_DESC = new org.apache.thrift.protocol.TField("useSSL", org.apache.thrift.protocol.TType.BOOL, (short)13);
   private static final org.apache.thrift.protocol.TField REQUEST_TIMOUT_MS_FIELD_DESC = new org.apache.thrift.protocol.TField("requestTimoutMs", org.apache.thrift.protocol.TType.I64, (short)14);
+  private static final org.apache.thrift.protocol.TField VERBOSE_FIELD_DESC = new org.apache.thrift.protocol.TField("verbose", org.apache.thrift.protocol.TType.BOOL, (short)15);
 
   private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new JMXConfigStandardSchemeFactory();
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new JMXConfigTupleSchemeFactory();
@@ -42,6 +43,7 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
   public boolean isJBossStandaloneMode; // required
   public boolean useSSL; // required
   public long requestTimoutMs; // required
+  public boolean verbose; // required
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -58,7 +60,8 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
     IS_REMOTE((short)11, "isRemote"),
     IS_JBOSS_STANDALONE_MODE((short)12, "isJBossStandaloneMode"),
     USE_SSL((short)13, "useSSL"),
-    REQUEST_TIMOUT_MS((short)14, "requestTimoutMs");
+    REQUEST_TIMOUT_MS((short)14, "requestTimoutMs"),
+    VERBOSE((short)15, "verbose");
 
     private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -102,6 +105,8 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
           return USE_SSL;
         case 14: // REQUEST_TIMOUT_MS
           return REQUEST_TIMOUT_MS;
+        case 15: // VERBOSE
+          return VERBOSE;
         default:
           return null;
       }
@@ -148,6 +153,7 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
   private static final int __ISJBOSSSTANDALONEMODE_ISSET_ID = 2;
   private static final int __USESSL_ISSET_ID = 3;
   private static final int __REQUESTTIMOUTMS_ISSET_ID = 4;
+  private static final int __VERBOSE_ISSET_ID = 5;
   private byte __isset_bitfield = 0;
   private static final _Fields optionals[] = {_Fields.URI_PATH};
   public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
@@ -181,6 +187,8 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
     tmpMap.put(_Fields.REQUEST_TIMOUT_MS, new org.apache.thrift.meta_data.FieldMetaData("requestTimoutMs", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
+    tmpMap.put(_Fields.VERBOSE, new org.apache.thrift.meta_data.FieldMetaData("verbose", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
     metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(JMXConfig.class, metaDataMap);
   }
@@ -201,7 +209,8 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
     boolean isRemote,
     boolean isJBossStandaloneMode,
     boolean useSSL,
-    long requestTimoutMs)
+    long requestTimoutMs,
+    boolean verbose)
   {
     this();
     this.connectionURL = connectionURL;
@@ -222,6 +231,8 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
     setUseSSLIsSet(true);
     this.requestTimoutMs = requestTimoutMs;
     setRequestTimoutMsIsSet(true);
+    this.verbose = verbose;
+    setVerboseIsSet(true);
   }
 
   /**
@@ -261,6 +272,7 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
     this.isJBossStandaloneMode = other.isJBossStandaloneMode;
     this.useSSL = other.useSSL;
     this.requestTimoutMs = other.requestTimoutMs;
+    this.verbose = other.verbose;
   }
 
   public JMXConfig deepCopy() {
@@ -288,6 +300,8 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
     this.useSSL = false;
     setRequestTimoutMsIsSet(false);
     this.requestTimoutMs = 0;
+    setVerboseIsSet(false);
+    this.verbose = false;
   }
 
   @org.apache.thrift.annotation.Nullable
@@ -630,6 +644,29 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
     __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __REQUESTTIMOUTMS_ISSET_ID, value);
   }
 
+  public boolean isVerbose() {
+    return this.verbose;
+  }
+
+  public JMXConfig setVerbose(boolean verbose) {
+    this.verbose = verbose;
+    setVerboseIsSet(true);
+    return this;
+  }
+
+  public void unsetVerbose() {
+    __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __VERBOSE_ISSET_ID);
+  }
+
+  /** Returns true if field verbose is set (has been assigned a value) and false otherwise */
+  public boolean isSetVerbose() {
+    return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __VERBOSE_ISSET_ID);
+  }
+
+  public void setVerboseIsSet(boolean value) {
+    __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __VERBOSE_ISSET_ID, value);
+  }
+
   public void setFieldValue(_Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
     switch (field) {
     case CONNECTION_URL:
@@ -744,6 +781,14 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
       }
       break;
 
+    case VERBOSE:
+      if (value == null) {
+        unsetVerbose();
+      } else {
+        setVerbose((java.lang.Boolean)value);
+      }
+      break;
+
     }
   }
 
@@ -792,6 +837,9 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
     case REQUEST_TIMOUT_MS:
       return getRequestTimoutMs();
 
+    case VERBOSE:
+      return isVerbose();
+
     }
     throw new java.lang.IllegalStateException();
   }
@@ -831,6 +879,8 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
       return isSetUseSSL();
     case REQUEST_TIMOUT_MS:
       return isSetRequestTimoutMs();
+    case VERBOSE:
+      return isSetVerbose();
     }
     throw new java.lang.IllegalStateException();
   }
@@ -976,6 +1026,15 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
         return false;
     }
 
+    boolean this_present_verbose = true;
+    boolean that_present_verbose = true;
+    if (this_present_verbose || that_present_verbose) {
+      if (!(this_present_verbose && that_present_verbose))
+        return false;
+      if (this.verbose != that.verbose)
+        return false;
+    }
+
     return true;
   }
 
@@ -1028,6 +1087,8 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
     hashCode = hashCode * 8191 + ((useSSL) ? 131071 : 524287);
 
     hashCode = hashCode * 8191 + org.apache.thrift.TBaseHelper.hashCode(requestTimoutMs);
+
+    hashCode = hashCode * 8191 + ((verbose) ? 131071 : 524287);
 
     return hashCode;
   }
@@ -1180,6 +1241,16 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
         return lastComparison;
       }
     }
+    lastComparison = java.lang.Boolean.valueOf(isSetVerbose()).compareTo(other.isSetVerbose());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetVerbose()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.verbose, other.verbose);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
     return 0;
   }
 
@@ -1293,6 +1364,10 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
     if (!first) sb.append(", ");
     sb.append("requestTimoutMs:");
     sb.append(this.requestTimoutMs);
+    first = false;
+    if (!first) sb.append(", ");
+    sb.append("verbose:");
+    sb.append(this.verbose);
     first = false;
     sb.append(")");
     return sb.toString();
@@ -1451,6 +1526,14 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 15: // VERBOSE
+            if (schemeField.type == org.apache.thrift.protocol.TType.BOOL) {
+              struct.verbose = iprot.readBool();
+              struct.setVerboseIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -1528,6 +1611,9 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
       oprot.writeFieldBegin(REQUEST_TIMOUT_MS_FIELD_DESC);
       oprot.writeI64(struct.requestTimoutMs);
       oprot.writeFieldEnd();
+      oprot.writeFieldBegin(VERBOSE_FIELD_DESC);
+      oprot.writeBool(struct.verbose);
+      oprot.writeFieldEnd();
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -1588,7 +1674,10 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
       if (struct.isSetRequestTimoutMs()) {
         optionals.set(13);
       }
-      oprot.writeBitSet(optionals, 14);
+      if (struct.isSetVerbose()) {
+        optionals.set(14);
+      }
+      oprot.writeBitSet(optionals, 15);
       if (struct.isSetConnectionURL()) {
         oprot.writeString(struct.connectionURL);
       }
@@ -1631,12 +1720,15 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
       if (struct.isSetRequestTimoutMs()) {
         oprot.writeI64(struct.requestTimoutMs);
       }
+      if (struct.isSetVerbose()) {
+        oprot.writeBool(struct.verbose);
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, JMXConfig struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-      java.util.BitSet incoming = iprot.readBitSet(14);
+      java.util.BitSet incoming = iprot.readBitSet(15);
       if (incoming.get(0)) {
         struct.connectionURL = iprot.readString();
         struct.setConnectionURLIsSet(true);
@@ -1692,6 +1784,10 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
       if (incoming.get(13)) {
         struct.requestTimoutMs = iprot.readI64();
         struct.setRequestTimoutMsIsSet(true);
+      }
+      if (incoming.get(14)) {
+        struct.verbose = iprot.readBool();
+        struct.setVerboseIsSet(true);
       }
     }
   }

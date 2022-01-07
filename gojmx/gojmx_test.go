@@ -9,9 +9,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/newrelic/nrjmx/gojmx/internal/nrjmx"
-	"github.com/newrelic/nrjmx/gojmx/internal/nrprotocol"
 	"github.com/newrelic/nrjmx/gojmx/internal/testutils"
-	"github.com/shirou/gopsutil/v3/process"
+	gopsutil "github.com/shirou/gopsutil/v3/process"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io/ioutil"
@@ -23,6 +22,8 @@ import (
 	"time"
 )
 
+var timeStamp = time.Date(2022, time.January, 1, 01, 23, 45, 0, time.Local).UnixNano() / 1000000
+
 func init() {
 	_ = os.Setenv("NR_JMX_TOOL", filepath.Join(testutils.PrjDir, "bin", "nrjmx"))
 	//_ = os.Setenv("NRIA_NRJMX_DEBUG", "true")
@@ -30,7 +31,7 @@ func init() {
 
 func Test_Query_Success_LargeAmountOfData(t *testing.T) {
 	ctx := context.Background()
-	//
+
 	// GIVEN a JMX Server running inside a container
 	container, err := testutils.RunJMXServiceContainer(ctx)
 	require.NoError(t, err)
@@ -47,6 +48,7 @@ func Test_Query_Success_LargeAmountOfData(t *testing.T) {
 			"floatValue":  2.2,
 			"numberValue": 3,
 			"boolValue":   true,
+			"dateValue":   timeStamp,
 		})
 	}
 
@@ -105,6 +107,7 @@ func Test_Query_Success(t *testing.T) {
 		"floatValue":  2.2222222,
 		"numberValue": 3,
 		"boolValue":   true,
+		"dateValue":   timeStamp,
 	})
 	assert.NoError(t, err)
 	assert.Equal(t, "ok!\n", string(resp))
@@ -134,7 +137,7 @@ func Test_Query_Success(t *testing.T) {
 	require.ElementsMatch(t, expectedMBeanNames, actualMBeanNames)
 
 	expectedMBeanAttrNames := []string{
-		"BoolValue", "FloatValue", "NumberValue", "DoubleValue", "Name",
+		"BoolValue", "FloatValue", "NumberValue", "DoubleValue", "Name", "DateValue",
 	}
 	actualMBeanAttrNames, err := client.GetMBeanAttrNames("test:name=tomas,type=Cat")
 	require.NoError(t, err)
@@ -153,6 +156,12 @@ func Test_Query_Success(t *testing.T) {
 
 			ValueType: ValueTypeInt,
 			IntValue:  3,
+		},
+		{
+			Attribute: "test:type=Cat,name=tomas,attr=DateValue",
+
+			ValueType:   ValueTypeString,
+			StringValue: "Jan 1, 2022 1:23:45 AM",
 		},
 		{
 			Attribute: "test:type=Cat,name=tomas,attr=BoolValue",
@@ -273,6 +282,10 @@ func Test_QueryMBean_Success(t *testing.T) {
 			Status:    QueryResponseStatusSuccess,
 			StatusMsg: "success",
 		},
+		{
+			Status:    QueryResponseStatusError,
+			StatusMsg: `error while querying mBean 'test:type=Cat,name=tomas', attribute: 'DateValue', error message: found a null value for bean: test:type=Cat,name=tomas,attr=DateValue, error cause: , stacktrace: ""`,
+		},
 	}
 
 	assert.ElementsMatch(t, expectedResponse, actualResponse)
@@ -341,12 +354,8 @@ func Test_Query_CompositeData(t *testing.T) {
 		},
 	}
 
-	var actual []*JMXAttribute
-	//for _, mBeanAttrName := range expectedMBeanAttrNames {
-	jmxAttrs, err := client.GetMBeanAttrs("test:type=CompositeDataCat,name=tomas", "CatInfo")
+	actual, err := client.GetMBeanAttrs("test:type=CompositeDataCat,name=tomas", "CatInfo")
 	assert.NoError(t, err)
-	actual = append(actual, jmxAttrs...)
-	//}
 	assert.ElementsMatch(t, expected, actual)
 }
 
@@ -443,7 +452,7 @@ func Test_JavaNotInstalledError(t *testing.T) {
 	// AND Query fails with expected error
 	actual, err := client.GetMBeanNames("test:type=Cat,*")
 	assert.Nil(t, actual)
-	assert.ErrorIs(t, err, nrjmx.ErrProcessNotRunning)
+	assert.ErrorIs(t, err, errProcessNotRunning)
 }
 
 func Test_WrongMBeanFormatError(t *testing.T) {
@@ -470,10 +479,7 @@ func Test_WrongMBeanFormatError(t *testing.T) {
 	// AND Query returns expected error
 	actual, err := client.GetMBeanNames("wrong_format")
 	assert.Nil(t, actual)
-
-	jmxErr, ok := err.(*nrprotocol.JMXError)
-	assert.True(t, ok)
-	assert.Equal(t, jmxErr.GetMessage(), "cannot parse MBean glob pattern: 'wrong_format', valid: 'DOMAIN:BEAN'")
+	assert.EqualError(t, err, `jmx error: cannot parse MBean glob pattern: 'wrong_format', valid: 'DOMAIN:BEAN', cause: Key properties cannot be empty, stacktrace: `)
 }
 
 func Test_Wrong_Connection(t *testing.T) {
@@ -515,6 +521,7 @@ func Test_SSLQuery_Success(t *testing.T) {
 		"floatValue":  2.222222,
 		"numberValue": 3,
 		"boolValue":   true,
+		"dateValue":   1641429296000,
 	})
 	assert.NoError(t, err)
 	assert.Equal(t, "ok!\n", string(resp))
@@ -548,54 +555,11 @@ func Test_SSLQuery_Success(t *testing.T) {
 	require.ElementsMatch(t, expectedMBeanNames, actualMBeanNames)
 
 	expectedMBeanAttrNames := []string{
-		"BoolValue", "FloatValue", "NumberValue", "DoubleValue", "Name",
+		"BoolValue", "FloatValue", "NumberValue", "DoubleValue", "Name", "DateValue",
 	}
 	actualMBeanAttrNames, err := client.GetMBeanAttrNames("test:name=tomas,type=Cat")
 	require.NoError(t, err)
 	require.ElementsMatch(t, expectedMBeanAttrNames, actualMBeanAttrNames)
-
-	// AND Query returns expected data
-	expected := []*JMXAttribute{
-		{
-			Attribute: "test:type=Cat,name=tomas,attr=FloatValue",
-
-			ValueType:   ValueTypeDouble,
-			DoubleValue: 2.222222,
-		},
-		{
-			Attribute: "test:type=Cat,name=tomas,attr=NumberValue",
-
-			ValueType: ValueTypeInt,
-			IntValue:  3,
-		},
-		{
-			Attribute: "test:type=Cat,name=tomas,attr=BoolValue",
-
-			ValueType: ValueTypeBool,
-			BoolValue: true,
-		},
-		{
-			Attribute: "test:type=Cat,name=tomas,attr=DoubleValue",
-
-			ValueType:   ValueTypeDouble,
-			DoubleValue: 1.2,
-		},
-		{
-			Attribute: "test:type=Cat,name=tomas,attr=Name",
-
-			ValueType:   ValueTypeString,
-			StringValue: "tomas",
-		},
-	}
-
-	var actual []*JMXAttribute
-	for _, mBeanAttrName := range expectedMBeanAttrNames {
-		jmxAttrs, err := client.GetMBeanAttrs("test:type=Cat,name=tomas", mBeanAttrName)
-		assert.NoError(t, err)
-		actual = append(actual, jmxAttrs...)
-	}
-
-	assert.ElementsMatch(t, expected, actual)
 }
 
 func Test_Wrong_Credentials(t *testing.T) {
@@ -680,7 +644,7 @@ func Test_Connector_Success(t *testing.T) {
 
 	// Install the connector
 	dstFile := filepath.Join(testutils.PrjDir, "/bin/jboss-client.jar")
-	err = testutils.CopyFileFromContainer(ctx, container.GetContainerID(), "/opt/jboss/wildfly/bin/client/jboss-client.jar", dstFile)
+	err = testutils.CopyFileFromContainer(ctx, container, "/opt/jboss/wildfly/bin/client/jboss-client.jar", dstFile)
 	assert.NoError(t, err)
 
 	defer os.Remove(dstFile)
@@ -845,9 +809,9 @@ func TestClientClose(t *testing.T) {
 	// AND Query returns expected error
 	actual, err := client.GetMBeanNames("*:*")
 	assert.Nil(t, actual)
-	assert.ErrorIs(t, err, nrjmx.ErrProcessNotRunning)
+	assert.ErrorIs(t, err, errProcessNotRunning)
 
-	assert.True(t, client.nrJMXProcess.GetOSProcessState().Success())
+	assert.True(t, client.nrJMXProcess.getOSProcessState().Success())
 }
 
 func TestProcessExits(t *testing.T) {
@@ -879,7 +843,7 @@ func TestProcessExits(t *testing.T) {
 		f, err := os.OpenFile(os.Getenv("TMP_FILE"), os.O_WRONLY|os.O_TRUNC, 0644)
 		require.NoError(t, err)
 		defer f.Close()
-		_, err = fmt.Fprintf(f, "%d\n", client.nrJMXProcess.GetPID())
+		_, err = fmt.Fprintf(f, "%d\n", client.nrJMXProcess.getPID())
 		require.NoError(t, err)
 		<-time.After(5 * time.Minute)
 	}
@@ -919,7 +883,7 @@ func TestProcessExits(t *testing.T) {
 		return true
 	}, 30*time.Second, 50*time.Millisecond)
 
-	p, err := process.NewProcess(pid)
+	p, err := gopsutil.NewProcess(pid)
 	assert.NoError(t, err)
 	ch, err := p.Children()
 	assert.NoError(t, err)

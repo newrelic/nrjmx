@@ -11,7 +11,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -38,7 +37,7 @@ const (
 	TruststorePassword                 = "password"
 	JmxUsername                        = "testuser"
 	JmxPassword                        = "testpassword"
-	DefaultTimeoutMs                   = 5000
+	DefaultTimeoutMs                   = 10000
 )
 
 var (
@@ -61,6 +60,11 @@ func init() {
 
 // RunJMXServiceContainer will start a container running test-server with JMX.
 func RunJMXServiceContainer(ctx context.Context) (testcontainers.Container, error) {
+	var hostnameOpt string
+	if !isRunningInDockerContainer() {
+		hostnameOpt = "-Djava.rmi.server.hostname=0.0.0.0"
+	}
+
 	req := testcontainers.ContainerRequest{
 		Image: "test-server:latest",
 		ExposedPorts: []string{
@@ -70,10 +74,11 @@ func RunJMXServiceContainer(ctx context.Context) (testcontainers.Container, erro
 		Env: map[string]string{
 			"JAVA_OPTS": "-Dcom.sun.management.jmxremote.port=" + TestServerJMXPort + " " +
 				"-Dcom.sun.management.jmxremote.authenticate=false " +
+				"-Dcom.sun.management.jmxremote.local.only=false " +
 				"-Dcom.sun.management.jmxremote.ssl=false " +
 				"-Dcom.sun.management.jmxremote=true " +
 				"-Dcom.sun.management.jmxremote.rmi.port=" + TestServerJMXPort + " " +
-				"-Djava.rmi.server.hostname=localhost",
+				hostnameOpt,
 		},
 
 		WaitingFor: wait.ForListeningPort(TestServerPort),
@@ -95,12 +100,18 @@ func RunJMXServiceContainer(ctx context.Context) (testcontainers.Container, erro
 
 // RunJMXServiceContainerSSL will start a container running test-server configured with SSL JMX.
 func RunJMXServiceContainerSSL(ctx context.Context) (testcontainers.Container, error) {
+	var hostnameOpt string
+	if !isRunningInDockerContainer() {
+		hostnameOpt = "-Djava.rmi.server.hostname=0.0.0.0"
+	}
+
 	req := testcontainers.ContainerRequest{
 		Image: "test-server:latest",
 		ExposedPorts: []string{
 			fmt.Sprintf("%[1]s:%[1]s", TestServerPort),
 			fmt.Sprintf("%[1]s:%[1]s", TestServerJMXPort),
 		},
+
 		Env: map[string]string{
 			"JAVA_OPTS": "-Dcom.sun.management.jmxremote.port=" + TestServerJMXPort + " " +
 				"-Dcom.sun.management.jmxremote.authenticate=true " +
@@ -109,11 +120,12 @@ func RunJMXServiceContainerSSL(ctx context.Context) (testcontainers.Container, e
 				"-Dcom.sun.management.jmxremote.registry.ssl=true " +
 				"-Dcom.sun.management.jmxremote=true " +
 				"-Dcom.sun.management.jmxremote.rmi.port=" + TestServerJMXPort + " " +
-				"-Djava.rmi.server.hostname=0.0.0.0 " +
+				"-Dcom.sun.management.jmxremote.local.only=false " +
 				"-Djavax.net.ssl.keyStore=/keystore  " +
 				"-Djavax.net.ssl.keyStorePassword=password " +
 				"-Djavax.net.ssl.trustStore=/truststore " +
-				"-Djavax.net.ssl.trustStorePassword=password",
+				"-Djavax.net.ssl.trustStorePassword=password " +
+				hostnameOpt,
 		},
 		WaitingFor: wait.ForListeningPort(TestServerPort),
 	}
@@ -139,9 +151,15 @@ func GetContainerServiceURL(ctx context.Context, container testcontainers.Contai
 		return "", err
 	}
 
-	hostIP, err := container.Host(ctx)
-	if err != nil {
-		return "", err
+	var hostIP string
+	if isRunningInDockerContainer() {
+		if hostIP, err = container.ContainerIP(ctx); err != nil {
+			return "", err
+		}
+	} else {
+		if hostIP, err = container.Host(ctx); err != nil {
+			return "", err
+		}
 	}
 
 	return fmt.Sprintf("http://%s:%s%s", hostIP, mappedPort.Port(), endpoint), nil
@@ -160,6 +178,7 @@ func CleanMBeans(ctx context.Context, container testcontainers.Container) ([]byt
 func AddMBeansBatch(ctx context.Context, container testcontainers.Container, body []map[string]interface{}) ([]byte, error) {
 	return addMBeans(ctx, container, body, TestServerAddDataBatchEndpoint)
 }
+
 // AddMBeans will add new MBeans to the test-server.
 func AddMBeans(ctx context.Context, container testcontainers.Container, body map[string]interface{}) ([]byte, error) {
 	return addMBeans(ctx, container, body, TestServerAddDataEndpoint)
@@ -218,20 +237,12 @@ func RunJbossStandaloneJMXContainer(ctx context.Context) (testcontainers.Contain
 }
 
 // CopyFileFromContainer will copy a file from a given docker container.
-func CopyFileFromContainer(ctx context.Context, containerID, srcPath, dstPath string) error {
-	cli, err := client.NewClientWithOpts(client.FromEnv)
-	if err != nil {
-		return err
-	}
-	reader, containerPathStat, err := cli.CopyFromContainer(ctx, containerID, srcPath)
+func CopyFileFromContainer(ctx context.Context, container testcontainers.Container, srcPath, dstPath string) error {
+	reader, err := container.CopyFileFromContainer(ctx, srcPath)
 	if err != nil {
 		return err
 	}
 	defer reader.Close()
-
-	if !containerPathStat.Mode.IsRegular() {
-		return fmt.Errorf("src is not a regular file: %s", srcPath)
-	}
 
 	b, err := ioutil.ReadAll(reader)
 	if err != nil {
@@ -282,9 +293,15 @@ func ReadFirstLine(filename string) (string, error) {
 
 // GetContainerMappedPort returns the hostname and the port for a given container.
 func GetContainerMappedPort(ctx context.Context, container testcontainers.Container, targetPort nat.Port) (host string, port nat.Port, err error) {
-	host, err = container.Host(ctx)
-	if err != nil {
-		return
+
+	if isRunningInDockerContainer() {
+		if host, err = container.ContainerIP(ctx); err != nil {
+			return
+		}
+	} else {
+		if host, err = container.Host(ctx); err != nil {
+			return
+		}
 	}
 
 	port, err = container.MappedPort(ctx, targetPort)
@@ -305,4 +322,17 @@ func ReadPidFile(fileName string) (int32, error) {
 		return -1, err
 	}
 	return int32(pid), nil
+}
+
+func isRunningInDockerContainer() bool {
+	// docker creates a .dockerenv file at the root
+	// of the directory tree inside the container.
+	// if this file exists then the viewer is running
+	// from inside a container so return true
+
+	if _, err := os.Stat("/.dockerenv"); err == nil {
+		return true
+	}
+
+	return false
 }

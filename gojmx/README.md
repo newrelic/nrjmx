@@ -5,7 +5,7 @@ endpoint.
 # Installing
 You can use gojmx in your project by running `go get` command:
 
-    go get -u github.com/newrelic/nrjmx/gojmx
+    go get github.com/newrelic/nrjmx/gojmx
 
 Next, import the dependency into your application:
 
@@ -61,6 +61,17 @@ for _, mBeanName := range mBeanNames {
             printAttr(jmxAttr)
         }
     }
+}
+
+// Or use QueryMBean call which wraps all the necessary requests to get the values for an MBeanNamePattern.
+response, err := client.QueryMBean("java.lang:type=*")
+handleError(err)
+for _, attr := range response {
+    if attr.Status == gojmx.QueryResponseStatusError {
+        fmt.Println(attr.StatusMsg)
+        continue
+    }
+    printAttr(attr.Attribute)
 }
 ```
 

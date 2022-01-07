@@ -12,9 +12,12 @@ RUN apt-get update && \
     debsigs \
     unzip \
     zip \
-    gcc
+    gcc \
+    openjdk-11-jdk
 
-ENV PATH="/usr/local/go/bin:$PATH" 
+RUN ln -s /usr/lib/jvm/java-11-openjdk-amd64/ /usr/local/openjdk-11
+
+ENV PATH="/usr/local/go/bin:$PATH"
 
 # Install golang.
 RUN curl -L "https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz" -o go.tar.gz && tar -C /usr/local -xzf go.tar.gz && export PATH=${PATH}:/usr/local/go/bin

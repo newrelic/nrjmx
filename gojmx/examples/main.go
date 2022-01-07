@@ -33,17 +33,17 @@ func main() {
 	client, err := gojmx.NewClient(context.Background()).Open(config)
 	handleError(err)
 
-	// Query the mBean names.
+	// Get the mBean names.
 	mBeanNames, err := client.GetMBeanNames("java.lang:type=*")
 	handleError(err)
 
-	// Query the Attribute names for each mBeanName.
+	// Get the Attribute names for each mBeanName.
 	for _, mBeanName := range mBeanNames {
 		mBeanAttrNames, err := client.GetMBeanAttrNames(mBeanName)
 		handleError(err)
 
 		for _, mBeanAttrName := range mBeanAttrNames {
-			// Query the attribute value for each mBeanName and mBeanAttributeName.
+			// Get the attribute value for each mBeanName and mBeanAttributeName.
 			jmxAttrs, err := client.GetMBeanAttrs(mBeanName, mBeanAttrName)
 			if err != nil {
 				fmt.Println(err)
@@ -53,6 +53,17 @@ func main() {
 				printAttr(jmxAttr)
 			}
 		}
+	}
+
+	// Or use QueryMBean call which wraps all the necessary requests to get the values for an MBeanNamePattern.
+	response, err := client.QueryMBean("java.lang:type=*")
+	handleError(err)
+	for _, attr := range response {
+		if attr.Status == gojmx.QueryResponseStatusError {
+			fmt.Println(attr.StatusMsg)
+			continue
+		}
+		printAttr(attr.Attribute)
 	}
 }
 

@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
+import java.rmi.ConnectException;
 import java.text.DateFormat;
 import java.util.*;
 import java.util.concurrent.*;
@@ -37,6 +38,8 @@ public class JMXFetcher {
     private MBeanServerConnection connection;
 
     private DateFormat dateFormat = DateFormat.getDateTimeInstance(2, 2, Locale.US);
+
+    private JMXConfig jmxConfig;
 
     public JMXFetcher(ExecutorService executor) {
         this.executor = executor;
@@ -64,6 +67,8 @@ public class JMXFetcher {
      * @throws JMXConnectionError JMX connection related exception
      */
     public void connect(JMXConfig jmxConfig) throws JMXConnectionError {
+        this.jmxConfig = jmxConfig;
+
         String connectionString = buildConnectionString(jmxConfig);
         Map<String, Object> connectionEnv = buildConnectionEnvConfig(jmxConfig);
 
@@ -103,7 +108,7 @@ public class JMXFetcher {
      * @return List<String> containing all mBean names that were found
      * @throws JMXError JMX related Exception
      */
-    public List<String> getMBeanNames(String mBeanGlobPattern) throws JMXError {
+    public List<String> getMBeanNames(String mBeanGlobPattern) throws JMXConnectionError, JMXError {
         ObjectName objectName = this.getObjectName(mBeanGlobPattern);
         try {
             return getConnection().queryMBeans(objectName, null)
@@ -111,11 +116,14 @@ public class JMXFetcher {
                     .map(ObjectInstance::getObjectName)
                     .map(ObjectName::toString)
                     .collect(Collectors.toList());
+        } catch (ConnectException ce) {
+            String message = String.format("Can't connect to JMX server, error: '%s'", ce.getMessage());
+            throw new JMXConnectionError(message);
         } catch (IOException ioe) {
             throw new JMXError()
                     .setMessage("can't get beans for query: " + mBeanGlobPattern)
                     .setCauseMessage(ioe.getMessage())
-                    .setStacktrace(ExceptionUtils.getStackTrace(ioe));
+                    .setStacktrace(getStackTrace(ioe));
         }
     }
 
@@ -142,17 +150,20 @@ public class JMXFetcher {
      * @return List<String> containing all mBean attribute names that were found
      * @throws JMXError JMX related Exception
      */
-    public List<String> getMBeanAttrNames(String mBeanName) throws JMXError {
+    public List<String> getMBeanAttrNames(String mBeanName) throws JMXConnectionError, JMXError {
         ObjectName objectName = this.getObjectName(mBeanName);
         MBeanInfo info;
 
         try {
             info = getConnection().getMBeanInfo(objectName);
+        } catch (ConnectException ce) {
+            String message = String.format("Can't connect to JMX server, error: '%s'", ce.getMessage());
+            throw new JMXConnectionError(message);
         } catch (InstanceNotFoundException | IntrospectionException | ReflectionException | IOException e) {
             throw new JMXError()
                     .setMessage("can't find mBean: " + mBeanName)
                     .setCauseMessage(e.getMessage())
-                    .setStacktrace(ExceptionUtils.getStackTrace(e));
+                    .setStacktrace(getStackTrace(e));
         }
 
         return Arrays.stream(info.getAttributes())
@@ -186,7 +197,7 @@ public class JMXFetcher {
      * @return JMXAttribute representing the mBean attribute value
      * @throws JMXError JMX related Exception
      */
-    public List<JMXAttribute> getMBeanAttrs(String mBeanName, String attrName) throws JMXError {
+    public List<JMXAttribute> getMBeanAttrs(String mBeanName, String attrName) throws JMXConnectionError, JMXError {
         Object value;
         ObjectName objectName = this.getObjectName(mBeanName);
         try {
@@ -195,11 +206,14 @@ public class JMXFetcher {
                 Attribute jmxAttr = (Attribute) value;
                 value = jmxAttr.getValue();
             }
+        } catch (ConnectException ce) {
+            String message = String.format("Can't connect to JMX server, error: '%s'", ce.getMessage());
+            throw new JMXConnectionError(message);
         } catch (Exception e) {
             throw new JMXError()
                     .setMessage("can't get attribute: " + attrName + " for bean: " + mBeanName + ": ")
                     .setCauseMessage(e.getMessage())
-                    .setStacktrace(ExceptionUtils.getStackTrace(e));
+                    .setStacktrace(getStackTrace(e));
         }
 
         String name = String.format("%s,attr=%s", mBeanName, attrName);
@@ -220,7 +234,7 @@ public class JMXFetcher {
             throw new JMXError()
                     .setMessage("cannot parse MBean glob pattern: '" + mBeanName + "', valid: 'DOMAIN:BEAN'")
                     .setCauseMessage(me.getMessage())
-                    .setStacktrace(ExceptionUtils.getStackTrace(me));
+                    .setStacktrace(getStackTrace(me));
         }
     }
 
@@ -246,12 +260,12 @@ public class JMXFetcher {
             throw new JMXError()
                     .setMessage("request was interrupted " + e.getMessage())
                     .setCauseMessage(e.getMessage())
-                    .setStacktrace(ExceptionUtils.getStackTrace(e));
+                    .setStacktrace(getStackTrace(e));
         } catch (TimeoutException e) {
             throw new JMXError()
                     .setMessage("request timeout exceeded: " + timeoutMs + "ms")
                     .setCauseMessage(e.getMessage())
-                    .setStacktrace(ExceptionUtils.getStackTrace(e));
+                    .setStacktrace(getStackTrace(e));
         } catch (ExecutionException e) {
             if (e.getCause() instanceof JMXError) {
                 throw (JMXError) e.getCause();
@@ -260,7 +274,7 @@ public class JMXFetcher {
             }
             throw new JMXError()
                     .setMessage("failed to execute operation, error: " + e.getMessage())
-                    .setStacktrace(ExceptionUtils.getStackTrace(e));
+                    .setStacktrace(getStackTrace(e));
         }
     }
 
@@ -339,9 +353,9 @@ public class JMXFetcher {
      * @return MBeanServerConnection the connection to the JMX endpoint
      * @throws JMXError JMX related Exception
      */
-    private MBeanServerConnection getConnection() throws JMXError {
+    private MBeanServerConnection getConnection() throws JMXConnectionError {
         if (this.connection == null) {
-            throw new JMXError()
+            throw new JMXConnectionError()
                     .setMessage("connection to JMX endpoint is not established");
         }
         return this.connection;
@@ -422,5 +436,12 @@ public class JMXFetcher {
         } catch (Exception e) {
             return "unknown";
         }
+    }
+
+    private String getStackTrace(Throwable throwable) {
+        if (throwable == null || jmxConfig == null || !jmxConfig.verbose) {
+            return "";
+        }
+        return ExceptionUtils.getStackTrace(throwable);
     }
 }

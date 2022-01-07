@@ -31,6 +31,14 @@ ci/test: deps
 ci/release: deps
 	@($(DOCKER_CMD) make release)
 
+.PHONY : ci/go-test
+ci/go-test: deps go-test-utils
+	@($(DOCKER_CMD) make go-test -o go-test-utils)
+
+.PHONY : ci/go-test-jdk11
+ci/go-test-jdk11: deps go-test-utils
+	@($(DOCKER_CMD) /bin/bash -c 'export PATH=/usr/local/openjdk-11/bin:$$PATH; java -version; make go-test -o go-test-utils')
+
 TRACKED_GEN_DIR=src/main/java/org/newrelic/nrjmx/v2/nrprotocol \
 				gojmx/internal/nrprotocol
 .PHONY : ci/check-gen-code
