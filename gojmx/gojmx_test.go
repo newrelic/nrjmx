@@ -479,10 +479,7 @@ func Test_WrongMBeanFormatError(t *testing.T) {
 	// AND Query returns expected error
 	actual, err := client.GetMBeanNames("wrong_format")
 	assert.Nil(t, actual)
-
-	jmxErr, ok := err.(*JMXError)
-	assert.True(t, ok)
-	assert.Equal(t, jmxErr.Message, "cannot parse MBean glob pattern: 'wrong_format', valid: 'DOMAIN:BEAN'")
+	assert.EqualError(t, err, `jmx error: cannot parse MBean glob pattern: 'wrong_format', valid: 'DOMAIN:BEAN', cause: Key properties cannot be empty, stacktrace: `)
 }
 
 func Test_Wrong_Connection(t *testing.T) {
@@ -647,7 +644,7 @@ func Test_Connector_Success(t *testing.T) {
 
 	// Install the connector
 	dstFile := filepath.Join(testutils.PrjDir, "/bin/jboss-client.jar")
-	err = testutils.CopyFileFromContainer(ctx, container.GetContainerID(), "/opt/jboss/wildfly/bin/client/jboss-client.jar", dstFile)
+	err = testutils.CopyFileFromContainer(ctx, container, "/opt/jboss/wildfly/bin/client/jboss-client.jar", dstFile)
 	assert.NoError(t, err)
 
 	defer os.Remove(dstFile)

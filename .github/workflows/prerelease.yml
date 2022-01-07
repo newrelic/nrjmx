@@ -40,8 +40,8 @@ jobs:
       - name: Running unit tests
         run: make ci/test
 
-  test-go-linux:
-    name: Linux unit tests for Go
+  test-go-linux-jdk8:
+    name: Linux unit tests for Go on JDK 8
     runs-on: ubuntu-20.04
 
     steps:
@@ -57,7 +57,26 @@ jobs:
           password: ${{ env.DOCKER_HUB_PASSWORD }}
 
       - name: Running unit tests
-        run: make go-test
+        run: make ci/go-test
+
+  test-go-linux-jdk11:
+    name: Linux unit tests for Go on JDK 11
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{env.GO_VERSION}}
+      - uses: actions/checkout@v2
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ env.DOCKER_HUB_ID }}
+          password: ${{ env.DOCKER_HUB_PASSWORD }}
+
+      - name: Running unit tests
+        run: make ci/go-test-jdk11
 
   check-gen-code:
     name: Checking generated code
@@ -76,7 +95,7 @@ jobs:
   packaging:
     name: Build and upload artifacts into GH Release assets
     runs-on: ubuntu-20.04
-    needs: [ unit-test-linux, test-go-linux, check-gen-code ]
+    needs: [ unit-test-linux, test-go-linux-jdk8, test-go-linux-jdk11, check-gen-code ]
 
     steps:
       - uses: actions/checkout@v2

@@ -8,6 +8,7 @@ package gojmx
 import (
 	"fmt"
 	"github.com/newrelic/nrjmx/gojmx/internal/nrprotocol"
+	"strings"
 	"unsafe"
 )
 
@@ -60,7 +61,16 @@ func (j *JMXError) String() string {
 	if j == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("jmx error: %q, cause: %q, stacktrace: %q", j.Message, j.CauseMessage, j.Stacktrace)
+	return fmt.Sprintf("jmx error: %s, cause: %s, stacktrace: %s",
+		removeNewLines(j.Message),
+		removeNewLines(j.CauseMessage),
+		removeNewLines(j.Stacktrace))
+}
+
+func removeNewLines(text string) string {
+	text = strings.Replace(text, "\n", "\\n", -1)
+	text = strings.Replace(text, "\r", " ", -1)
+	return text
 }
 
 func (j *JMXError) Error() string {
@@ -82,7 +92,7 @@ func (e *JMXConnectionError) String() string {
 	if e == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("connection error: %q", e.Message)
+	return fmt.Sprintf("connection error: %s", removeNewLines(e.Message))
 }
 
 func (e *JMXConnectionError) Error() string {
