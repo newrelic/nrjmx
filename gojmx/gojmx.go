@@ -21,6 +21,8 @@ const (
 
 	// nrJMXExitTimeout specifies how long we wait for nrjmx process to exit.
 	nrJMXExitTimeout = 5 * time.Second
+
+	unknownNRJMXVersion = "<unknown>"
 )
 
 // errPingTimeout returned if pingTimeout exceeded.
@@ -32,12 +34,15 @@ type Client struct {
 	jmxService   nrprotocol.JMXService
 	nrJMXProcess *process
 	ctx          context.Context
+	version      string
 }
 
 // NewClient returns a JMX client.
 func NewClient(ctx context.Context) *Client {
 	return &Client{
-		ctx: ctx,
+		ctx:          ctx,
+		version:      unknownNRJMXVersion,
+		nrJMXProcess: newProcess(ctx),
 	}
 }
 
@@ -59,7 +64,7 @@ func (c *Client) Open(config *JMXConfig) (client *Client, err error) {
 		return c, err
 	}
 
-	err = c.ping(pingTimeout)
+	c.version, err = c.ping(pingTimeout)
 	if err != nil {
 		return c, err
 	}
@@ -110,13 +115,8 @@ func (c *Client) Close() error {
 }
 
 // GetClientVersion returns nrjmx version.
-func (c *Client) GetClientVersion() (version string, err error) {
-	if err = c.nrJMXProcess.error(); err != nil {
-		return "<nil>", err
-	}
-	version, err = c.jmxService.GetClientVersion(c.ctx)
-
-	return version, c.handleError(err)
+func (c *Client) GetClientVersion() string {
+	return c.version
 }
 
 // QueryMBean performs all calls necessary for retrieving all MBeanAttrs values for the mBeanNamePattern:
@@ -191,30 +191,30 @@ func (c *Client) connect(config *JMXConfig) (err error) {
 }
 
 // ping will test the communication with nrjmx subprocess.
-func (c *Client) ping(timeout time.Duration) error {
+func (c *Client) ping(timeout time.Duration) (string, error) {
 	ctx, cancel := context.WithCancel(c.ctx)
 	defer cancel()
-	done := make(chan struct{}, 1)
+	done := make(chan string, 1)
 	go func() {
 		for ctx.Err() == nil {
-			_, err := c.jmxService.GetClientVersion(ctx)
+			version, err := c.jmxService.GetClientVersion(ctx)
 			if err != nil {
 				continue
 			}
-			done <- struct{}{}
+			done <- version
 			break
 		}
 	}()
 	select {
 	case <-time.After(timeout):
-		return errPingTimeout
+		return "<nil>", errPingTimeout
 	case err, open := <-c.nrJMXProcess.state.ErrorC():
 		if err == nil && !open {
-			return errProcessNotRunning
+			return "<nil>", errProcessNotRunning
 		}
-		return err
-	case <-done:
-		return nil
+		return "<nil>", err
+	case version := <-done:
+		return version, nil
 	}
 }
 
