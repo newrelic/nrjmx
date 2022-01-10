@@ -81,8 +81,9 @@ public class JMXFetcher {
 
             this.connection = connector.getMBeanServerConnection();
         } catch (Exception e) {
-            String message = String.format("can't connect to JMX server: '%s', error: '%s', '%s', stacktrace: '%s'", connectionString,
-                    e.getLocalizedMessage(), e.getMessage(), getStackTrace(e));
+            String message = String.format("can't connect to JMX server: '%s', error: '%s'",
+                    connectionString,
+                    getErrorMessage(e));
             throw new JMXConnectionError(message);
         }
     }
@@ -610,6 +611,25 @@ public class JMXFetcher {
         if (throwable == null || jmxConfig == null || !jmxConfig.verbose) {
             return "";
         }
+        return ExceptionUtils.getStackTrace(throwable);
+    }
+
+    private String getErrorMessage(Throwable throwable) {
+        if (throwable == null) {
+            return "NULL";
+        }
+
+        String message = throwable.getMessage();
+        if (message != null && !message.equals("")) {
+            return message;
+        }
+
+        message = throwable.getLocalizedMessage();
+
+        if (message != null && !message.equals("")) {
+            return message;
+        }
+
         return ExceptionUtils.getStackTrace(throwable);
     }
 
