@@ -24,33 +24,35 @@ func (j *JMXConfig) convertToProtocol() *nrprotocol.JMXConfig {
 	return (*nrprotocol.JMXConfig)(j)
 }
 
-// JMXAttribute keeps the JMX MBean query response.
-type JMXAttribute nrprotocol.JMXAttribute
+// AttributeResponse keeps the JMX MBean query response.
+type AttributeResponse nrprotocol.AttributeResponse
 
-func (j *JMXAttribute) String() string {
+func (j *AttributeResponse) String() string {
 	if j == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("JMXAttribute(%+v)", *j)
+	return fmt.Sprintf("AttributeResponse(%+v)", *j)
 }
 
-func toJMXAttributeList(in []*nrprotocol.JMXAttribute) []*JMXAttribute {
-	return *(*[]*JMXAttribute)(unsafe.Pointer(&in))
+func toAttributeResponseList(in []*nrprotocol.AttributeResponse) []*AttributeResponse {
+	return *(*[]*AttributeResponse)(unsafe.Pointer(&in))
 }
 
-// GetValue extracts the value from JMXAttribute based on type.
-func (j *JMXAttribute) GetValue() interface{} {
-	switch (*j).ValueType {
-	case ValueTypeBool:
+// GetValue extracts the value from AttributeResponse based on type.
+func (j *AttributeResponse) GetValue() interface{} {
+	switch (*j).ResponseType {
+	case ResponseTypeBool:
 		return j.BoolValue
-	case ValueTypeString:
+	case ResponseTypeString:
 		return j.StringValue
-	case ValueTypeDouble:
+	case ResponseTypeDouble:
 		return j.DoubleValue
-	case ValueTypeInt:
+	case ResponseTypeInt:
 		return j.IntValue
+	case ResponseTypeErr:
+		return "<nil>"
 	default:
-		panic(fmt.Sprintf("unkown value type: %v", j.ValueType))
+		panic(fmt.Sprintf("unkown value type: %v", j.ResponseType))
 	}
 }
 
@@ -116,47 +118,18 @@ func IsJMXConnectionError(err error) (*JMXConnectionError, bool) {
 	return nil, false
 }
 
-// ValueType specify the type of the value of the JMXAttribute.
-type ValueType nrprotocol.ValueType
+// ResponseType specify the type of the value of the AttributeResponse.
+type ResponseType nrprotocol.ResponseType
 
 var (
-	// ValueTypeBool JMXAttribute of bool value
-	ValueTypeBool = nrprotocol.ValueType_BOOL
-	// ValueTypeString JMXAttribute of string value
-	ValueTypeString = nrprotocol.ValueType_STRING
-	// ValueTypeDouble JMXAttribute of double value
-	ValueTypeDouble = nrprotocol.ValueType_DOUBLE
-	// ValueTypeInt JMXAttribute of int value
-	ValueTypeInt = nrprotocol.ValueType_INT
+	// ResponseTypeBool AttributeResponse of bool value
+	ResponseTypeBool = nrprotocol.ResponseType_BOOL
+	// ResponseTypeString AttributeResponse of string value
+	ResponseTypeString = nrprotocol.ResponseType_STRING
+	// ResponseTypeDouble AttributeResponse of double value
+	ResponseTypeDouble = nrprotocol.ResponseType_DOUBLE
+	// ResponseTypeInt AttributeResponse of int value
+	ResponseTypeInt = nrprotocol.ResponseType_INT
+	// ResponseTypeErr AttributeResponse with error
+	ResponseTypeErr = nrprotocol.ResponseType_ERROR
 )
-
-// ResponseStatus for QueryResponse
-type ResponseStatus int
-
-const (
-	// QueryResponseStatusSuccess is returned when JMXAttribute was successfully retrieved.
-	QueryResponseStatusSuccess ResponseStatus = iota
-	// QueryResponseStatusError is returned when gojmx fails to retrieve the JMXAttribute.
-	QueryResponseStatusError
-)
-
-// QueryAttrResponse wraps the JMXAttribute with the status and status message for the request.
-type QueryAttrResponse struct {
-	Attribute *JMXAttribute
-	Status    ResponseStatus
-	StatusMsg string
-}
-
-// QueryResponse wraps the JMXAttribute with the status and status message for the request.
-type QueryResponse []*QueryAttrResponse
-
-// GetValidAttributes returns all the valid JMXAttribute from the QueryResponse by checking the query status.
-func (qr QueryResponse) GetValidAttributes() (result []*JMXAttribute) {
-	for _, attr := range qr {
-		if attr.Status != QueryResponseStatusSuccess {
-			continue
-		}
-		result = append(result, attr.Attribute)
-	}
-	return
-}

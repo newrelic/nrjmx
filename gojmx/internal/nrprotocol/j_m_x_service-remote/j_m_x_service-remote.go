@@ -26,9 +26,10 @@ func Usage() {
   fmt.Fprintln(os.Stderr, "  void connect(JMXConfig config)")
   fmt.Fprintln(os.Stderr, "  void disconnect()")
   fmt.Fprintln(os.Stderr, "  string getClientVersion()")
-  fmt.Fprintln(os.Stderr, "   getMBeanNames(string mBeanNamePattern)")
-  fmt.Fprintln(os.Stderr, "   getMBeanAttrNames(string mBeanName)")
-  fmt.Fprintln(os.Stderr, "   getMBeanAttrs(string mBeanName, string attrName)")
+  fmt.Fprintln(os.Stderr, "   queryMBeanNames(string mBeanNamePattern)")
+  fmt.Fprintln(os.Stderr, "   getMBeanAttributeNames(string mBeanName)")
+  fmt.Fprintln(os.Stderr, "   getMBeanAttributes(string mBeanName,  attributes)")
+  fmt.Fprintln(os.Stderr, "   queryMBeanAttributes(string mBeanNamePattern)")
   fmt.Fprintln(os.Stderr)
   os.Exit(0)
 }
@@ -155,19 +156,19 @@ func main() {
       fmt.Fprintln(os.Stderr, "Connect requires 1 args")
       flag.Usage()
     }
-    arg17 := flag.Arg(1)
-    mbTrans18 := thrift.NewTMemoryBufferLen(len(arg17))
-    defer mbTrans18.Close()
-    _, err19 := mbTrans18.WriteString(arg17)
-    if err19 != nil {
+    arg21 := flag.Arg(1)
+    mbTrans22 := thrift.NewTMemoryBufferLen(len(arg21))
+    defer mbTrans22.Close()
+    _, err23 := mbTrans22.WriteString(arg21)
+    if err23 != nil {
       Usage()
       return
     }
-    factory20 := thrift.NewTJSONProtocolFactory()
-    jsProt21 := factory20.GetProtocol(mbTrans18)
+    factory24 := thrift.NewTJSONProtocolFactory()
+    jsProt25 := factory24.GetProtocol(mbTrans22)
     argvalue0 := nrprotocol.NewJMXConfig()
-    err22 := argvalue0.Read(jsProt21)
-    if err22 != nil {
+    err26 := argvalue0.Read(jsProt25)
+    if err26 != nil {
       Usage()
       return
     }
@@ -191,36 +192,62 @@ func main() {
     fmt.Print(client.GetClientVersion(context.Background()))
     fmt.Print("\n")
     break
-  case "getMBeanNames":
+  case "queryMBeanNames":
     if flag.NArg() - 1 != 1 {
-      fmt.Fprintln(os.Stderr, "GetMBeanNames requires 1 args")
+      fmt.Fprintln(os.Stderr, "QueryMBeanNames requires 1 args")
       flag.Usage()
     }
     argvalue0 := flag.Arg(1)
     value0 := argvalue0
-    fmt.Print(client.GetMBeanNames(context.Background(), value0))
+    fmt.Print(client.QueryMBeanNames(context.Background(), value0))
     fmt.Print("\n")
     break
-  case "getMBeanAttrNames":
+  case "getMBeanAttributeNames":
     if flag.NArg() - 1 != 1 {
-      fmt.Fprintln(os.Stderr, "GetMBeanAttrNames requires 1 args")
+      fmt.Fprintln(os.Stderr, "GetMBeanAttributeNames requires 1 args")
       flag.Usage()
     }
     argvalue0 := flag.Arg(1)
     value0 := argvalue0
-    fmt.Print(client.GetMBeanAttrNames(context.Background(), value0))
+    fmt.Print(client.GetMBeanAttributeNames(context.Background(), value0))
     fmt.Print("\n")
     break
-  case "getMBeanAttrs":
+  case "getMBeanAttributes":
     if flag.NArg() - 1 != 2 {
-      fmt.Fprintln(os.Stderr, "GetMBeanAttrs requires 2 args")
+      fmt.Fprintln(os.Stderr, "GetMBeanAttributes requires 2 args")
       flag.Usage()
     }
     argvalue0 := flag.Arg(1)
     value0 := argvalue0
-    argvalue1 := flag.Arg(2)
+    arg30 := flag.Arg(2)
+    mbTrans31 := thrift.NewTMemoryBufferLen(len(arg30))
+    defer mbTrans31.Close()
+    _, err32 := mbTrans31.WriteString(arg30)
+    if err32 != nil { 
+      Usage()
+      return
+    }
+    factory33 := thrift.NewTJSONProtocolFactory()
+    jsProt34 := factory33.GetProtocol(mbTrans31)
+    containerStruct1 := nrprotocol.NewJMXServiceGetMBeanAttributesArgs()
+    err35 := containerStruct1.ReadField2(jsProt34)
+    if err35 != nil {
+      Usage()
+      return
+    }
+    argvalue1 := containerStruct1.Attributes
     value1 := argvalue1
-    fmt.Print(client.GetMBeanAttrs(context.Background(), value0, value1))
+    fmt.Print(client.GetMBeanAttributes(context.Background(), value0, value1))
+    fmt.Print("\n")
+    break
+  case "queryMBeanAttributes":
+    if flag.NArg() - 1 != 1 {
+      fmt.Fprintln(os.Stderr, "QueryMBeanAttributes requires 1 args")
+      flag.Usage()
+    }
+    argvalue0 := flag.Arg(1)
+    value0 := argvalue0
+    fmt.Print(client.QueryMBeanAttributes(context.Background(), value0))
     fmt.Print("\n")
     break
   case "":

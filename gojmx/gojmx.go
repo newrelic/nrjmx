@@ -7,7 +7,6 @@ package gojmx
 
 import (
 	"context"
-	"fmt"
 	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/pkg/errors"
 	"time"
@@ -72,34 +71,34 @@ func (c *Client) Open(config *JMXConfig) (client *Client, err error) {
 	return c, c.connect(config)
 }
 
-// GetMBeanNames returns all the mbeans that match the glob pattern DOMAIN:BEAN.
+// QueryMBeanNames returns all the mbeans that match the glob pattern DOMAIN:BEAN.
 // e.g *:* or jboss.as:subsystem=remoting,configuration=endpoint
-func (c *Client) GetMBeanNames(mBeanGlobPattern string) ([]string, error) {
+func (c *Client) QueryMBeanNames(mBeanGlobPattern string) ([]string, error) {
 	if err := c.nrJMXProcess.error(); err != nil {
 		return nil, err
 	}
-	result, err := c.jmxService.GetMBeanNames(c.ctx, mBeanGlobPattern)
+	result, err := c.jmxService.QueryMBeanNames(c.ctx, mBeanGlobPattern)
 
 	return result, c.handleError(err)
 }
 
-// GetMBeanAttrNames returns all the available JMX attribute names for a given mBeanName.
-func (c *Client) GetMBeanAttrNames(mBeanName string) ([]string, error) {
+// GetMBeanAttributeNames returns all the available JMX attribute names for a given mBeanName.
+func (c *Client) GetMBeanAttributeNames(mBeanName string) ([]string, error) {
 	if err := c.nrJMXProcess.error(); err != nil {
 		return nil, err
 	}
-	result, err := c.jmxService.GetMBeanAttrNames(c.ctx, mBeanName)
+	result, err := c.jmxService.GetMBeanAttributeNames(c.ctx, mBeanName)
 	return result, c.handleError(err)
 }
 
-// GetMBeanAttrs returns the JMX attribute values.
-func (c *Client) GetMBeanAttrs(mBeanName, mBeanAttrName string) ([]*JMXAttribute, error) {
+// GetMBeanAttributes returns the JMX attribute values.
+func (c *Client) GetMBeanAttributes(mBeanName string, mBeanAttrName ...string) ([]*AttributeResponse, error) {
 	if err := c.nrJMXProcess.error(); err != nil {
 		return nil, err
 	}
 
-	result, err := c.jmxService.GetMBeanAttrs(c.ctx, mBeanName, mBeanAttrName)
-	return toJMXAttributeList(result), c.handleError(err)
+	result, err := c.jmxService.GetMBeanAttributes(c.ctx, mBeanName, mBeanAttrName)
+	return toAttributeResponseList(result), c.handleError(err)
 }
 
 // Close will stop the connection with the JMX endpoint.
@@ -119,64 +118,18 @@ func (c *Client) GetClientVersion() string {
 	return c.version
 }
 
-// QueryMBean performs all calls necessary for retrieving all MBeanAttrs values for the mBeanNamePattern:
-// 1. GetMBeanNames
-// 2. GetMBeanAttrNames
-// 3. GetMBeanAttrs
+// QueryMBeanAttributes performs all calls necessary for retrieving all MBeanAttrs values for the mBeanNamePattern:
+// 1. QueryMBeanNames
+// 2. GetMBeanAttributeNames
+// 3. GetMBeanAttributes
 // If an error occur it checks if it's a collection error (it can recover) or a connection error (that blocks all the collection).
-func (c *Client) QueryMBean(mBeanNamePattern string) (QueryResponse, error) {
-	var result QueryResponse
-
-	mBeanNames, err := c.GetMBeanNames(mBeanNamePattern)
-	if err != nil {
+func (c *Client) QueryMBeanAttributes(mBeanNamePattern string) ([]*AttributeResponse, error) {
+	if err := c.nrJMXProcess.error(); err != nil {
 		return nil, err
 	}
 
-	for _, mBeanName := range mBeanNames {
-		mBeanAttrNames, err := c.GetMBeanAttrNames(mBeanName)
-		if jmxErr, isJMXErr := IsJMXError(err); isJMXErr {
-			result = append(result, &QueryAttrResponse{
-				Status: QueryResponseStatusError,
-				StatusMsg: fmt.Sprintf("error while querying mBean name: '%s', error message: %s, error cause: %s, stacktrace: %q",
-					mBeanName,
-					jmxErr.Message,
-					jmxErr.CauseMessage,
-					jmxErr.Stacktrace,
-				),
-			})
-			continue
-		} else if err != nil {
-			return nil, err
-		}
-
-		for _, mBeanAttrName := range mBeanAttrNames {
-			jmxAttributes, err := c.GetMBeanAttrs(mBeanName, mBeanAttrName)
-			if jmxErr, isJMXErr := IsJMXError(err); isJMXErr {
-				result = append(result, &QueryAttrResponse{
-					Status: QueryResponseStatusError,
-					StatusMsg: fmt.Sprintf("error while querying mBean '%s', attribute: '%s', error message: %s, error cause: %s, stacktrace: %q",
-						mBeanName,
-						mBeanAttrName,
-						jmxErr.Message,
-						jmxErr.CauseMessage,
-						jmxErr.Stacktrace,
-					),
-				})
-				continue
-			} else if err != nil {
-				return nil, err
-			}
-
-			for _, attr := range jmxAttributes {
-				result = append(result, &QueryAttrResponse{
-					Attribute: attr,
-					Status:    QueryResponseStatusSuccess,
-					StatusMsg: "success",
-				})
-			}
-		}
-	}
-	return result, nil
+	result, err := c.jmxService.QueryMBeanAttributes(c.ctx, mBeanNamePattern)
+	return toAttributeResponseList(result), c.handleError(err)
 }
 
 // connect will pass the JMXConfig to nrjmx subprocess and establish the

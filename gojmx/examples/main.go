@@ -24,9 +24,9 @@ func init() {
 func main() {
 	// JMX Client configuration.
 	config := &gojmx.JMXConfig{
-		Hostname:        "localhost",
-		Port:            7199,
-		RequestTimoutMs: 10000,
+		Hostname:         "localhost",
+		Port:             7199,
+		RequestTimeoutMs: 10000,
 	}
 
 	// Connect to JMX endpoint.
@@ -34,17 +34,17 @@ func main() {
 	handleError(err)
 
 	// Get the mBean names.
-	mBeanNames, err := client.GetMBeanNames("java.lang:type=*")
+	mBeanNames, err := client.QueryMBeanNames("java.lang:type=*")
 	handleError(err)
 
 	// Get the Attribute names for each mBeanName.
 	for _, mBeanName := range mBeanNames {
-		mBeanAttrNames, err := client.GetMBeanAttrNames(mBeanName)
+		mBeanAttrNames, err := client.GetMBeanAttributeNames(mBeanName)
 		handleError(err)
 
 		for _, mBeanAttrName := range mBeanAttrNames {
 			// Get the attribute value for each mBeanName and mBeanAttributeName.
-			jmxAttrs, err := client.GetMBeanAttrs(mBeanName, mBeanAttrName)
+			jmxAttrs, err := client.GetMBeanAttributes(mBeanName, mBeanAttrName)
 			if err != nil {
 				fmt.Println(err)
 				continue
@@ -56,24 +56,24 @@ func main() {
 	}
 
 	// Or use QueryMBean call which wraps all the necessary requests to get the values for an MBeanNamePattern.
-	response, err := client.QueryMBean("java.lang:type=*")
+	response, err := client.QueryMBeanAttributes("java.lang:type=*")
 	handleError(err)
 	for _, attr := range response {
-		if attr.Status == gojmx.QueryResponseStatusError {
+		if attr.ResponseType == gojmx.ResponseTypeErr {
 			fmt.Println(attr.StatusMsg)
 			continue
 		}
-		printAttr(attr.Attribute)
+		printAttr(attr)
 	}
 }
 
-func printAttr(jmxAttr *gojmx.JMXAttribute) {
+func printAttr(jmxAttr *gojmx.AttributeResponse) {
 	_, _ = fmt.Fprintf(
 		os.Stdout,
 		"Attribute Name: %s\nAttribute Value: %v\nAttribute Value Type: %v\n\n",
-		jmxAttr.Attribute,
+		jmxAttr.Name,
 		jmxAttr.GetValue(),
-		jmxAttr.ValueType,
+		jmxAttr.ResponseType,
 	)
 }
 

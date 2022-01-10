@@ -29,7 +29,7 @@ func Test_FormatConfig(t *testing.T) {
 		IsRemote:              true,
 		IsJBossStandaloneMode: true,
 		UseSSL:                true,
-		RequestTimoutMs:       4567,
+		RequestTimeoutMs:      4567,
 		Verbose:               true,
 	}
 
@@ -81,7 +81,7 @@ func Test_FormatConfig_ConnectionURL(t *testing.T) {
 		IsRemote:              true,
 		IsJBossStandaloneMode: true,
 		UseSSL:                true,
-		RequestTimoutMs:       4567,
+		RequestTimeoutMs:      4567,
 	}
 
 	hideSecrets := true
@@ -133,26 +133,26 @@ collect:
 ##############################################
 `
 
-	attributes := []*JMXAttribute{
+	attributes := []*AttributeResponse{
 		{
-			Attribute: "abc:def,attr=xyz",
-			ValueType: ValueTypeInt,
-			IntValue:  3,
+			Name:         "abc:def,attr=xyz",
+			ResponseType: ResponseTypeInt,
+			IntValue:     3,
 		},
 		{
-			Attribute:   "abc:def,attr=xyz",
-			ValueType:   ValueTypeDouble,
-			DoubleValue: 3.2,
+			Name:         "abc:def,attr=xyz",
+			ResponseType: ResponseTypeDouble,
+			DoubleValue:  3.2,
 		},
 		{
-			Attribute:   "abc:ghi,attr=xyz",
-			ValueType:   ValueTypeDouble,
-			DoubleValue: 3.2,
+			Name:         "abc:ghi,attr=xyz",
+			ResponseType: ResponseTypeDouble,
+			DoubleValue:  3.2,
 		},
 		{
-			Attribute: "jlk:mno,attr=xyz",
-			ValueType: ValueTypeBool,
-			BoolValue: true,
+			Name:         "jlk:mno,attr=xyz",
+			ResponseType: ResponseTypeBool,
+			BoolValue:    true,
 		},
 	}
 
@@ -171,11 +171,11 @@ func Test_FormatJMXAttributes_WrongFormat(t *testing.T) {
 	// Nil attributes
 	assert.Equal(t, noAttributesFormat, FormatJMXAttributes(nil))
 
-	wrongAttributeFormat := []*JMXAttribute{
+	wrongAttributeFormat := []*AttributeResponse{
 		{
-			Attribute: "abc",
-			ValueType: ValueTypeInt,
-			IntValue:  3,
+			Name:         "abc",
+			ResponseType: ResponseTypeInt,
+			IntValue:     3,
 		},
 	}
 

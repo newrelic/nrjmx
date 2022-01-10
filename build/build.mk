@@ -34,6 +34,8 @@ code-gen-utils:
 
 .PHONY : code-gen
 code-gen: code-gen-utils
+	rm -rf src/main/java/org/newrelic/nrjmx/v2/nrprotocol
+	rm -rf gojmx/internal/nrprotocol
 	@($(DOCKER_THRIFT) thrift -r --out src/main/java/ --gen java:generated_annotations=suppress ./commons/nrjmx.thrift)
 	@($(DOCKER_THRIFT) thrift -r --out gojmx/internal/ --gen go:package_prefix=github.com/newrelic/nrjmx/gojmx/internal/,package=nrprotocol ./commons/nrjmx.thrift)
 
