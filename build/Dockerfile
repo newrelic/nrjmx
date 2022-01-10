@@ -1,6 +1,6 @@
 FROM maven:3.6-jdk-8
 
-ARG GH_VERSION='1.1.0'
+ARG GH_VERSION='2.0.0'
 ARG GO_VERSION='1.16.10'
 
 RUN apt-get update && \
