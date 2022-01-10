@@ -266,7 +266,7 @@ func Test_QueryMBean_Success(t *testing.T) {
 		{
 			Name:         "test:type=Cat,name=tomas,attr=DateValue",
 			ResponseType: ResponseTypeErr,
-			StatusMsg:    `can't parse attribute, error: found a null value for bean: test:type=Cat,name=tomas,attr=DateValue, cause: null, stacktrace: null`,
+			StatusMsg:    `can't parse attribute, error: 'found a null value for bean: test:type=Cat,name=tomas,attr=DateValue', cause: 'null', stacktrace: 'null'`,
 		},
 	}
 
@@ -682,7 +682,7 @@ func Test_Connector_Success(t *testing.T) {
 	expected := []*AttributeResponse{
 		{
 			Name:         "jboss.as:subsystem=remoting,configuration=endpoint,attr=authRealm",
-			StatusMsg:    "can't parse attribute, error: found a null value for bean: jboss.as:subsystem=remoting,configuration=endpoint,attr=authRealm, cause: null, stacktrace: null",
+			StatusMsg:    "can't parse attribute, error: 'found a null value for bean: jboss.as:subsystem=remoting,configuration=endpoint,attr=authRealm', cause: 'null', stacktrace: 'null'",
 			ResponseType: ResponseTypeErr,
 		},
 		{
@@ -692,12 +692,12 @@ func Test_Connector_Success(t *testing.T) {
 		},
 		{
 			Name:         "jboss.as:subsystem=remoting,configuration=endpoint,attr=authorizeId",
-			StatusMsg:    "can't parse attribute, error: found a null value for bean: jboss.as:subsystem=remoting,configuration=endpoint,attr=authorizeId, cause: null, stacktrace: null",
+			StatusMsg:    "can't parse attribute, error: 'found a null value for bean: jboss.as:subsystem=remoting,configuration=endpoint,attr=authorizeId', cause: 'null', stacktrace: 'null'",
 			ResponseType: ResponseTypeErr,
 		},
 		{
 			Name:         "jboss.as:subsystem=remoting,configuration=endpoint,attr=bufferRegionSize",
-			StatusMsg:    "can't parse attribute, error: found a null value for bean: jboss.as:subsystem=remoting,configuration=endpoint,attr=bufferRegionSize, cause: null, stacktrace: null",
+			StatusMsg:    "can't parse attribute, error: 'found a null value for bean: jboss.as:subsystem=remoting,configuration=endpoint,attr=bufferRegionSize', cause: 'null', stacktrace: 'null'",
 			ResponseType: ResponseTypeErr,
 		},
 		{
@@ -742,7 +742,7 @@ func Test_Connector_Success(t *testing.T) {
 		},
 		{
 			Name:         "jboss.as:subsystem=remoting,configuration=endpoint,attr=serverName",
-			StatusMsg:    "can't parse attribute, error: found a null value for bean: jboss.as:subsystem=remoting,configuration=endpoint,attr=serverName, cause: null, stacktrace: null",
+			StatusMsg:    "can't parse attribute, error: 'found a null value for bean: jboss.as:subsystem=remoting,configuration=endpoint,attr=serverName', cause: 'null', stacktrace: 'null'",
 			ResponseType: ResponseTypeErr,
 		},
 		{
