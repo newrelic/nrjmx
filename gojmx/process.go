@@ -25,11 +25,6 @@ var (
 	errProcessNotRunning     = newJMXConnectionError("nrjmx subprocess is not running")
 )
 
-type readCloser struct {
-	io.Reader
-	io.Closer
-}
-
 // process will handle the nrjmx subprocess.
 type process struct {
 	ctx    context.Context
@@ -67,28 +62,10 @@ func (p *process) start() (*process, error) {
 		}
 	}()
 
-	//b := bytes.Buffer{}
-
-	stdout, err := p.cmd.StdoutPipe()
+	p.Stdout, err = p.cmd.StdoutPipe()
 	if err != nil {
 		return nil, newJMXConnectionError("failed to create stdout pipe to %q: %v", p.cmd.Path, err)
 	}
-
-	//tee := io.TeeReader(stdout, &b)
-	//teeCloser := readCloser{tee, nil}
-	//
-	//go func() {
-	//	for {
-	//		res, _ := io.ReadAll(&b)
-	//		if len(res) == 0 {
-	//			continue
-	//		}
-	//		fmt.Print(string(res))
-	//		//time.Sleep(10 * time.Millisecond)
-	//	}
-	//}()
-
-	p.Stdout = stdout
 
 	p.Stdin, err = p.cmd.StdinPipe()
 	if err != nil {
