@@ -81,8 +81,8 @@ public class JMXFetcher {
 
             this.connection = connector.getMBeanServerConnection();
         } catch (Exception e) {
-            String message = String.format("can't connect to JMX server: '%s', error: '%s'", connectionString,
-                    e.getMessage());
+            String message = String.format("can't connect to JMX server: '%s', error: '%s', '%s', stacktrace: '%s'", connectionString,
+                    e.getLocalizedMessage(), e.getMessage(), getStackTrace(e));
             throw new JMXConnectionError(message);
         }
     }
@@ -277,7 +277,7 @@ public class JMXFetcher {
                 try {
                     getMBeanAttribute(objectName, attribute, output);
                 } catch (JMXError je) {
-                    String statusMessage = String.format("can't get attribute, error: %s, cause: %s, stacktrace: %s", je.message, je.causeMessage, je.stacktrace);
+                    String statusMessage = String.format("can't get attribute, error: '%s', cause: '%s', stacktrace: '%s'", je.message, je.causeMessage, je.stacktrace);
                     output.add(new AttributeResponse()
                             .setName(formattedAttrName)
                             .setResponseType(ResponseType.ERROR)
@@ -292,7 +292,7 @@ public class JMXFetcher {
             try {
                 parseValue(formattedAttrName, attrValue.getValue(), output);
             } catch (JMXError je) {
-                String statusMessage = String.format("can't parse attribute, error: %s, cause: %s, stacktrace: %s", je.message, je.causeMessage, je.stacktrace);
+                String statusMessage = String.format("can't parse attribute, error: '%s', cause: '%s', stacktrace: '%s'", je.message, je.causeMessage, je.stacktrace);
                 output.add(new AttributeResponse()
                         .setName(formattedAttrName)
                         .setResponseType(ResponseType.ERROR)
