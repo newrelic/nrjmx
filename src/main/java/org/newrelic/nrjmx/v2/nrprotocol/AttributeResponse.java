@@ -7,25 +7,27 @@
 package org.newrelic.nrjmx.v2.nrprotocol;
 
 @SuppressWarnings({"cast", "rawtypes", "serial", "unchecked", "unused"})
-public class JMXAttribute implements org.apache.thrift.TBase<JMXAttribute, JMXAttribute._Fields>, java.io.Serializable, Cloneable, Comparable<JMXAttribute> {
-  private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("JMXAttribute");
+public class AttributeResponse implements org.apache.thrift.TBase<AttributeResponse, AttributeResponse._Fields>, java.io.Serializable, Cloneable, Comparable<AttributeResponse> {
+  private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("AttributeResponse");
 
-  private static final org.apache.thrift.protocol.TField ATTRIBUTE_FIELD_DESC = new org.apache.thrift.protocol.TField("attribute", org.apache.thrift.protocol.TType.STRING, (short)1);
-  private static final org.apache.thrift.protocol.TField VALUE_TYPE_FIELD_DESC = new org.apache.thrift.protocol.TField("valueType", org.apache.thrift.protocol.TType.I32, (short)2);
-  private static final org.apache.thrift.protocol.TField STRING_VALUE_FIELD_DESC = new org.apache.thrift.protocol.TField("stringValue", org.apache.thrift.protocol.TType.STRING, (short)3);
-  private static final org.apache.thrift.protocol.TField DOUBLE_VALUE_FIELD_DESC = new org.apache.thrift.protocol.TField("doubleValue", org.apache.thrift.protocol.TType.DOUBLE, (short)4);
-  private static final org.apache.thrift.protocol.TField INT_VALUE_FIELD_DESC = new org.apache.thrift.protocol.TField("intValue", org.apache.thrift.protocol.TType.I64, (short)5);
-  private static final org.apache.thrift.protocol.TField BOOL_VALUE_FIELD_DESC = new org.apache.thrift.protocol.TField("boolValue", org.apache.thrift.protocol.TType.BOOL, (short)6);
+  private static final org.apache.thrift.protocol.TField STATUS_MSG_FIELD_DESC = new org.apache.thrift.protocol.TField("statusMsg", org.apache.thrift.protocol.TType.STRING, (short)1);
+  private static final org.apache.thrift.protocol.TField NAME_FIELD_DESC = new org.apache.thrift.protocol.TField("name", org.apache.thrift.protocol.TType.STRING, (short)2);
+  private static final org.apache.thrift.protocol.TField RESPONSE_TYPE_FIELD_DESC = new org.apache.thrift.protocol.TField("responseType", org.apache.thrift.protocol.TType.I32, (short)3);
+  private static final org.apache.thrift.protocol.TField STRING_VALUE_FIELD_DESC = new org.apache.thrift.protocol.TField("stringValue", org.apache.thrift.protocol.TType.STRING, (short)4);
+  private static final org.apache.thrift.protocol.TField DOUBLE_VALUE_FIELD_DESC = new org.apache.thrift.protocol.TField("doubleValue", org.apache.thrift.protocol.TType.DOUBLE, (short)5);
+  private static final org.apache.thrift.protocol.TField INT_VALUE_FIELD_DESC = new org.apache.thrift.protocol.TField("intValue", org.apache.thrift.protocol.TType.I64, (short)6);
+  private static final org.apache.thrift.protocol.TField BOOL_VALUE_FIELD_DESC = new org.apache.thrift.protocol.TField("boolValue", org.apache.thrift.protocol.TType.BOOL, (short)7);
 
-  private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new JMXAttributeStandardSchemeFactory();
-  private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new JMXAttributeTupleSchemeFactory();
+  private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new AttributeResponseStandardSchemeFactory();
+  private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new AttributeResponseTupleSchemeFactory();
 
-  public @org.apache.thrift.annotation.Nullable java.lang.String attribute; // required
+  public @org.apache.thrift.annotation.Nullable java.lang.String statusMsg; // required
+  public @org.apache.thrift.annotation.Nullable java.lang.String name; // required
   /**
    * 
-   * @see ValueType
+   * @see ResponseType
    */
-  public @org.apache.thrift.annotation.Nullable ValueType valueType; // required
+  public @org.apache.thrift.annotation.Nullable ResponseType responseType; // required
   public @org.apache.thrift.annotation.Nullable java.lang.String stringValue; // required
   public double doubleValue; // required
   public long intValue; // required
@@ -33,16 +35,17 @@ public class JMXAttribute implements org.apache.thrift.TBase<JMXAttribute, JMXAt
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-    ATTRIBUTE((short)1, "attribute"),
+    STATUS_MSG((short)1, "statusMsg"),
+    NAME((short)2, "name"),
     /**
      * 
-     * @see ValueType
+     * @see ResponseType
      */
-    VALUE_TYPE((short)2, "valueType"),
-    STRING_VALUE((short)3, "stringValue"),
-    DOUBLE_VALUE((short)4, "doubleValue"),
-    INT_VALUE((short)5, "intValue"),
-    BOOL_VALUE((short)6, "boolValue");
+    RESPONSE_TYPE((short)3, "responseType"),
+    STRING_VALUE((short)4, "stringValue"),
+    DOUBLE_VALUE((short)5, "doubleValue"),
+    INT_VALUE((short)6, "intValue"),
+    BOOL_VALUE((short)7, "boolValue");
 
     private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -58,17 +61,19 @@ public class JMXAttribute implements org.apache.thrift.TBase<JMXAttribute, JMXAt
     @org.apache.thrift.annotation.Nullable
     public static _Fields findByThriftId(int fieldId) {
       switch(fieldId) {
-        case 1: // ATTRIBUTE
-          return ATTRIBUTE;
-        case 2: // VALUE_TYPE
-          return VALUE_TYPE;
-        case 3: // STRING_VALUE
+        case 1: // STATUS_MSG
+          return STATUS_MSG;
+        case 2: // NAME
+          return NAME;
+        case 3: // RESPONSE_TYPE
+          return RESPONSE_TYPE;
+        case 4: // STRING_VALUE
           return STRING_VALUE;
-        case 4: // DOUBLE_VALUE
+        case 5: // DOUBLE_VALUE
           return DOUBLE_VALUE;
-        case 5: // INT_VALUE
+        case 6: // INT_VALUE
           return INT_VALUE;
-        case 6: // BOOL_VALUE
+        case 7: // BOOL_VALUE
           return BOOL_VALUE;
         default:
           return null;
@@ -118,10 +123,12 @@ public class JMXAttribute implements org.apache.thrift.TBase<JMXAttribute, JMXAt
   public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
-    tmpMap.put(_Fields.ATTRIBUTE, new org.apache.thrift.meta_data.FieldMetaData("attribute", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+    tmpMap.put(_Fields.STATUS_MSG, new org.apache.thrift.meta_data.FieldMetaData("statusMsg", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
-    tmpMap.put(_Fields.VALUE_TYPE, new org.apache.thrift.meta_data.FieldMetaData("valueType", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-        new org.apache.thrift.meta_data.EnumMetaData(org.apache.thrift.protocol.TType.ENUM, ValueType.class)));
+    tmpMap.put(_Fields.NAME, new org.apache.thrift.meta_data.FieldMetaData("name", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+    tmpMap.put(_Fields.RESPONSE_TYPE, new org.apache.thrift.meta_data.FieldMetaData("responseType", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+        new org.apache.thrift.meta_data.EnumMetaData(org.apache.thrift.protocol.TType.ENUM, ResponseType.class)));
     tmpMap.put(_Fields.STRING_VALUE, new org.apache.thrift.meta_data.FieldMetaData("stringValue", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     tmpMap.put(_Fields.DOUBLE_VALUE, new org.apache.thrift.meta_data.FieldMetaData("doubleValue", org.apache.thrift.TFieldRequirementType.DEFAULT, 
@@ -131,23 +138,25 @@ public class JMXAttribute implements org.apache.thrift.TBase<JMXAttribute, JMXAt
     tmpMap.put(_Fields.BOOL_VALUE, new org.apache.thrift.meta_data.FieldMetaData("boolValue", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
     metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
-    org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(JMXAttribute.class, metaDataMap);
+    org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(AttributeResponse.class, metaDataMap);
   }
 
-  public JMXAttribute() {
+  public AttributeResponse() {
   }
 
-  public JMXAttribute(
-    java.lang.String attribute,
-    ValueType valueType,
+  public AttributeResponse(
+    java.lang.String statusMsg,
+    java.lang.String name,
+    ResponseType responseType,
     java.lang.String stringValue,
     double doubleValue,
     long intValue,
     boolean boolValue)
   {
     this();
-    this.attribute = attribute;
-    this.valueType = valueType;
+    this.statusMsg = statusMsg;
+    this.name = name;
+    this.responseType = responseType;
     this.stringValue = stringValue;
     this.doubleValue = doubleValue;
     setDoubleValueIsSet(true);
@@ -160,13 +169,16 @@ public class JMXAttribute implements org.apache.thrift.TBase<JMXAttribute, JMXAt
   /**
    * Performs a deep copy on <i>other</i>.
    */
-  public JMXAttribute(JMXAttribute other) {
+  public AttributeResponse(AttributeResponse other) {
     __isset_bitfield = other.__isset_bitfield;
-    if (other.isSetAttribute()) {
-      this.attribute = other.attribute;
+    if (other.isSetStatusMsg()) {
+      this.statusMsg = other.statusMsg;
     }
-    if (other.isSetValueType()) {
-      this.valueType = other.valueType;
+    if (other.isSetName()) {
+      this.name = other.name;
+    }
+    if (other.isSetResponseType()) {
+      this.responseType = other.responseType;
     }
     if (other.isSetStringValue()) {
       this.stringValue = other.stringValue;
@@ -176,14 +188,15 @@ public class JMXAttribute implements org.apache.thrift.TBase<JMXAttribute, JMXAt
     this.boolValue = other.boolValue;
   }
 
-  public JMXAttribute deepCopy() {
-    return new JMXAttribute(this);
+  public AttributeResponse deepCopy() {
+    return new AttributeResponse(this);
   }
 
   @Override
   public void clear() {
-    this.attribute = null;
-    this.valueType = null;
+    this.statusMsg = null;
+    this.name = null;
+    this.responseType = null;
     this.stringValue = null;
     setDoubleValueIsSet(false);
     this.doubleValue = 0.0;
@@ -194,60 +207,85 @@ public class JMXAttribute implements org.apache.thrift.TBase<JMXAttribute, JMXAt
   }
 
   @org.apache.thrift.annotation.Nullable
-  public java.lang.String getAttribute() {
-    return this.attribute;
+  public java.lang.String getStatusMsg() {
+    return this.statusMsg;
   }
 
-  public JMXAttribute setAttribute(@org.apache.thrift.annotation.Nullable java.lang.String attribute) {
-    this.attribute = attribute;
+  public AttributeResponse setStatusMsg(@org.apache.thrift.annotation.Nullable java.lang.String statusMsg) {
+    this.statusMsg = statusMsg;
     return this;
   }
 
-  public void unsetAttribute() {
-    this.attribute = null;
+  public void unsetStatusMsg() {
+    this.statusMsg = null;
   }
 
-  /** Returns true if field attribute is set (has been assigned a value) and false otherwise */
-  public boolean isSetAttribute() {
-    return this.attribute != null;
+  /** Returns true if field statusMsg is set (has been assigned a value) and false otherwise */
+  public boolean isSetStatusMsg() {
+    return this.statusMsg != null;
   }
 
-  public void setAttributeIsSet(boolean value) {
+  public void setStatusMsgIsSet(boolean value) {
     if (!value) {
-      this.attribute = null;
+      this.statusMsg = null;
+    }
+  }
+
+  @org.apache.thrift.annotation.Nullable
+  public java.lang.String getName() {
+    return this.name;
+  }
+
+  public AttributeResponse setName(@org.apache.thrift.annotation.Nullable java.lang.String name) {
+    this.name = name;
+    return this;
+  }
+
+  public void unsetName() {
+    this.name = null;
+  }
+
+  /** Returns true if field name is set (has been assigned a value) and false otherwise */
+  public boolean isSetName() {
+    return this.name != null;
+  }
+
+  public void setNameIsSet(boolean value) {
+    if (!value) {
+      this.name = null;
     }
   }
 
   /**
    * 
-   * @see ValueType
+   * @see ResponseType
    */
   @org.apache.thrift.annotation.Nullable
-  public ValueType getValueType() {
-    return this.valueType;
+  public ResponseType getResponseType() {
+    return this.responseType;
   }
 
   /**
    * 
-   * @see ValueType
+   * @see ResponseType
    */
-  public JMXAttribute setValueType(@org.apache.thrift.annotation.Nullable ValueType valueType) {
-    this.valueType = valueType;
+  public AttributeResponse setResponseType(@org.apache.thrift.annotation.Nullable ResponseType responseType) {
+    this.responseType = responseType;
     return this;
   }
 
-  public void unsetValueType() {
-    this.valueType = null;
+  public void unsetResponseType() {
+    this.responseType = null;
   }
 
-  /** Returns true if field valueType is set (has been assigned a value) and false otherwise */
-  public boolean isSetValueType() {
-    return this.valueType != null;
+  /** Returns true if field responseType is set (has been assigned a value) and false otherwise */
+  public boolean isSetResponseType() {
+    return this.responseType != null;
   }
 
-  public void setValueTypeIsSet(boolean value) {
+  public void setResponseTypeIsSet(boolean value) {
     if (!value) {
-      this.valueType = null;
+      this.responseType = null;
     }
   }
 
@@ -256,7 +294,7 @@ public class JMXAttribute implements org.apache.thrift.TBase<JMXAttribute, JMXAt
     return this.stringValue;
   }
 
-  public JMXAttribute setStringValue(@org.apache.thrift.annotation.Nullable java.lang.String stringValue) {
+  public AttributeResponse setStringValue(@org.apache.thrift.annotation.Nullable java.lang.String stringValue) {
     this.stringValue = stringValue;
     return this;
   }
@@ -280,7 +318,7 @@ public class JMXAttribute implements org.apache.thrift.TBase<JMXAttribute, JMXAt
     return this.doubleValue;
   }
 
-  public JMXAttribute setDoubleValue(double doubleValue) {
+  public AttributeResponse setDoubleValue(double doubleValue) {
     this.doubleValue = doubleValue;
     setDoubleValueIsSet(true);
     return this;
@@ -303,7 +341,7 @@ public class JMXAttribute implements org.apache.thrift.TBase<JMXAttribute, JMXAt
     return this.intValue;
   }
 
-  public JMXAttribute setIntValue(long intValue) {
+  public AttributeResponse setIntValue(long intValue) {
     this.intValue = intValue;
     setIntValueIsSet(true);
     return this;
@@ -326,7 +364,7 @@ public class JMXAttribute implements org.apache.thrift.TBase<JMXAttribute, JMXAt
     return this.boolValue;
   }
 
-  public JMXAttribute setBoolValue(boolean boolValue) {
+  public AttributeResponse setBoolValue(boolean boolValue) {
     this.boolValue = boolValue;
     setBoolValueIsSet(true);
     return this;
@@ -347,19 +385,27 @@ public class JMXAttribute implements org.apache.thrift.TBase<JMXAttribute, JMXAt
 
   public void setFieldValue(_Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
     switch (field) {
-    case ATTRIBUTE:
+    case STATUS_MSG:
       if (value == null) {
-        unsetAttribute();
+        unsetStatusMsg();
       } else {
-        setAttribute((java.lang.String)value);
+        setStatusMsg((java.lang.String)value);
       }
       break;
 
-    case VALUE_TYPE:
+    case NAME:
       if (value == null) {
-        unsetValueType();
+        unsetName();
       } else {
-        setValueType((ValueType)value);
+        setName((java.lang.String)value);
+      }
+      break;
+
+    case RESPONSE_TYPE:
+      if (value == null) {
+        unsetResponseType();
+      } else {
+        setResponseType((ResponseType)value);
       }
       break;
 
@@ -401,11 +447,14 @@ public class JMXAttribute implements org.apache.thrift.TBase<JMXAttribute, JMXAt
   @org.apache.thrift.annotation.Nullable
   public java.lang.Object getFieldValue(_Fields field) {
     switch (field) {
-    case ATTRIBUTE:
-      return getAttribute();
+    case STATUS_MSG:
+      return getStatusMsg();
 
-    case VALUE_TYPE:
-      return getValueType();
+    case NAME:
+      return getName();
+
+    case RESPONSE_TYPE:
+      return getResponseType();
 
     case STRING_VALUE:
       return getStringValue();
@@ -430,10 +479,12 @@ public class JMXAttribute implements org.apache.thrift.TBase<JMXAttribute, JMXAt
     }
 
     switch (field) {
-    case ATTRIBUTE:
-      return isSetAttribute();
-    case VALUE_TYPE:
-      return isSetValueType();
+    case STATUS_MSG:
+      return isSetStatusMsg();
+    case NAME:
+      return isSetName();
+    case RESPONSE_TYPE:
+      return isSetResponseType();
     case STRING_VALUE:
       return isSetStringValue();
     case DOUBLE_VALUE:
@@ -450,32 +501,41 @@ public class JMXAttribute implements org.apache.thrift.TBase<JMXAttribute, JMXAt
   public boolean equals(java.lang.Object that) {
     if (that == null)
       return false;
-    if (that instanceof JMXAttribute)
-      return this.equals((JMXAttribute)that);
+    if (that instanceof AttributeResponse)
+      return this.equals((AttributeResponse)that);
     return false;
   }
 
-  public boolean equals(JMXAttribute that) {
+  public boolean equals(AttributeResponse that) {
     if (that == null)
       return false;
     if (this == that)
       return true;
 
-    boolean this_present_attribute = true && this.isSetAttribute();
-    boolean that_present_attribute = true && that.isSetAttribute();
-    if (this_present_attribute || that_present_attribute) {
-      if (!(this_present_attribute && that_present_attribute))
+    boolean this_present_statusMsg = true && this.isSetStatusMsg();
+    boolean that_present_statusMsg = true && that.isSetStatusMsg();
+    if (this_present_statusMsg || that_present_statusMsg) {
+      if (!(this_present_statusMsg && that_present_statusMsg))
         return false;
-      if (!this.attribute.equals(that.attribute))
+      if (!this.statusMsg.equals(that.statusMsg))
         return false;
     }
 
-    boolean this_present_valueType = true && this.isSetValueType();
-    boolean that_present_valueType = true && that.isSetValueType();
-    if (this_present_valueType || that_present_valueType) {
-      if (!(this_present_valueType && that_present_valueType))
+    boolean this_present_name = true && this.isSetName();
+    boolean that_present_name = true && that.isSetName();
+    if (this_present_name || that_present_name) {
+      if (!(this_present_name && that_present_name))
         return false;
-      if (!this.valueType.equals(that.valueType))
+      if (!this.name.equals(that.name))
+        return false;
+    }
+
+    boolean this_present_responseType = true && this.isSetResponseType();
+    boolean that_present_responseType = true && that.isSetResponseType();
+    if (this_present_responseType || that_present_responseType) {
+      if (!(this_present_responseType && that_present_responseType))
+        return false;
+      if (!this.responseType.equals(that.responseType))
         return false;
     }
 
@@ -522,13 +582,17 @@ public class JMXAttribute implements org.apache.thrift.TBase<JMXAttribute, JMXAt
   public int hashCode() {
     int hashCode = 1;
 
-    hashCode = hashCode * 8191 + ((isSetAttribute()) ? 131071 : 524287);
-    if (isSetAttribute())
-      hashCode = hashCode * 8191 + attribute.hashCode();
+    hashCode = hashCode * 8191 + ((isSetStatusMsg()) ? 131071 : 524287);
+    if (isSetStatusMsg())
+      hashCode = hashCode * 8191 + statusMsg.hashCode();
 
-    hashCode = hashCode * 8191 + ((isSetValueType()) ? 131071 : 524287);
-    if (isSetValueType())
-      hashCode = hashCode * 8191 + valueType.getValue();
+    hashCode = hashCode * 8191 + ((isSetName()) ? 131071 : 524287);
+    if (isSetName())
+      hashCode = hashCode * 8191 + name.hashCode();
+
+    hashCode = hashCode * 8191 + ((isSetResponseType()) ? 131071 : 524287);
+    if (isSetResponseType())
+      hashCode = hashCode * 8191 + responseType.getValue();
 
     hashCode = hashCode * 8191 + ((isSetStringValue()) ? 131071 : 524287);
     if (isSetStringValue())
@@ -544,29 +608,39 @@ public class JMXAttribute implements org.apache.thrift.TBase<JMXAttribute, JMXAt
   }
 
   @Override
-  public int compareTo(JMXAttribute other) {
+  public int compareTo(AttributeResponse other) {
     if (!getClass().equals(other.getClass())) {
       return getClass().getName().compareTo(other.getClass().getName());
     }
 
     int lastComparison = 0;
 
-    lastComparison = java.lang.Boolean.valueOf(isSetAttribute()).compareTo(other.isSetAttribute());
+    lastComparison = java.lang.Boolean.valueOf(isSetStatusMsg()).compareTo(other.isSetStatusMsg());
     if (lastComparison != 0) {
       return lastComparison;
     }
-    if (isSetAttribute()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.attribute, other.attribute);
+    if (isSetStatusMsg()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.statusMsg, other.statusMsg);
       if (lastComparison != 0) {
         return lastComparison;
       }
     }
-    lastComparison = java.lang.Boolean.valueOf(isSetValueType()).compareTo(other.isSetValueType());
+    lastComparison = java.lang.Boolean.valueOf(isSetName()).compareTo(other.isSetName());
     if (lastComparison != 0) {
       return lastComparison;
     }
-    if (isSetValueType()) {
-      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.valueType, other.valueType);
+    if (isSetName()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.name, other.name);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = java.lang.Boolean.valueOf(isSetResponseType()).compareTo(other.isSetResponseType());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetResponseType()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.responseType, other.responseType);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -629,22 +703,30 @@ public class JMXAttribute implements org.apache.thrift.TBase<JMXAttribute, JMXAt
 
   @Override
   public java.lang.String toString() {
-    java.lang.StringBuilder sb = new java.lang.StringBuilder("JMXAttribute(");
+    java.lang.StringBuilder sb = new java.lang.StringBuilder("AttributeResponse(");
     boolean first = true;
 
-    sb.append("attribute:");
-    if (this.attribute == null) {
+    sb.append("statusMsg:");
+    if (this.statusMsg == null) {
       sb.append("null");
     } else {
-      sb.append(this.attribute);
+      sb.append(this.statusMsg);
     }
     first = false;
     if (!first) sb.append(", ");
-    sb.append("valueType:");
-    if (this.valueType == null) {
+    sb.append("name:");
+    if (this.name == null) {
       sb.append("null");
     } else {
-      sb.append(this.valueType);
+      sb.append(this.name);
+    }
+    first = false;
+    if (!first) sb.append(", ");
+    sb.append("responseType:");
+    if (this.responseType == null) {
+      sb.append("null");
+    } else {
+      sb.append(this.responseType);
     }
     first = false;
     if (!first) sb.append(", ");
@@ -694,15 +776,15 @@ public class JMXAttribute implements org.apache.thrift.TBase<JMXAttribute, JMXAt
     }
   }
 
-  private static class JMXAttributeStandardSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
-    public JMXAttributeStandardScheme getScheme() {
-      return new JMXAttributeStandardScheme();
+  private static class AttributeResponseStandardSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+    public AttributeResponseStandardScheme getScheme() {
+      return new AttributeResponseStandardScheme();
     }
   }
 
-  private static class JMXAttributeStandardScheme extends org.apache.thrift.scheme.StandardScheme<JMXAttribute> {
+  private static class AttributeResponseStandardScheme extends org.apache.thrift.scheme.StandardScheme<AttributeResponse> {
 
-    public void read(org.apache.thrift.protocol.TProtocol iprot, JMXAttribute struct) throws org.apache.thrift.TException {
+    public void read(org.apache.thrift.protocol.TProtocol iprot, AttributeResponse struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TField schemeField;
       iprot.readStructBegin();
       while (true)
@@ -712,23 +794,31 @@ public class JMXAttribute implements org.apache.thrift.TBase<JMXAttribute, JMXAt
           break;
         }
         switch (schemeField.id) {
-          case 1: // ATTRIBUTE
+          case 1: // STATUS_MSG
             if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-              struct.attribute = iprot.readString();
-              struct.setAttributeIsSet(true);
+              struct.statusMsg = iprot.readString();
+              struct.setStatusMsgIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 2: // VALUE_TYPE
+          case 2: // NAME
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+              struct.name = iprot.readString();
+              struct.setNameIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 3: // RESPONSE_TYPE
             if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
-              struct.valueType = org.newrelic.nrjmx.v2.nrprotocol.ValueType.findByValue(iprot.readI32());
-              struct.setValueTypeIsSet(true);
+              struct.responseType = org.newrelic.nrjmx.v2.nrprotocol.ResponseType.findByValue(iprot.readI32());
+              struct.setResponseTypeIsSet(true);
             } else { 
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 3: // STRING_VALUE
+          case 4: // STRING_VALUE
             if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
               struct.stringValue = iprot.readString();
               struct.setStringValueIsSet(true);
@@ -736,7 +826,7 @@ public class JMXAttribute implements org.apache.thrift.TBase<JMXAttribute, JMXAt
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 4: // DOUBLE_VALUE
+          case 5: // DOUBLE_VALUE
             if (schemeField.type == org.apache.thrift.protocol.TType.DOUBLE) {
               struct.doubleValue = iprot.readDouble();
               struct.setDoubleValueIsSet(true);
@@ -744,7 +834,7 @@ public class JMXAttribute implements org.apache.thrift.TBase<JMXAttribute, JMXAt
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 5: // INT_VALUE
+          case 6: // INT_VALUE
             if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
               struct.intValue = iprot.readI64();
               struct.setIntValueIsSet(true);
@@ -752,7 +842,7 @@ public class JMXAttribute implements org.apache.thrift.TBase<JMXAttribute, JMXAt
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
-          case 6: // BOOL_VALUE
+          case 7: // BOOL_VALUE
             if (schemeField.type == org.apache.thrift.protocol.TType.BOOL) {
               struct.boolValue = iprot.readBool();
               struct.setBoolValueIsSet(true);
@@ -771,18 +861,23 @@ public class JMXAttribute implements org.apache.thrift.TBase<JMXAttribute, JMXAt
       struct.validate();
     }
 
-    public void write(org.apache.thrift.protocol.TProtocol oprot, JMXAttribute struct) throws org.apache.thrift.TException {
+    public void write(org.apache.thrift.protocol.TProtocol oprot, AttributeResponse struct) throws org.apache.thrift.TException {
       struct.validate();
 
       oprot.writeStructBegin(STRUCT_DESC);
-      if (struct.attribute != null) {
-        oprot.writeFieldBegin(ATTRIBUTE_FIELD_DESC);
-        oprot.writeString(struct.attribute);
+      if (struct.statusMsg != null) {
+        oprot.writeFieldBegin(STATUS_MSG_FIELD_DESC);
+        oprot.writeString(struct.statusMsg);
         oprot.writeFieldEnd();
       }
-      if (struct.valueType != null) {
-        oprot.writeFieldBegin(VALUE_TYPE_FIELD_DESC);
-        oprot.writeI32(struct.valueType.getValue());
+      if (struct.name != null) {
+        oprot.writeFieldBegin(NAME_FIELD_DESC);
+        oprot.writeString(struct.name);
+        oprot.writeFieldEnd();
+      }
+      if (struct.responseType != null) {
+        oprot.writeFieldBegin(RESPONSE_TYPE_FIELD_DESC);
+        oprot.writeI32(struct.responseType.getValue());
         oprot.writeFieldEnd();
       }
       if (struct.stringValue != null) {
@@ -805,42 +900,48 @@ public class JMXAttribute implements org.apache.thrift.TBase<JMXAttribute, JMXAt
 
   }
 
-  private static class JMXAttributeTupleSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
-    public JMXAttributeTupleScheme getScheme() {
-      return new JMXAttributeTupleScheme();
+  private static class AttributeResponseTupleSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+    public AttributeResponseTupleScheme getScheme() {
+      return new AttributeResponseTupleScheme();
     }
   }
 
-  private static class JMXAttributeTupleScheme extends org.apache.thrift.scheme.TupleScheme<JMXAttribute> {
+  private static class AttributeResponseTupleScheme extends org.apache.thrift.scheme.TupleScheme<AttributeResponse> {
 
     @Override
-    public void write(org.apache.thrift.protocol.TProtocol prot, JMXAttribute struct) throws org.apache.thrift.TException {
+    public void write(org.apache.thrift.protocol.TProtocol prot, AttributeResponse struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol oprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
       java.util.BitSet optionals = new java.util.BitSet();
-      if (struct.isSetAttribute()) {
+      if (struct.isSetStatusMsg()) {
         optionals.set(0);
       }
-      if (struct.isSetValueType()) {
+      if (struct.isSetName()) {
         optionals.set(1);
       }
-      if (struct.isSetStringValue()) {
+      if (struct.isSetResponseType()) {
         optionals.set(2);
       }
-      if (struct.isSetDoubleValue()) {
+      if (struct.isSetStringValue()) {
         optionals.set(3);
       }
-      if (struct.isSetIntValue()) {
+      if (struct.isSetDoubleValue()) {
         optionals.set(4);
       }
-      if (struct.isSetBoolValue()) {
+      if (struct.isSetIntValue()) {
         optionals.set(5);
       }
-      oprot.writeBitSet(optionals, 6);
-      if (struct.isSetAttribute()) {
-        oprot.writeString(struct.attribute);
+      if (struct.isSetBoolValue()) {
+        optionals.set(6);
       }
-      if (struct.isSetValueType()) {
-        oprot.writeI32(struct.valueType.getValue());
+      oprot.writeBitSet(optionals, 7);
+      if (struct.isSetStatusMsg()) {
+        oprot.writeString(struct.statusMsg);
+      }
+      if (struct.isSetName()) {
+        oprot.writeString(struct.name);
+      }
+      if (struct.isSetResponseType()) {
+        oprot.writeI32(struct.responseType.getValue());
       }
       if (struct.isSetStringValue()) {
         oprot.writeString(struct.stringValue);
@@ -857,30 +958,34 @@ public class JMXAttribute implements org.apache.thrift.TBase<JMXAttribute, JMXAt
     }
 
     @Override
-    public void read(org.apache.thrift.protocol.TProtocol prot, JMXAttribute struct) throws org.apache.thrift.TException {
+    public void read(org.apache.thrift.protocol.TProtocol prot, AttributeResponse struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-      java.util.BitSet incoming = iprot.readBitSet(6);
+      java.util.BitSet incoming = iprot.readBitSet(7);
       if (incoming.get(0)) {
-        struct.attribute = iprot.readString();
-        struct.setAttributeIsSet(true);
+        struct.statusMsg = iprot.readString();
+        struct.setStatusMsgIsSet(true);
       }
       if (incoming.get(1)) {
-        struct.valueType = org.newrelic.nrjmx.v2.nrprotocol.ValueType.findByValue(iprot.readI32());
-        struct.setValueTypeIsSet(true);
+        struct.name = iprot.readString();
+        struct.setNameIsSet(true);
       }
       if (incoming.get(2)) {
+        struct.responseType = org.newrelic.nrjmx.v2.nrprotocol.ResponseType.findByValue(iprot.readI32());
+        struct.setResponseTypeIsSet(true);
+      }
+      if (incoming.get(3)) {
         struct.stringValue = iprot.readString();
         struct.setStringValueIsSet(true);
       }
-      if (incoming.get(3)) {
+      if (incoming.get(4)) {
         struct.doubleValue = iprot.readDouble();
         struct.setDoubleValueIsSet(true);
       }
-      if (incoming.get(4)) {
+      if (incoming.get(5)) {
         struct.intValue = iprot.readI64();
         struct.setIntValueIsSet(true);
       }
-      if (incoming.get(5)) {
+      if (incoming.get(6)) {
         struct.boolValue = iprot.readBool();
         struct.setBoolValueIsSet(true);
       }

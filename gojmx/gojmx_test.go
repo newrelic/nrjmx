@@ -72,17 +72,17 @@ func Test_Query_Success_LargeAmountOfData(t *testing.T) {
 	defer assertCloseClientNoError(t, client)
 
 	// AND query returns at least 5Mb of data.
-	mBeanNames, err := client.GetMBeanNames("test:type=Cat,*")
+	mBeanNames, err := client.QueryMBeanNames("test:type=Cat,*")
 	assert.NoError(t, err)
 
-	var result []*JMXAttribute
+	var result []*AttributeResponse
 
 	for _, mBeanName := range mBeanNames {
-		mBeanAttrNames, err := client.GetMBeanAttrNames(mBeanName)
+		mBeanAttrNames, err := client.GetMBeanAttributeNames(mBeanName)
 		assert.NoError(t, err)
 
 		for _, mBeanAttrName := range mBeanAttrNames {
-			jmxAttrs, err := client.GetMBeanAttrs(mBeanName, mBeanAttrName)
+			jmxAttrs, err := client.GetMBeanAttributes(mBeanName, mBeanAttrName)
 			assert.NoError(t, err)
 			result = append(result, jmxAttrs...)
 		}
@@ -119,9 +119,9 @@ func Test_Query_Success(t *testing.T) {
 
 	// THEN JMX connection can be oppened
 	config := &JMXConfig{
-		Hostname:        jmxHost,
-		Port:            int32(jmxPort.Int()),
-		RequestTimoutMs: testutils.DefaultTimeoutMs,
+		Hostname:         jmxHost,
+		Port:             int32(jmxPort.Int()),
+		RequestTimeoutMs: testutils.DefaultTimeoutMs,
 	}
 
 	client, err := NewClient(ctx).Open(config)
@@ -132,60 +132,61 @@ func Test_Query_Success(t *testing.T) {
 	expectedMBeanNames := []string{
 		"test:type=Cat,name=tomas",
 	}
-	actualMBeanNames, err := client.GetMBeanNames("test:type=Cat,*")
+
+	actualMBeanNames, err := client.QueryMBeanNames("test:type=Cat,*")
 	require.NoError(t, err)
 	require.ElementsMatch(t, expectedMBeanNames, actualMBeanNames)
 
 	expectedMBeanAttrNames := []string{
 		"BoolValue", "FloatValue", "NumberValue", "DoubleValue", "Name", "DateValue",
 	}
-	actualMBeanAttrNames, err := client.GetMBeanAttrNames("test:name=tomas,type=Cat")
+	actualMBeanAttrNames, err := client.GetMBeanAttributeNames("test:name=tomas,type=Cat")
 	require.NoError(t, err)
 	require.ElementsMatch(t, expectedMBeanAttrNames, actualMBeanAttrNames)
 
 	// AND Query returns expected data
-	expected := []*JMXAttribute{
+	expected := []*AttributeResponse{
 		{
-			Attribute: "test:type=Cat,name=tomas,attr=FloatValue",
+			Name: "test:type=Cat,name=tomas,attr=NumberValue",
 
-			ValueType:   ValueTypeDouble,
-			DoubleValue: 2.222222,
+			ResponseType: ResponseTypeInt,
+			IntValue:     3,
 		},
 		{
-			Attribute: "test:type=Cat,name=tomas,attr=NumberValue",
+			Name: "test:type=Cat,name=tomas,attr=FloatValue",
 
-			ValueType: ValueTypeInt,
-			IntValue:  3,
+			ResponseType: ResponseTypeDouble,
+			DoubleValue:  2.222222,
 		},
 		{
-			Attribute: "test:type=Cat,name=tomas,attr=DateValue",
+			Name: "test:type=Cat,name=tomas,attr=DateValue",
 
-			ValueType:   ValueTypeString,
-			StringValue: "Jan 1, 2022 1:23:45 AM",
+			ResponseType: ResponseTypeString,
+			StringValue:  "Jan 1, 2022 1:23:45 AM",
 		},
 		{
-			Attribute: "test:type=Cat,name=tomas,attr=BoolValue",
+			Name: "test:type=Cat,name=tomas,attr=BoolValue",
 
-			ValueType: ValueTypeBool,
-			BoolValue: true,
+			ResponseType: ResponseTypeBool,
+			BoolValue:    true,
 		},
 		{
-			Attribute: "test:type=Cat,name=tomas,attr=DoubleValue",
+			Name: "test:type=Cat,name=tomas,attr=DoubleValue",
 
-			ValueType:   ValueTypeDouble,
-			DoubleValue: 1.2,
+			ResponseType: ResponseTypeDouble,
+			DoubleValue:  1.2,
 		},
 		{
-			Attribute: "test:type=Cat,name=tomas,attr=Name",
+			Name: "test:type=Cat,name=tomas,attr=Name",
 
-			ValueType:   ValueTypeString,
-			StringValue: "tomas",
+			ResponseType: ResponseTypeString,
+			StringValue:  "tomas",
 		},
 	}
 
-	var actual []*JMXAttribute
+	var actual []*AttributeResponse
 	for _, mBeanAttrName := range expectedMBeanAttrNames {
-		jmxAttrs, err := client.GetMBeanAttrs("test:type=Cat,name=tomas", mBeanAttrName)
+		jmxAttrs, err := client.GetMBeanAttributes("test:type=Cat,name=tomas", mBeanAttrName)
 		assert.NoError(t, err)
 		actual = append(actual, jmxAttrs...)
 	}
@@ -218,9 +219,9 @@ func Test_QueryMBean_Success(t *testing.T) {
 
 	// THEN JMX connection can be oppened
 	config := &JMXConfig{
-		Hostname:        jmxHost,
-		Port:            int32(jmxPort.Int()),
-		RequestTimoutMs: testutils.DefaultTimeoutMs,
+		Hostname:         jmxHost,
+		Port:             int32(jmxPort.Int()),
+		RequestTimeoutMs: testutils.DefaultTimeoutMs,
 	}
 
 	client, err := NewClient(ctx).Open(config)
@@ -228,63 +229,44 @@ func Test_QueryMBean_Success(t *testing.T) {
 	defer assertCloseClientNoError(t, client)
 
 	// AND Query returns expected data
-	actualResponse, err := client.QueryMBean("test:type=Cat,name=tomas")
+	actualResponse, err := client.QueryMBeanAttributes("test:type=Cat,name=tomas")
 	require.NoError(t, err)
 
-	expectedResponse := QueryResponse{
+	expectedResponse := []*AttributeResponse{
 		{
-			Attribute: &JMXAttribute{
-				Attribute: "test:type=Cat,name=tomas,attr=FloatValue",
+			Name: "test:type=Cat,name=tomas,attr=FloatValue",
 
-				ValueType:   ValueTypeDouble,
-				DoubleValue: 2.222222,
-			},
-			Status:    QueryResponseStatusSuccess,
-			StatusMsg: "success",
+			ResponseType: ResponseTypeDouble,
+			DoubleValue:  2.222222,
 		},
 		{
-			Attribute: &JMXAttribute{
-				Attribute: "test:type=Cat,name=tomas,attr=NumberValue",
+			Name: "test:type=Cat,name=tomas,attr=NumberValue",
 
-				ValueType: ValueTypeInt,
-				IntValue:  3,
-			},
-			Status:    QueryResponseStatusSuccess,
-			StatusMsg: "success",
+			ResponseType: ResponseTypeInt,
+			IntValue:     3,
 		},
 		{
-			Attribute: &JMXAttribute{
-				Attribute: "test:type=Cat,name=tomas,attr=BoolValue",
+			Name: "test:type=Cat,name=tomas,attr=BoolValue",
 
-				ValueType: ValueTypeBool,
-				BoolValue: true,
-			},
-			Status:    QueryResponseStatusSuccess,
-			StatusMsg: "success",
+			ResponseType: ResponseTypeBool,
+			BoolValue:    true,
 		},
 		{
-			Attribute: &JMXAttribute{
-				Attribute: "test:type=Cat,name=tomas,attr=DoubleValue",
+			Name: "test:type=Cat,name=tomas,attr=DoubleValue",
 
-				ValueType:   ValueTypeDouble,
-				DoubleValue: 1.2,
-			},
-			Status:    QueryResponseStatusSuccess,
-			StatusMsg: "success",
+			ResponseType: ResponseTypeDouble,
+			DoubleValue:  1.2,
 		},
 		{
-			Attribute: &JMXAttribute{
-				Attribute: "test:type=Cat,name=tomas,attr=Name",
+			Name: "test:type=Cat,name=tomas,attr=Name",
 
-				ValueType:   ValueTypeString,
-				StringValue: "tomas",
-			},
-			Status:    QueryResponseStatusSuccess,
-			StatusMsg: "success",
+			ResponseType: ResponseTypeString,
+			StringValue:  "tomas",
 		},
 		{
-			Status:    QueryResponseStatusError,
-			StatusMsg: `error while querying mBean 'test:type=Cat,name=tomas', attribute: 'DateValue', error message: found a null value for bean: test:type=Cat,name=tomas,attr=DateValue, error cause: , stacktrace: ""`,
+			Name:         "test:type=Cat,name=tomas,attr=DateValue",
+			ResponseType: ResponseTypeErr,
+			StatusMsg:    `can't parse attribute, error: found a null value for bean: test:type=Cat,name=tomas,attr=DateValue, cause: null, stacktrace: null`,
 		},
 	}
 
@@ -314,9 +296,9 @@ func Test_Query_CompositeData(t *testing.T) {
 
 	// THEN JMX connection can be oppened
 	config := &JMXConfig{
-		Hostname:        jmxHost,
-		Port:            int32(jmxPort.Int()),
-		RequestTimoutMs: testutils.DefaultTimeoutMs,
+		Hostname:         jmxHost,
+		Port:             int32(jmxPort.Int()),
+		RequestTimeoutMs: testutils.DefaultTimeoutMs,
 	}
 
 	client, err := NewClient(ctx).Open(config)
@@ -327,34 +309,34 @@ func Test_Query_CompositeData(t *testing.T) {
 	expectedMBeanNames := []string{
 		"test:type=CompositeDataCat,name=tomas",
 	}
-	actualMBeanNames, err := client.GetMBeanNames("test:type=CompositeDataCat,*")
+	actualMBeanNames, err := client.QueryMBeanNames("test:type=CompositeDataCat,*")
 	require.NoError(t, err)
 	require.ElementsMatch(t, expectedMBeanNames, actualMBeanNames)
 
 	expectedMBeanAttrNames := []string{
 		"CatInfo",
 	}
-	actualMBeanAttrNames, err := client.GetMBeanAttrNames("test:name=tomas,type=CompositeDataCat")
+	actualMBeanAttrNames, err := client.GetMBeanAttributeNames("test:name=tomas,type=CompositeDataCat")
 	require.NoError(t, err)
 	require.ElementsMatch(t, expectedMBeanAttrNames, actualMBeanAttrNames)
 
 	// AND Query returns expected data
-	expected := []*JMXAttribute{
+	expected := []*AttributeResponse{
 		{
-			Attribute: "test:type=CompositeDataCat,name=tomas,attr=CatInfo.Double",
+			Name: "test:type=CompositeDataCat,name=tomas,attr=CatInfo.Double",
 
-			ValueType:   ValueTypeDouble,
-			DoubleValue: 1.2,
+			ResponseType: ResponseTypeDouble,
+			DoubleValue:  1.2,
 		},
 		{
-			Attribute: "test:type=CompositeDataCat,name=tomas,attr=CatInfo.Name",
+			Name: "test:type=CompositeDataCat,name=tomas,attr=CatInfo.Name",
 
-			ValueType:   ValueTypeString,
-			StringValue: "tomas",
+			ResponseType: ResponseTypeString,
+			StringValue:  "tomas",
 		},
 	}
 
-	actual, err := client.GetMBeanAttrs("test:type=CompositeDataCat,name=tomas", "CatInfo")
+	actual, err := client.GetMBeanAttributes("test:type=CompositeDataCat,name=tomas", "CatInfo")
 	assert.NoError(t, err)
 	assert.ElementsMatch(t, expected, actual)
 }
@@ -372,9 +354,9 @@ func Test_Query_Timeout(t *testing.T) {
 
 	// THEN JMX connection fails
 	config := &JMXConfig{
-		Hostname:        jmxHost,
-		Port:            int32(jmxPort.Int()),
-		RequestTimoutMs: 1,
+		Hostname:         jmxHost,
+		Port:             int32(jmxPort.Int()),
+		RequestTimeoutMs: 1,
 	}
 	client, err := NewClient(ctx).Open(config)
 	assert.NotNil(t, client)
@@ -382,7 +364,7 @@ func Test_Query_Timeout(t *testing.T) {
 	defer assertCloseClientError(t, client)
 
 	// AND Query returns expected error
-	actual, err := client.GetMBeanAttrNames("*:*")
+	actual, err := client.GetMBeanAttributeNames("*:*")
 	assert.Nil(t, actual)
 	assert.Error(t, err)
 }
@@ -412,22 +394,22 @@ func Test_ConnectionURL_Success(t *testing.T) {
 
 	// THEN JMX connection can be oppened
 	config := &JMXConfig{
-		ConnectionURL:   fmt.Sprintf("service:jmx:rmi:///jndi/rmi://%s:%s/jmxrmi", jmxHost, jmxPort.Port()),
-		RequestTimoutMs: testutils.DefaultTimeoutMs,
+		ConnectionURL:    fmt.Sprintf("service:jmx:rmi:///jndi/rmi://%s:%s/jmxrmi", jmxHost, jmxPort.Port()),
+		RequestTimeoutMs: testutils.DefaultTimeoutMs,
 	}
 	client, err := NewClient(ctx).Open(config)
 	assert.NoError(t, err)
 	defer assertCloseClientNoError(t, client)
 
 	// AND Query returns expected data
-	actual, err := client.GetMBeanAttrs("test:type=Cat,name=tomas", "FloatValue")
+	actual, err := client.GetMBeanAttributes("test:type=Cat,name=tomas", "FloatValue")
 	assert.NoError(t, err)
 
-	expected := []*JMXAttribute{
+	expected := []*AttributeResponse{
 		{
-			Attribute:   "test:type=Cat,name=tomas,attr=FloatValue",
-			ValueType:   ValueTypeDouble,
-			DoubleValue: 2.2,
+			Name:         "test:type=Cat,name=tomas,attr=FloatValue",
+			ResponseType: ResponseTypeDouble,
+			DoubleValue:  2.2,
 		},
 	}
 
@@ -442,7 +424,7 @@ func Test_JavaNotInstalledError(t *testing.T) {
 	ctx := context.Background()
 
 	config := &JMXConfig{
-		RequestTimoutMs: testutils.DefaultTimeoutMs,
+		RequestTimeoutMs: testutils.DefaultTimeoutMs,
 	}
 	// THEN connect fails with expected error
 	client, err := NewClient(ctx).Open(config)
@@ -450,7 +432,7 @@ func Test_JavaNotInstalledError(t *testing.T) {
 	assert.Contains(t, err.Error(), "/wrong/path/bin/java")
 
 	// AND Query fails with expected error
-	actual, err := client.GetMBeanNames("test:type=Cat,*")
+	actual, err := client.QueryMBeanNames("test:type=Cat,*")
 	assert.Nil(t, actual)
 	assert.ErrorIs(t, err, errProcessNotRunning)
 }
@@ -468,8 +450,8 @@ func Test_WrongMBeanFormatError(t *testing.T) {
 
 	// THEN JMX connection can be oppened
 	config := &JMXConfig{
-		ConnectionURL:   fmt.Sprintf("service:jmx:rmi:///jndi/rmi://%s:%s/jmxrmi", jmxHost, jmxPort.Port()),
-		RequestTimoutMs: testutils.DefaultTimeoutMs,
+		ConnectionURL:    fmt.Sprintf("service:jmx:rmi:///jndi/rmi://%s:%s/jmxrmi", jmxHost, jmxPort.Port()),
+		RequestTimeoutMs: testutils.DefaultTimeoutMs,
 	}
 
 	client, err := NewClient(ctx).Open(config)
@@ -477,7 +459,7 @@ func Test_WrongMBeanFormatError(t *testing.T) {
 	defer assertCloseClientNoError(t, client)
 
 	// AND Query returns expected error
-	actual, err := client.GetMBeanNames("wrong_format")
+	actual, err := client.QueryMBeanNames("wrong_format")
 	assert.Nil(t, actual)
 	assert.EqualError(t, err, `jmx error: cannot parse MBean glob pattern: 'wrong_format', valid: 'DOMAIN:BEAN', cause: Key properties cannot be empty, stacktrace: `)
 }
@@ -487,9 +469,9 @@ func Test_Wrong_Connection(t *testing.T) {
 
 	// GIVEN a wrong hostname and port
 	config := &JMXConfig{
-		Hostname:        "localhost",
-		Port:            1234,
-		RequestTimoutMs: testutils.DefaultTimeoutMs,
+		Hostname:         "localhost",
+		Port:             1234,
+		RequestTimeoutMs: testutils.DefaultTimeoutMs,
 	}
 
 	// THEN open fails with expected error
@@ -501,7 +483,7 @@ func Test_Wrong_Connection(t *testing.T) {
 	// AND query returns expected error
 	assert.Contains(t, err.Error(), "Connection refused to host: localhost;") // TODO: fix this, doesn't return the correct error
 
-	actual, err := client.GetMBeanNames("test:type=Cat,*")
+	actual, err := client.QueryMBeanNames("test:type=Cat,*")
 	assert.Nil(t, actual)
 	assert.Errorf(t, err, "connection to JMX endpoint is not established")
 }
@@ -540,7 +522,7 @@ func Test_SSLQuery_Success(t *testing.T) {
 		KeyStorePassword:   testutils.KeystorePassword,
 		TrustStore:         testutils.TruststorePath,
 		TrustStorePassword: testutils.TruststorePassword,
-		RequestTimoutMs:    testutils.DefaultTimeoutMs,
+		RequestTimeoutMs:   testutils.DefaultTimeoutMs,
 	}
 	client, err := NewClient(ctx).Open(config)
 	assert.NoError(t, err)
@@ -550,14 +532,14 @@ func Test_SSLQuery_Success(t *testing.T) {
 	expectedMBeanNames := []string{
 		"test:type=Cat,name=tomas",
 	}
-	actualMBeanNames, err := client.GetMBeanNames("test:type=Cat,*")
+	actualMBeanNames, err := client.QueryMBeanNames("test:type=Cat,*")
 	require.NoError(t, err)
 	require.ElementsMatch(t, expectedMBeanNames, actualMBeanNames)
 
 	expectedMBeanAttrNames := []string{
 		"BoolValue", "FloatValue", "NumberValue", "DoubleValue", "Name", "DateValue",
 	}
-	actualMBeanAttrNames, err := client.GetMBeanAttrNames("test:name=tomas,type=Cat")
+	actualMBeanAttrNames, err := client.GetMBeanAttributeNames("test:name=tomas,type=Cat")
 	require.NoError(t, err)
 	require.ElementsMatch(t, expectedMBeanAttrNames, actualMBeanAttrNames)
 }
@@ -583,7 +565,7 @@ func Test_Wrong_Credentials(t *testing.T) {
 		KeyStorePassword:   testutils.KeystorePassword,
 		TrustStore:         testutils.TruststorePath,
 		TrustStorePassword: testutils.TruststorePassword,
-		RequestTimoutMs:    testutils.DefaultTimeoutMs,
+		RequestTimeoutMs:   testutils.DefaultTimeoutMs,
 	}
 
 	// THEN open fails with expected error
@@ -593,7 +575,7 @@ func Test_Wrong_Credentials(t *testing.T) {
 	defer assertCloseClientError(t, client)
 
 	// AND Query returns expected error
-	actual, err := client.GetMBeanNames("test:type=Cat,*")
+	actual, err := client.QueryMBeanNames("test:type=Cat,*")
 	assert.Nil(t, actual)
 	assert.Errorf(t, err, "connection to JMX endpoint is not established")
 }
@@ -619,7 +601,7 @@ func Test_Wrong_Certificate_password(t *testing.T) {
 		KeyStorePassword:   "wrong_password",
 		TrustStore:         testutils.TruststorePath,
 		TrustStorePassword: testutils.TruststorePassword,
-		RequestTimoutMs:    testutils.DefaultTimeoutMs,
+		RequestTimeoutMs:   testutils.DefaultTimeoutMs,
 	}
 
 	// THEN open returns expected error
@@ -629,7 +611,7 @@ func Test_Wrong_Certificate_password(t *testing.T) {
 	defer assertCloseClientError(t, client)
 
 	// AND Query returns expected error
-	actual, err := client.GetMBeanNames("test:type=Cat,*")
+	actual, err := client.QueryMBeanNames("test:type=Cat,*")
 	assert.Nil(t, actual)
 	assert.Errorf(t, err, "connection to JMX endpoint is not established")
 }
@@ -660,7 +642,7 @@ func Test_Connector_Success(t *testing.T) {
 		Password:              testutils.JbossJMXPassword,
 		IsJBossStandaloneMode: true,
 		IsRemote:              true,
-		RequestTimoutMs:       testutils.DefaultTimeoutMs,
+		RequestTimeoutMs:      testutils.DefaultTimeoutMs,
 	}
 	client, err := NewClient(ctx).Open(config)
 	assert.NoError(t, err)
@@ -670,7 +652,7 @@ func Test_Connector_Success(t *testing.T) {
 	expectedMbeanNames := []string{
 		"jboss.as:subsystem=remoting,configuration=endpoint",
 	}
-	actualMbeanNames, err := client.GetMBeanNames("jboss.as:subsystem=remoting,configuration=endpoint")
+	actualMbeanNames, err := client.QueryMBeanNames("jboss.as:subsystem=remoting,configuration=endpoint")
 	assert.NoError(t, err)
 	assert.ElementsMatch(t, expectedMbeanNames, actualMbeanNames)
 
@@ -694,85 +676,105 @@ func Test_Connector_Success(t *testing.T) {
 		"transmitWindowSize",
 		"worker",
 	}
-	actualMBeanAttrNames, err := client.GetMBeanAttrNames("jboss.as:subsystem=remoting,configuration=endpoint")
+	actualMBeanAttrNames, err := client.GetMBeanAttributeNames("jboss.as:subsystem=remoting,configuration=endpoint")
 	assert.ElementsMatch(t, expectedMBeanAttrNames, actualMBeanAttrNames)
 
-	expected := []*JMXAttribute{
+	expected := []*AttributeResponse{
 		{
-			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=authenticationRetries",
-			ValueType: ValueTypeInt,
-			IntValue:  3,
+			Name:         "jboss.as:subsystem=remoting,configuration=endpoint,attr=authRealm",
+			StatusMsg:    "can't parse attribute, error: found a null value for bean: jboss.as:subsystem=remoting,configuration=endpoint,attr=authRealm, cause: null, stacktrace: null",
+			ResponseType: ResponseTypeErr,
 		},
 		{
-			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=heartbeatInterval",
-			ValueType: ValueTypeInt,
-			IntValue:  60000,
+			Name:         "jboss.as:subsystem=remoting,configuration=endpoint,attr=authenticationRetries",
+			ResponseType: ResponseTypeInt,
+			IntValue:     3,
 		},
 		{
-			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=maxInboundChannels",
-			ValueType: ValueTypeInt,
-			IntValue:  40,
+			Name:         "jboss.as:subsystem=remoting,configuration=endpoint,attr=authorizeId",
+			StatusMsg:    "can't parse attribute, error: found a null value for bean: jboss.as:subsystem=remoting,configuration=endpoint,attr=authorizeId, cause: null, stacktrace: null",
+			ResponseType: ResponseTypeErr,
 		},
 		{
-			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=maxInboundMessageSize",
-			ValueType: ValueTypeInt,
-			IntValue:  9223372036854775807,
+			Name:         "jboss.as:subsystem=remoting,configuration=endpoint,attr=bufferRegionSize",
+			StatusMsg:    "can't parse attribute, error: found a null value for bean: jboss.as:subsystem=remoting,configuration=endpoint,attr=bufferRegionSize, cause: null, stacktrace: null",
+			ResponseType: ResponseTypeErr,
 		},
 		{
-			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=maxInboundMessages",
-			ValueType: ValueTypeInt,
-			IntValue:  80,
+			Name:         "jboss.as:subsystem=remoting,configuration=endpoint,attr=heartbeatInterval",
+			ResponseType: ResponseTypeInt,
+			IntValue:     60000,
 		},
 		{
-			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=maxOutboundChannels",
-			ValueType: ValueTypeInt,
-			IntValue:  40,
+			Name:         "jboss.as:subsystem=remoting,configuration=endpoint,attr=maxInboundChannels",
+			ResponseType: ResponseTypeInt,
+			IntValue:     40,
 		},
 		{
-			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=maxOutboundMessageSize",
-			ValueType: ValueTypeInt,
-			IntValue:  9223372036854775807,
+			Name:         "jboss.as:subsystem=remoting,configuration=endpoint,attr=maxInboundMessageSize",
+			ResponseType: ResponseTypeInt,
+			IntValue:     9223372036854775807,
 		},
 		{
-			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=maxOutboundMessages",
-			ValueType: ValueTypeInt,
-			IntValue:  65535,
+			Name:         "jboss.as:subsystem=remoting,configuration=endpoint,attr=maxInboundMessages",
+			ResponseType: ResponseTypeInt,
+			IntValue:     80,
 		},
 		{
-			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=receiveBufferSize",
-			ValueType: ValueTypeInt,
-			IntValue:  8192,
+			Name:         "jboss.as:subsystem=remoting,configuration=endpoint,attr=maxOutboundChannels",
+			ResponseType: ResponseTypeInt,
+			IntValue:     40,
 		},
 		{
-			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=receiveWindowSize",
-			ValueType: ValueTypeInt,
-			IntValue:  131072,
+			Name:         "jboss.as:subsystem=remoting,configuration=endpoint,attr=maxOutboundMessageSize",
+			ResponseType: ResponseTypeInt,
+			IntValue:     9223372036854775807,
 		},
 		{
-			Attribute:   "jboss.as:subsystem=remoting,configuration=endpoint,attr=saslProtocol",
-			ValueType:   ValueTypeString,
-			StringValue: "remote",
+			Name:         "jboss.as:subsystem=remoting,configuration=endpoint,attr=maxOutboundMessages",
+			ResponseType: ResponseTypeInt,
+			IntValue:     65535,
 		},
 		{
-			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=sendBufferSize",
-			ValueType: ValueTypeInt,
-			IntValue:  8192,
+			Name:         "jboss.as:subsystem=remoting,configuration=endpoint,attr=receiveBufferSize",
+			ResponseType: ResponseTypeInt,
+			IntValue:     8192,
 		},
 		{
-			Attribute: "jboss.as:subsystem=remoting,configuration=endpoint,attr=transmitWindowSize",
-			ValueType: ValueTypeInt,
-			IntValue:  131072,
+			Name:         "jboss.as:subsystem=remoting,configuration=endpoint,attr=serverName",
+			StatusMsg:    "can't parse attribute, error: found a null value for bean: jboss.as:subsystem=remoting,configuration=endpoint,attr=serverName, cause: null, stacktrace: null",
+			ResponseType: ResponseTypeErr,
 		},
 		{
-			Attribute:   "jboss.as:subsystem=remoting,configuration=endpoint,attr=worker",
-			ValueType:   ValueTypeString,
-			StringValue: "default",
+			Name:         "jboss.as:subsystem=remoting,configuration=endpoint,attr=receiveWindowSize",
+			ResponseType: ResponseTypeInt,
+			IntValue:     131072,
+		},
+		{
+			Name:         "jboss.as:subsystem=remoting,configuration=endpoint,attr=saslProtocol",
+			ResponseType: ResponseTypeString,
+			StringValue:  "remote",
+		},
+		{
+			Name:         "jboss.as:subsystem=remoting,configuration=endpoint,attr=sendBufferSize",
+			ResponseType: ResponseTypeInt,
+			IntValue:     8192,
+		},
+		{
+			Name:         "jboss.as:subsystem=remoting,configuration=endpoint,attr=transmitWindowSize",
+			ResponseType: ResponseTypeInt,
+			IntValue:     131072,
+		},
+		{
+			Name:         "jboss.as:subsystem=remoting,configuration=endpoint,attr=worker",
+			ResponseType: ResponseTypeString,
+			StringValue:  "default",
 		},
 	}
 
-	var actual []*JMXAttribute
+	var actual []*AttributeResponse
 	for _, mBeanAttrName := range expectedMBeanAttrNames {
-		jmxAttrs, err := client.GetMBeanAttrs("jboss.as:subsystem=remoting,configuration=endpoint", mBeanAttrName)
+		jmxAttrs, err := client.GetMBeanAttributes("jboss.as:subsystem=remoting,configuration=endpoint", mBeanAttrName)
 		if err != nil {
 			continue
 		}
@@ -795,9 +797,9 @@ func TestClientClose(t *testing.T) {
 
 	// THEN JMX connection can be opened.
 	config := &JMXConfig{
-		Hostname:        jmxHost,
-		Port:            int32(jmxPort.Int()),
-		RequestTimoutMs: testutils.DefaultTimeoutMs,
+		Hostname:         jmxHost,
+		Port:             int32(jmxPort.Int()),
+		RequestTimeoutMs: testutils.DefaultTimeoutMs,
 	}
 
 	client, err := NewClient(ctx).Open(config)
@@ -807,7 +809,7 @@ func TestClientClose(t *testing.T) {
 	assertCloseClientNoError(t, client)
 
 	// AND Query returns expected error
-	actual, err := client.GetMBeanNames("*:*")
+	actual, err := client.QueryMBeanNames("*:*")
 	assert.Nil(t, actual)
 	assert.ErrorIs(t, err, errProcessNotRunning)
 
@@ -833,9 +835,9 @@ func TestProcessExits(t *testing.T) {
 
 		// THEN JMX connection can be opened
 		config := &JMXConfig{
-			Hostname:        jmxHost,
-			Port:            int32(jmxPort.Int()),
-			RequestTimoutMs: testutils.DefaultTimeoutMs,
+			Hostname:         jmxHost,
+			Port:             int32(jmxPort.Int()),
+			RequestTimeoutMs: testutils.DefaultTimeoutMs,
 		}
 		client, err := NewClient(ctx).Open(config)
 		require.NoError(t, err)

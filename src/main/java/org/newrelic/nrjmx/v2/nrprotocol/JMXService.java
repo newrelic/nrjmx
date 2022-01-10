@@ -17,11 +17,13 @@ public class JMXService {
 
     public java.lang.String getClientVersion() throws JMXError, org.apache.thrift.TException;
 
-    public java.util.List<java.lang.String> getMBeanNames(java.lang.String mBeanNamePattern) throws JMXConnectionError, JMXError, org.apache.thrift.TException;
+    public java.util.List<java.lang.String> queryMBeanNames(java.lang.String mBeanNamePattern) throws JMXConnectionError, JMXError, org.apache.thrift.TException;
 
-    public java.util.List<java.lang.String> getMBeanAttrNames(java.lang.String mBeanName) throws JMXConnectionError, JMXError, org.apache.thrift.TException;
+    public java.util.List<java.lang.String> getMBeanAttributeNames(java.lang.String mBeanName) throws JMXConnectionError, JMXError, org.apache.thrift.TException;
 
-    public java.util.List<JMXAttribute> getMBeanAttrs(java.lang.String mBeanName, java.lang.String attrName) throws JMXConnectionError, JMXError, org.apache.thrift.TException;
+    public java.util.List<AttributeResponse> getMBeanAttributes(java.lang.String mBeanName, java.util.List<java.lang.String> attributes) throws JMXConnectionError, JMXError, org.apache.thrift.TException;
+
+    public java.util.List<AttributeResponse> queryMBeanAttributes(java.lang.String mBeanNamePattern) throws JMXConnectionError, JMXError, org.apache.thrift.TException;
 
   }
 
@@ -33,11 +35,13 @@ public class JMXService {
 
     public void getClientVersion(org.apache.thrift.async.AsyncMethodCallback<java.lang.String> resultHandler) throws org.apache.thrift.TException;
 
-    public void getMBeanNames(java.lang.String mBeanNamePattern, org.apache.thrift.async.AsyncMethodCallback<java.util.List<java.lang.String>> resultHandler) throws org.apache.thrift.TException;
+    public void queryMBeanNames(java.lang.String mBeanNamePattern, org.apache.thrift.async.AsyncMethodCallback<java.util.List<java.lang.String>> resultHandler) throws org.apache.thrift.TException;
 
-    public void getMBeanAttrNames(java.lang.String mBeanName, org.apache.thrift.async.AsyncMethodCallback<java.util.List<java.lang.String>> resultHandler) throws org.apache.thrift.TException;
+    public void getMBeanAttributeNames(java.lang.String mBeanName, org.apache.thrift.async.AsyncMethodCallback<java.util.List<java.lang.String>> resultHandler) throws org.apache.thrift.TException;
 
-    public void getMBeanAttrs(java.lang.String mBeanName, java.lang.String attrName, org.apache.thrift.async.AsyncMethodCallback<java.util.List<JMXAttribute>> resultHandler) throws org.apache.thrift.TException;
+    public void getMBeanAttributes(java.lang.String mBeanName, java.util.List<java.lang.String> attributes, org.apache.thrift.async.AsyncMethodCallback<java.util.List<AttributeResponse>> resultHandler) throws org.apache.thrift.TException;
+
+    public void queryMBeanAttributes(java.lang.String mBeanNamePattern, org.apache.thrift.async.AsyncMethodCallback<java.util.List<AttributeResponse>> resultHandler) throws org.apache.thrift.TException;
 
   }
 
@@ -134,23 +138,23 @@ public class JMXService {
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "getClientVersion failed: unknown result");
     }
 
-    public java.util.List<java.lang.String> getMBeanNames(java.lang.String mBeanNamePattern) throws JMXConnectionError, JMXError, org.apache.thrift.TException
+    public java.util.List<java.lang.String> queryMBeanNames(java.lang.String mBeanNamePattern) throws JMXConnectionError, JMXError, org.apache.thrift.TException
     {
-      send_getMBeanNames(mBeanNamePattern);
-      return recv_getMBeanNames();
+      send_queryMBeanNames(mBeanNamePattern);
+      return recv_queryMBeanNames();
     }
 
-    public void send_getMBeanNames(java.lang.String mBeanNamePattern) throws org.apache.thrift.TException
+    public void send_queryMBeanNames(java.lang.String mBeanNamePattern) throws org.apache.thrift.TException
     {
-      getMBeanNames_args args = new getMBeanNames_args();
+      queryMBeanNames_args args = new queryMBeanNames_args();
       args.setMBeanNamePattern(mBeanNamePattern);
-      sendBase("getMBeanNames", args);
+      sendBase("queryMBeanNames", args);
     }
 
-    public java.util.List<java.lang.String> recv_getMBeanNames() throws JMXConnectionError, JMXError, org.apache.thrift.TException
+    public java.util.List<java.lang.String> recv_queryMBeanNames() throws JMXConnectionError, JMXError, org.apache.thrift.TException
     {
-      getMBeanNames_result result = new getMBeanNames_result();
-      receiveBase(result, "getMBeanNames");
+      queryMBeanNames_result result = new queryMBeanNames_result();
+      receiveBase(result, "queryMBeanNames");
       if (result.isSetSuccess()) {
         return result.success;
       }
@@ -160,26 +164,26 @@ public class JMXService {
       if (result.jmxErr != null) {
         throw result.jmxErr;
       }
-      throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "getMBeanNames failed: unknown result");
+      throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "queryMBeanNames failed: unknown result");
     }
 
-    public java.util.List<java.lang.String> getMBeanAttrNames(java.lang.String mBeanName) throws JMXConnectionError, JMXError, org.apache.thrift.TException
+    public java.util.List<java.lang.String> getMBeanAttributeNames(java.lang.String mBeanName) throws JMXConnectionError, JMXError, org.apache.thrift.TException
     {
-      send_getMBeanAttrNames(mBeanName);
-      return recv_getMBeanAttrNames();
+      send_getMBeanAttributeNames(mBeanName);
+      return recv_getMBeanAttributeNames();
     }
 
-    public void send_getMBeanAttrNames(java.lang.String mBeanName) throws org.apache.thrift.TException
+    public void send_getMBeanAttributeNames(java.lang.String mBeanName) throws org.apache.thrift.TException
     {
-      getMBeanAttrNames_args args = new getMBeanAttrNames_args();
+      getMBeanAttributeNames_args args = new getMBeanAttributeNames_args();
       args.setMBeanName(mBeanName);
-      sendBase("getMBeanAttrNames", args);
+      sendBase("getMBeanAttributeNames", args);
     }
 
-    public java.util.List<java.lang.String> recv_getMBeanAttrNames() throws JMXConnectionError, JMXError, org.apache.thrift.TException
+    public java.util.List<java.lang.String> recv_getMBeanAttributeNames() throws JMXConnectionError, JMXError, org.apache.thrift.TException
     {
-      getMBeanAttrNames_result result = new getMBeanAttrNames_result();
-      receiveBase(result, "getMBeanAttrNames");
+      getMBeanAttributeNames_result result = new getMBeanAttributeNames_result();
+      receiveBase(result, "getMBeanAttributeNames");
       if (result.isSetSuccess()) {
         return result.success;
       }
@@ -189,27 +193,27 @@ public class JMXService {
       if (result.jmxErr != null) {
         throw result.jmxErr;
       }
-      throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "getMBeanAttrNames failed: unknown result");
+      throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "getMBeanAttributeNames failed: unknown result");
     }
 
-    public java.util.List<JMXAttribute> getMBeanAttrs(java.lang.String mBeanName, java.lang.String attrName) throws JMXConnectionError, JMXError, org.apache.thrift.TException
+    public java.util.List<AttributeResponse> getMBeanAttributes(java.lang.String mBeanName, java.util.List<java.lang.String> attributes) throws JMXConnectionError, JMXError, org.apache.thrift.TException
     {
-      send_getMBeanAttrs(mBeanName, attrName);
-      return recv_getMBeanAttrs();
+      send_getMBeanAttributes(mBeanName, attributes);
+      return recv_getMBeanAttributes();
     }
 
-    public void send_getMBeanAttrs(java.lang.String mBeanName, java.lang.String attrName) throws org.apache.thrift.TException
+    public void send_getMBeanAttributes(java.lang.String mBeanName, java.util.List<java.lang.String> attributes) throws org.apache.thrift.TException
     {
-      getMBeanAttrs_args args = new getMBeanAttrs_args();
+      getMBeanAttributes_args args = new getMBeanAttributes_args();
       args.setMBeanName(mBeanName);
-      args.setAttrName(attrName);
-      sendBase("getMBeanAttrs", args);
+      args.setAttributes(attributes);
+      sendBase("getMBeanAttributes", args);
     }
 
-    public java.util.List<JMXAttribute> recv_getMBeanAttrs() throws JMXConnectionError, JMXError, org.apache.thrift.TException
+    public java.util.List<AttributeResponse> recv_getMBeanAttributes() throws JMXConnectionError, JMXError, org.apache.thrift.TException
     {
-      getMBeanAttrs_result result = new getMBeanAttrs_result();
-      receiveBase(result, "getMBeanAttrs");
+      getMBeanAttributes_result result = new getMBeanAttributes_result();
+      receiveBase(result, "getMBeanAttributes");
       if (result.isSetSuccess()) {
         return result.success;
       }
@@ -219,7 +223,36 @@ public class JMXService {
       if (result.jmxErr != null) {
         throw result.jmxErr;
       }
-      throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "getMBeanAttrs failed: unknown result");
+      throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "getMBeanAttributes failed: unknown result");
+    }
+
+    public java.util.List<AttributeResponse> queryMBeanAttributes(java.lang.String mBeanNamePattern) throws JMXConnectionError, JMXError, org.apache.thrift.TException
+    {
+      send_queryMBeanAttributes(mBeanNamePattern);
+      return recv_queryMBeanAttributes();
+    }
+
+    public void send_queryMBeanAttributes(java.lang.String mBeanNamePattern) throws org.apache.thrift.TException
+    {
+      queryMBeanAttributes_args args = new queryMBeanAttributes_args();
+      args.setMBeanNamePattern(mBeanNamePattern);
+      sendBase("queryMBeanAttributes", args);
+    }
+
+    public java.util.List<AttributeResponse> recv_queryMBeanAttributes() throws JMXConnectionError, JMXError, org.apache.thrift.TException
+    {
+      queryMBeanAttributes_result result = new queryMBeanAttributes_result();
+      receiveBase(result, "queryMBeanAttributes");
+      if (result.isSetSuccess()) {
+        return result.success;
+      }
+      if (result.connErr != null) {
+        throw result.connErr;
+      }
+      if (result.jmxErr != null) {
+        throw result.jmxErr;
+      }
+      throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "queryMBeanAttributes failed: unknown result");
     }
 
   }
@@ -330,23 +363,23 @@ public class JMXService {
       }
     }
 
-    public void getMBeanNames(java.lang.String mBeanNamePattern, org.apache.thrift.async.AsyncMethodCallback<java.util.List<java.lang.String>> resultHandler) throws org.apache.thrift.TException {
+    public void queryMBeanNames(java.lang.String mBeanNamePattern, org.apache.thrift.async.AsyncMethodCallback<java.util.List<java.lang.String>> resultHandler) throws org.apache.thrift.TException {
       checkReady();
-      getMBeanNames_call method_call = new getMBeanNames_call(mBeanNamePattern, resultHandler, this, ___protocolFactory, ___transport);
+      queryMBeanNames_call method_call = new queryMBeanNames_call(mBeanNamePattern, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
       ___manager.call(method_call);
     }
 
-    public static class getMBeanNames_call extends org.apache.thrift.async.TAsyncMethodCall<java.util.List<java.lang.String>> {
+    public static class queryMBeanNames_call extends org.apache.thrift.async.TAsyncMethodCall<java.util.List<java.lang.String>> {
       private java.lang.String mBeanNamePattern;
-      public getMBeanNames_call(java.lang.String mBeanNamePattern, org.apache.thrift.async.AsyncMethodCallback<java.util.List<java.lang.String>> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      public queryMBeanNames_call(java.lang.String mBeanNamePattern, org.apache.thrift.async.AsyncMethodCallback<java.util.List<java.lang.String>> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
         this.mBeanNamePattern = mBeanNamePattern;
       }
 
       public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
-        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("getMBeanNames", org.apache.thrift.protocol.TMessageType.CALL, 0));
-        getMBeanNames_args args = new getMBeanNames_args();
+        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("queryMBeanNames", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        queryMBeanNames_args args = new queryMBeanNames_args();
         args.setMBeanNamePattern(mBeanNamePattern);
         args.write(prot);
         prot.writeMessageEnd();
@@ -358,27 +391,27 @@ public class JMXService {
         }
         org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
         org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
-        return (new Client(prot)).recv_getMBeanNames();
+        return (new Client(prot)).recv_queryMBeanNames();
       }
     }
 
-    public void getMBeanAttrNames(java.lang.String mBeanName, org.apache.thrift.async.AsyncMethodCallback<java.util.List<java.lang.String>> resultHandler) throws org.apache.thrift.TException {
+    public void getMBeanAttributeNames(java.lang.String mBeanName, org.apache.thrift.async.AsyncMethodCallback<java.util.List<java.lang.String>> resultHandler) throws org.apache.thrift.TException {
       checkReady();
-      getMBeanAttrNames_call method_call = new getMBeanAttrNames_call(mBeanName, resultHandler, this, ___protocolFactory, ___transport);
+      getMBeanAttributeNames_call method_call = new getMBeanAttributeNames_call(mBeanName, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
       ___manager.call(method_call);
     }
 
-    public static class getMBeanAttrNames_call extends org.apache.thrift.async.TAsyncMethodCall<java.util.List<java.lang.String>> {
+    public static class getMBeanAttributeNames_call extends org.apache.thrift.async.TAsyncMethodCall<java.util.List<java.lang.String>> {
       private java.lang.String mBeanName;
-      public getMBeanAttrNames_call(java.lang.String mBeanName, org.apache.thrift.async.AsyncMethodCallback<java.util.List<java.lang.String>> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      public getMBeanAttributeNames_call(java.lang.String mBeanName, org.apache.thrift.async.AsyncMethodCallback<java.util.List<java.lang.String>> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
         this.mBeanName = mBeanName;
       }
 
       public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
-        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("getMBeanAttrNames", org.apache.thrift.protocol.TMessageType.CALL, 0));
-        getMBeanAttrNames_args args = new getMBeanAttrNames_args();
+        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("getMBeanAttributeNames", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        getMBeanAttributeNames_args args = new getMBeanAttributeNames_args();
         args.setMBeanName(mBeanName);
         args.write(prot);
         prot.writeMessageEnd();
@@ -390,42 +423,74 @@ public class JMXService {
         }
         org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
         org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
-        return (new Client(prot)).recv_getMBeanAttrNames();
+        return (new Client(prot)).recv_getMBeanAttributeNames();
       }
     }
 
-    public void getMBeanAttrs(java.lang.String mBeanName, java.lang.String attrName, org.apache.thrift.async.AsyncMethodCallback<java.util.List<JMXAttribute>> resultHandler) throws org.apache.thrift.TException {
+    public void getMBeanAttributes(java.lang.String mBeanName, java.util.List<java.lang.String> attributes, org.apache.thrift.async.AsyncMethodCallback<java.util.List<AttributeResponse>> resultHandler) throws org.apache.thrift.TException {
       checkReady();
-      getMBeanAttrs_call method_call = new getMBeanAttrs_call(mBeanName, attrName, resultHandler, this, ___protocolFactory, ___transport);
+      getMBeanAttributes_call method_call = new getMBeanAttributes_call(mBeanName, attributes, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
       ___manager.call(method_call);
     }
 
-    public static class getMBeanAttrs_call extends org.apache.thrift.async.TAsyncMethodCall<java.util.List<JMXAttribute>> {
+    public static class getMBeanAttributes_call extends org.apache.thrift.async.TAsyncMethodCall<java.util.List<AttributeResponse>> {
       private java.lang.String mBeanName;
-      private java.lang.String attrName;
-      public getMBeanAttrs_call(java.lang.String mBeanName, java.lang.String attrName, org.apache.thrift.async.AsyncMethodCallback<java.util.List<JMXAttribute>> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      private java.util.List<java.lang.String> attributes;
+      public getMBeanAttributes_call(java.lang.String mBeanName, java.util.List<java.lang.String> attributes, org.apache.thrift.async.AsyncMethodCallback<java.util.List<AttributeResponse>> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
         this.mBeanName = mBeanName;
-        this.attrName = attrName;
+        this.attributes = attributes;
       }
 
       public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
-        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("getMBeanAttrs", org.apache.thrift.protocol.TMessageType.CALL, 0));
-        getMBeanAttrs_args args = new getMBeanAttrs_args();
+        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("getMBeanAttributes", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        getMBeanAttributes_args args = new getMBeanAttributes_args();
         args.setMBeanName(mBeanName);
-        args.setAttrName(attrName);
+        args.setAttributes(attributes);
         args.write(prot);
         prot.writeMessageEnd();
       }
 
-      public java.util.List<JMXAttribute> getResult() throws JMXConnectionError, JMXError, org.apache.thrift.TException {
+      public java.util.List<AttributeResponse> getResult() throws JMXConnectionError, JMXError, org.apache.thrift.TException {
         if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
           throw new java.lang.IllegalStateException("Method call not finished!");
         }
         org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
         org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
-        return (new Client(prot)).recv_getMBeanAttrs();
+        return (new Client(prot)).recv_getMBeanAttributes();
+      }
+    }
+
+    public void queryMBeanAttributes(java.lang.String mBeanNamePattern, org.apache.thrift.async.AsyncMethodCallback<java.util.List<AttributeResponse>> resultHandler) throws org.apache.thrift.TException {
+      checkReady();
+      queryMBeanAttributes_call method_call = new queryMBeanAttributes_call(mBeanNamePattern, resultHandler, this, ___protocolFactory, ___transport);
+      this.___currentMethod = method_call;
+      ___manager.call(method_call);
+    }
+
+    public static class queryMBeanAttributes_call extends org.apache.thrift.async.TAsyncMethodCall<java.util.List<AttributeResponse>> {
+      private java.lang.String mBeanNamePattern;
+      public queryMBeanAttributes_call(java.lang.String mBeanNamePattern, org.apache.thrift.async.AsyncMethodCallback<java.util.List<AttributeResponse>> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+        super(client, protocolFactory, transport, resultHandler, false);
+        this.mBeanNamePattern = mBeanNamePattern;
+      }
+
+      public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
+        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("queryMBeanAttributes", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        queryMBeanAttributes_args args = new queryMBeanAttributes_args();
+        args.setMBeanNamePattern(mBeanNamePattern);
+        args.write(prot);
+        prot.writeMessageEnd();
+      }
+
+      public java.util.List<AttributeResponse> getResult() throws JMXConnectionError, JMXError, org.apache.thrift.TException {
+        if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
+          throw new java.lang.IllegalStateException("Method call not finished!");
+        }
+        org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
+        org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
+        return (new Client(prot)).recv_queryMBeanAttributes();
       }
     }
 
@@ -445,9 +510,10 @@ public class JMXService {
       processMap.put("connect", new connect());
       processMap.put("disconnect", new disconnect());
       processMap.put("getClientVersion", new getClientVersion());
-      processMap.put("getMBeanNames", new getMBeanNames());
-      processMap.put("getMBeanAttrNames", new getMBeanAttrNames());
-      processMap.put("getMBeanAttrs", new getMBeanAttrs());
+      processMap.put("queryMBeanNames", new queryMBeanNames());
+      processMap.put("getMBeanAttributeNames", new getMBeanAttributeNames());
+      processMap.put("getMBeanAttributes", new getMBeanAttributes());
+      processMap.put("queryMBeanAttributes", new queryMBeanAttributes());
       return processMap;
     }
 
@@ -540,13 +606,13 @@ public class JMXService {
       }
     }
 
-    public static class getMBeanNames<I extends Iface> extends org.apache.thrift.ProcessFunction<I, getMBeanNames_args> {
-      public getMBeanNames() {
-        super("getMBeanNames");
+    public static class queryMBeanNames<I extends Iface> extends org.apache.thrift.ProcessFunction<I, queryMBeanNames_args> {
+      public queryMBeanNames() {
+        super("queryMBeanNames");
       }
 
-      public getMBeanNames_args getEmptyArgsInstance() {
-        return new getMBeanNames_args();
+      public queryMBeanNames_args getEmptyArgsInstance() {
+        return new queryMBeanNames_args();
       }
 
       protected boolean isOneway() {
@@ -558,10 +624,10 @@ public class JMXService {
         return false;
       }
 
-      public getMBeanNames_result getResult(I iface, getMBeanNames_args args) throws org.apache.thrift.TException {
-        getMBeanNames_result result = new getMBeanNames_result();
+      public queryMBeanNames_result getResult(I iface, queryMBeanNames_args args) throws org.apache.thrift.TException {
+        queryMBeanNames_result result = new queryMBeanNames_result();
         try {
-          result.success = iface.getMBeanNames(args.mBeanNamePattern);
+          result.success = iface.queryMBeanNames(args.mBeanNamePattern);
         } catch (JMXConnectionError connErr) {
           result.connErr = connErr;
         } catch (JMXError jmxErr) {
@@ -571,13 +637,13 @@ public class JMXService {
       }
     }
 
-    public static class getMBeanAttrNames<I extends Iface> extends org.apache.thrift.ProcessFunction<I, getMBeanAttrNames_args> {
-      public getMBeanAttrNames() {
-        super("getMBeanAttrNames");
+    public static class getMBeanAttributeNames<I extends Iface> extends org.apache.thrift.ProcessFunction<I, getMBeanAttributeNames_args> {
+      public getMBeanAttributeNames() {
+        super("getMBeanAttributeNames");
       }
 
-      public getMBeanAttrNames_args getEmptyArgsInstance() {
-        return new getMBeanAttrNames_args();
+      public getMBeanAttributeNames_args getEmptyArgsInstance() {
+        return new getMBeanAttributeNames_args();
       }
 
       protected boolean isOneway() {
@@ -589,10 +655,10 @@ public class JMXService {
         return false;
       }
 
-      public getMBeanAttrNames_result getResult(I iface, getMBeanAttrNames_args args) throws org.apache.thrift.TException {
-        getMBeanAttrNames_result result = new getMBeanAttrNames_result();
+      public getMBeanAttributeNames_result getResult(I iface, getMBeanAttributeNames_args args) throws org.apache.thrift.TException {
+        getMBeanAttributeNames_result result = new getMBeanAttributeNames_result();
         try {
-          result.success = iface.getMBeanAttrNames(args.mBeanName);
+          result.success = iface.getMBeanAttributeNames(args.mBeanName);
         } catch (JMXConnectionError connErr) {
           result.connErr = connErr;
         } catch (JMXError jmxErr) {
@@ -602,13 +668,13 @@ public class JMXService {
       }
     }
 
-    public static class getMBeanAttrs<I extends Iface> extends org.apache.thrift.ProcessFunction<I, getMBeanAttrs_args> {
-      public getMBeanAttrs() {
-        super("getMBeanAttrs");
+    public static class getMBeanAttributes<I extends Iface> extends org.apache.thrift.ProcessFunction<I, getMBeanAttributes_args> {
+      public getMBeanAttributes() {
+        super("getMBeanAttributes");
       }
 
-      public getMBeanAttrs_args getEmptyArgsInstance() {
-        return new getMBeanAttrs_args();
+      public getMBeanAttributes_args getEmptyArgsInstance() {
+        return new getMBeanAttributes_args();
       }
 
       protected boolean isOneway() {
@@ -620,10 +686,41 @@ public class JMXService {
         return false;
       }
 
-      public getMBeanAttrs_result getResult(I iface, getMBeanAttrs_args args) throws org.apache.thrift.TException {
-        getMBeanAttrs_result result = new getMBeanAttrs_result();
+      public getMBeanAttributes_result getResult(I iface, getMBeanAttributes_args args) throws org.apache.thrift.TException {
+        getMBeanAttributes_result result = new getMBeanAttributes_result();
         try {
-          result.success = iface.getMBeanAttrs(args.mBeanName, args.attrName);
+          result.success = iface.getMBeanAttributes(args.mBeanName, args.attributes);
+        } catch (JMXConnectionError connErr) {
+          result.connErr = connErr;
+        } catch (JMXError jmxErr) {
+          result.jmxErr = jmxErr;
+        }
+        return result;
+      }
+    }
+
+    public static class queryMBeanAttributes<I extends Iface> extends org.apache.thrift.ProcessFunction<I, queryMBeanAttributes_args> {
+      public queryMBeanAttributes() {
+        super("queryMBeanAttributes");
+      }
+
+      public queryMBeanAttributes_args getEmptyArgsInstance() {
+        return new queryMBeanAttributes_args();
+      }
+
+      protected boolean isOneway() {
+        return false;
+      }
+
+      @Override
+      protected boolean rethrowUnhandledExceptions() {
+        return false;
+      }
+
+      public queryMBeanAttributes_result getResult(I iface, queryMBeanAttributes_args args) throws org.apache.thrift.TException {
+        queryMBeanAttributes_result result = new queryMBeanAttributes_result();
+        try {
+          result.success = iface.queryMBeanAttributes(args.mBeanNamePattern);
         } catch (JMXConnectionError connErr) {
           result.connErr = connErr;
         } catch (JMXError jmxErr) {
@@ -649,9 +746,10 @@ public class JMXService {
       processMap.put("connect", new connect());
       processMap.put("disconnect", new disconnect());
       processMap.put("getClientVersion", new getClientVersion());
-      processMap.put("getMBeanNames", new getMBeanNames());
-      processMap.put("getMBeanAttrNames", new getMBeanAttrNames());
-      processMap.put("getMBeanAttrs", new getMBeanAttrs());
+      processMap.put("queryMBeanNames", new queryMBeanNames());
+      processMap.put("getMBeanAttributeNames", new getMBeanAttributeNames());
+      processMap.put("getMBeanAttributes", new getMBeanAttributes());
+      processMap.put("queryMBeanAttributes", new queryMBeanAttributes());
       return processMap;
     }
 
@@ -852,89 +950,20 @@ public class JMXService {
       }
     }
 
-    public static class getMBeanNames<I extends AsyncIface> extends org.apache.thrift.AsyncProcessFunction<I, getMBeanNames_args, java.util.List<java.lang.String>> {
-      public getMBeanNames() {
-        super("getMBeanNames");
+    public static class queryMBeanNames<I extends AsyncIface> extends org.apache.thrift.AsyncProcessFunction<I, queryMBeanNames_args, java.util.List<java.lang.String>> {
+      public queryMBeanNames() {
+        super("queryMBeanNames");
       }
 
-      public getMBeanNames_args getEmptyArgsInstance() {
-        return new getMBeanNames_args();
-      }
-
-      public org.apache.thrift.async.AsyncMethodCallback<java.util.List<java.lang.String>> getResultHandler(final org.apache.thrift.server.AbstractNonblockingServer.AsyncFrameBuffer fb, final int seqid) {
-        final org.apache.thrift.AsyncProcessFunction fcall = this;
-        return new org.apache.thrift.async.AsyncMethodCallback<java.util.List<java.lang.String>>() { 
-          public void onComplete(java.util.List<java.lang.String> o) {
-            getMBeanNames_result result = new getMBeanNames_result();
-            result.success = o;
-            try {
-              fcall.sendResponse(fb, result, org.apache.thrift.protocol.TMessageType.REPLY,seqid);
-            } catch (org.apache.thrift.transport.TTransportException e) {
-              _LOGGER.error("TTransportException writing to internal frame buffer", e);
-              fb.close();
-            } catch (java.lang.Exception e) {
-              _LOGGER.error("Exception writing to internal frame buffer", e);
-              onError(e);
-            }
-          }
-          public void onError(java.lang.Exception e) {
-            byte msgType = org.apache.thrift.protocol.TMessageType.REPLY;
-            org.apache.thrift.TSerializable msg;
-            getMBeanNames_result result = new getMBeanNames_result();
-            if (e instanceof JMXConnectionError) {
-              result.connErr = (JMXConnectionError) e;
-              result.setConnErrIsSet(true);
-              msg = result;
-            } else if (e instanceof JMXError) {
-              result.jmxErr = (JMXError) e;
-              result.setJmxErrIsSet(true);
-              msg = result;
-            } else if (e instanceof org.apache.thrift.transport.TTransportException) {
-              _LOGGER.error("TTransportException inside handler", e);
-              fb.close();
-              return;
-            } else if (e instanceof org.apache.thrift.TApplicationException) {
-              _LOGGER.error("TApplicationException inside handler", e);
-              msgType = org.apache.thrift.protocol.TMessageType.EXCEPTION;
-              msg = (org.apache.thrift.TApplicationException)e;
-            } else {
-              _LOGGER.error("Exception inside handler", e);
-              msgType = org.apache.thrift.protocol.TMessageType.EXCEPTION;
-              msg = new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.INTERNAL_ERROR, e.getMessage());
-            }
-            try {
-              fcall.sendResponse(fb,msg,msgType,seqid);
-            } catch (java.lang.Exception ex) {
-              _LOGGER.error("Exception writing to internal frame buffer", ex);
-              fb.close();
-            }
-          }
-        };
-      }
-
-      protected boolean isOneway() {
-        return false;
-      }
-
-      public void start(I iface, getMBeanNames_args args, org.apache.thrift.async.AsyncMethodCallback<java.util.List<java.lang.String>> resultHandler) throws org.apache.thrift.TException {
-        iface.getMBeanNames(args.mBeanNamePattern,resultHandler);
-      }
-    }
-
-    public static class getMBeanAttrNames<I extends AsyncIface> extends org.apache.thrift.AsyncProcessFunction<I, getMBeanAttrNames_args, java.util.List<java.lang.String>> {
-      public getMBeanAttrNames() {
-        super("getMBeanAttrNames");
-      }
-
-      public getMBeanAttrNames_args getEmptyArgsInstance() {
-        return new getMBeanAttrNames_args();
+      public queryMBeanNames_args getEmptyArgsInstance() {
+        return new queryMBeanNames_args();
       }
 
       public org.apache.thrift.async.AsyncMethodCallback<java.util.List<java.lang.String>> getResultHandler(final org.apache.thrift.server.AbstractNonblockingServer.AsyncFrameBuffer fb, final int seqid) {
         final org.apache.thrift.AsyncProcessFunction fcall = this;
         return new org.apache.thrift.async.AsyncMethodCallback<java.util.List<java.lang.String>>() { 
           public void onComplete(java.util.List<java.lang.String> o) {
-            getMBeanAttrNames_result result = new getMBeanAttrNames_result();
+            queryMBeanNames_result result = new queryMBeanNames_result();
             result.success = o;
             try {
               fcall.sendResponse(fb, result, org.apache.thrift.protocol.TMessageType.REPLY,seqid);
@@ -949,7 +978,7 @@ public class JMXService {
           public void onError(java.lang.Exception e) {
             byte msgType = org.apache.thrift.protocol.TMessageType.REPLY;
             org.apache.thrift.TSerializable msg;
-            getMBeanAttrNames_result result = new getMBeanAttrNames_result();
+            queryMBeanNames_result result = new queryMBeanNames_result();
             if (e instanceof JMXConnectionError) {
               result.connErr = (JMXConnectionError) e;
               result.setConnErrIsSet(true);
@@ -985,25 +1014,25 @@ public class JMXService {
         return false;
       }
 
-      public void start(I iface, getMBeanAttrNames_args args, org.apache.thrift.async.AsyncMethodCallback<java.util.List<java.lang.String>> resultHandler) throws org.apache.thrift.TException {
-        iface.getMBeanAttrNames(args.mBeanName,resultHandler);
+      public void start(I iface, queryMBeanNames_args args, org.apache.thrift.async.AsyncMethodCallback<java.util.List<java.lang.String>> resultHandler) throws org.apache.thrift.TException {
+        iface.queryMBeanNames(args.mBeanNamePattern,resultHandler);
       }
     }
 
-    public static class getMBeanAttrs<I extends AsyncIface> extends org.apache.thrift.AsyncProcessFunction<I, getMBeanAttrs_args, java.util.List<JMXAttribute>> {
-      public getMBeanAttrs() {
-        super("getMBeanAttrs");
+    public static class getMBeanAttributeNames<I extends AsyncIface> extends org.apache.thrift.AsyncProcessFunction<I, getMBeanAttributeNames_args, java.util.List<java.lang.String>> {
+      public getMBeanAttributeNames() {
+        super("getMBeanAttributeNames");
       }
 
-      public getMBeanAttrs_args getEmptyArgsInstance() {
-        return new getMBeanAttrs_args();
+      public getMBeanAttributeNames_args getEmptyArgsInstance() {
+        return new getMBeanAttributeNames_args();
       }
 
-      public org.apache.thrift.async.AsyncMethodCallback<java.util.List<JMXAttribute>> getResultHandler(final org.apache.thrift.server.AbstractNonblockingServer.AsyncFrameBuffer fb, final int seqid) {
+      public org.apache.thrift.async.AsyncMethodCallback<java.util.List<java.lang.String>> getResultHandler(final org.apache.thrift.server.AbstractNonblockingServer.AsyncFrameBuffer fb, final int seqid) {
         final org.apache.thrift.AsyncProcessFunction fcall = this;
-        return new org.apache.thrift.async.AsyncMethodCallback<java.util.List<JMXAttribute>>() { 
-          public void onComplete(java.util.List<JMXAttribute> o) {
-            getMBeanAttrs_result result = new getMBeanAttrs_result();
+        return new org.apache.thrift.async.AsyncMethodCallback<java.util.List<java.lang.String>>() { 
+          public void onComplete(java.util.List<java.lang.String> o) {
+            getMBeanAttributeNames_result result = new getMBeanAttributeNames_result();
             result.success = o;
             try {
               fcall.sendResponse(fb, result, org.apache.thrift.protocol.TMessageType.REPLY,seqid);
@@ -1018,7 +1047,7 @@ public class JMXService {
           public void onError(java.lang.Exception e) {
             byte msgType = org.apache.thrift.protocol.TMessageType.REPLY;
             org.apache.thrift.TSerializable msg;
-            getMBeanAttrs_result result = new getMBeanAttrs_result();
+            getMBeanAttributeNames_result result = new getMBeanAttributeNames_result();
             if (e instanceof JMXConnectionError) {
               result.connErr = (JMXConnectionError) e;
               result.setConnErrIsSet(true);
@@ -1054,8 +1083,146 @@ public class JMXService {
         return false;
       }
 
-      public void start(I iface, getMBeanAttrs_args args, org.apache.thrift.async.AsyncMethodCallback<java.util.List<JMXAttribute>> resultHandler) throws org.apache.thrift.TException {
-        iface.getMBeanAttrs(args.mBeanName, args.attrName,resultHandler);
+      public void start(I iface, getMBeanAttributeNames_args args, org.apache.thrift.async.AsyncMethodCallback<java.util.List<java.lang.String>> resultHandler) throws org.apache.thrift.TException {
+        iface.getMBeanAttributeNames(args.mBeanName,resultHandler);
+      }
+    }
+
+    public static class getMBeanAttributes<I extends AsyncIface> extends org.apache.thrift.AsyncProcessFunction<I, getMBeanAttributes_args, java.util.List<AttributeResponse>> {
+      public getMBeanAttributes() {
+        super("getMBeanAttributes");
+      }
+
+      public getMBeanAttributes_args getEmptyArgsInstance() {
+        return new getMBeanAttributes_args();
+      }
+
+      public org.apache.thrift.async.AsyncMethodCallback<java.util.List<AttributeResponse>> getResultHandler(final org.apache.thrift.server.AbstractNonblockingServer.AsyncFrameBuffer fb, final int seqid) {
+        final org.apache.thrift.AsyncProcessFunction fcall = this;
+        return new org.apache.thrift.async.AsyncMethodCallback<java.util.List<AttributeResponse>>() { 
+          public void onComplete(java.util.List<AttributeResponse> o) {
+            getMBeanAttributes_result result = new getMBeanAttributes_result();
+            result.success = o;
+            try {
+              fcall.sendResponse(fb, result, org.apache.thrift.protocol.TMessageType.REPLY,seqid);
+            } catch (org.apache.thrift.transport.TTransportException e) {
+              _LOGGER.error("TTransportException writing to internal frame buffer", e);
+              fb.close();
+            } catch (java.lang.Exception e) {
+              _LOGGER.error("Exception writing to internal frame buffer", e);
+              onError(e);
+            }
+          }
+          public void onError(java.lang.Exception e) {
+            byte msgType = org.apache.thrift.protocol.TMessageType.REPLY;
+            org.apache.thrift.TSerializable msg;
+            getMBeanAttributes_result result = new getMBeanAttributes_result();
+            if (e instanceof JMXConnectionError) {
+              result.connErr = (JMXConnectionError) e;
+              result.setConnErrIsSet(true);
+              msg = result;
+            } else if (e instanceof JMXError) {
+              result.jmxErr = (JMXError) e;
+              result.setJmxErrIsSet(true);
+              msg = result;
+            } else if (e instanceof org.apache.thrift.transport.TTransportException) {
+              _LOGGER.error("TTransportException inside handler", e);
+              fb.close();
+              return;
+            } else if (e instanceof org.apache.thrift.TApplicationException) {
+              _LOGGER.error("TApplicationException inside handler", e);
+              msgType = org.apache.thrift.protocol.TMessageType.EXCEPTION;
+              msg = (org.apache.thrift.TApplicationException)e;
+            } else {
+              _LOGGER.error("Exception inside handler", e);
+              msgType = org.apache.thrift.protocol.TMessageType.EXCEPTION;
+              msg = new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.INTERNAL_ERROR, e.getMessage());
+            }
+            try {
+              fcall.sendResponse(fb,msg,msgType,seqid);
+            } catch (java.lang.Exception ex) {
+              _LOGGER.error("Exception writing to internal frame buffer", ex);
+              fb.close();
+            }
+          }
+        };
+      }
+
+      protected boolean isOneway() {
+        return false;
+      }
+
+      public void start(I iface, getMBeanAttributes_args args, org.apache.thrift.async.AsyncMethodCallback<java.util.List<AttributeResponse>> resultHandler) throws org.apache.thrift.TException {
+        iface.getMBeanAttributes(args.mBeanName, args.attributes,resultHandler);
+      }
+    }
+
+    public static class queryMBeanAttributes<I extends AsyncIface> extends org.apache.thrift.AsyncProcessFunction<I, queryMBeanAttributes_args, java.util.List<AttributeResponse>> {
+      public queryMBeanAttributes() {
+        super("queryMBeanAttributes");
+      }
+
+      public queryMBeanAttributes_args getEmptyArgsInstance() {
+        return new queryMBeanAttributes_args();
+      }
+
+      public org.apache.thrift.async.AsyncMethodCallback<java.util.List<AttributeResponse>> getResultHandler(final org.apache.thrift.server.AbstractNonblockingServer.AsyncFrameBuffer fb, final int seqid) {
+        final org.apache.thrift.AsyncProcessFunction fcall = this;
+        return new org.apache.thrift.async.AsyncMethodCallback<java.util.List<AttributeResponse>>() { 
+          public void onComplete(java.util.List<AttributeResponse> o) {
+            queryMBeanAttributes_result result = new queryMBeanAttributes_result();
+            result.success = o;
+            try {
+              fcall.sendResponse(fb, result, org.apache.thrift.protocol.TMessageType.REPLY,seqid);
+            } catch (org.apache.thrift.transport.TTransportException e) {
+              _LOGGER.error("TTransportException writing to internal frame buffer", e);
+              fb.close();
+            } catch (java.lang.Exception e) {
+              _LOGGER.error("Exception writing to internal frame buffer", e);
+              onError(e);
+            }
+          }
+          public void onError(java.lang.Exception e) {
+            byte msgType = org.apache.thrift.protocol.TMessageType.REPLY;
+            org.apache.thrift.TSerializable msg;
+            queryMBeanAttributes_result result = new queryMBeanAttributes_result();
+            if (e instanceof JMXConnectionError) {
+              result.connErr = (JMXConnectionError) e;
+              result.setConnErrIsSet(true);
+              msg = result;
+            } else if (e instanceof JMXError) {
+              result.jmxErr = (JMXError) e;
+              result.setJmxErrIsSet(true);
+              msg = result;
+            } else if (e instanceof org.apache.thrift.transport.TTransportException) {
+              _LOGGER.error("TTransportException inside handler", e);
+              fb.close();
+              return;
+            } else if (e instanceof org.apache.thrift.TApplicationException) {
+              _LOGGER.error("TApplicationException inside handler", e);
+              msgType = org.apache.thrift.protocol.TMessageType.EXCEPTION;
+              msg = (org.apache.thrift.TApplicationException)e;
+            } else {
+              _LOGGER.error("Exception inside handler", e);
+              msgType = org.apache.thrift.protocol.TMessageType.EXCEPTION;
+              msg = new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.INTERNAL_ERROR, e.getMessage());
+            }
+            try {
+              fcall.sendResponse(fb,msg,msgType,seqid);
+            } catch (java.lang.Exception ex) {
+              _LOGGER.error("Exception writing to internal frame buffer", ex);
+              fb.close();
+            }
+          }
+        };
+      }
+
+      protected boolean isOneway() {
+        return false;
+      }
+
+      public void start(I iface, queryMBeanAttributes_args args, org.apache.thrift.async.AsyncMethodCallback<java.util.List<AttributeResponse>> resultHandler) throws org.apache.thrift.TException {
+        iface.queryMBeanAttributes(args.mBeanNamePattern,resultHandler);
       }
     }
 
@@ -3260,13 +3427,13 @@ public class JMXService {
     }
   }
 
-  public static class getMBeanNames_args implements org.apache.thrift.TBase<getMBeanNames_args, getMBeanNames_args._Fields>, java.io.Serializable, Cloneable, Comparable<getMBeanNames_args>   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("getMBeanNames_args");
+  public static class queryMBeanNames_args implements org.apache.thrift.TBase<queryMBeanNames_args, queryMBeanNames_args._Fields>, java.io.Serializable, Cloneable, Comparable<queryMBeanNames_args>   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("queryMBeanNames_args");
 
     private static final org.apache.thrift.protocol.TField M_BEAN_NAME_PATTERN_FIELD_DESC = new org.apache.thrift.protocol.TField("mBeanNamePattern", org.apache.thrift.protocol.TType.STRING, (short)1);
 
-    private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new getMBeanNames_argsStandardSchemeFactory();
-    private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new getMBeanNames_argsTupleSchemeFactory();
+    private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new queryMBeanNames_argsStandardSchemeFactory();
+    private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new queryMBeanNames_argsTupleSchemeFactory();
 
     public @org.apache.thrift.annotation.Nullable java.lang.String mBeanNamePattern; // required
 
@@ -3337,13 +3504,13 @@ public class JMXService {
       tmpMap.put(_Fields.M_BEAN_NAME_PATTERN, new org.apache.thrift.meta_data.FieldMetaData("mBeanNamePattern", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
       metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
-      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(getMBeanNames_args.class, metaDataMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(queryMBeanNames_args.class, metaDataMap);
     }
 
-    public getMBeanNames_args() {
+    public queryMBeanNames_args() {
     }
 
-    public getMBeanNames_args(
+    public queryMBeanNames_args(
       java.lang.String mBeanNamePattern)
     {
       this();
@@ -3353,14 +3520,14 @@ public class JMXService {
     /**
      * Performs a deep copy on <i>other</i>.
      */
-    public getMBeanNames_args(getMBeanNames_args other) {
+    public queryMBeanNames_args(queryMBeanNames_args other) {
       if (other.isSetMBeanNamePattern()) {
         this.mBeanNamePattern = other.mBeanNamePattern;
       }
     }
 
-    public getMBeanNames_args deepCopy() {
-      return new getMBeanNames_args(this);
+    public queryMBeanNames_args deepCopy() {
+      return new queryMBeanNames_args(this);
     }
 
     @Override
@@ -3373,7 +3540,7 @@ public class JMXService {
       return this.mBeanNamePattern;
     }
 
-    public getMBeanNames_args setMBeanNamePattern(@org.apache.thrift.annotation.Nullable java.lang.String mBeanNamePattern) {
+    public queryMBeanNames_args setMBeanNamePattern(@org.apache.thrift.annotation.Nullable java.lang.String mBeanNamePattern) {
       this.mBeanNamePattern = mBeanNamePattern;
       return this;
     }
@@ -3433,12 +3600,12 @@ public class JMXService {
     public boolean equals(java.lang.Object that) {
       if (that == null)
         return false;
-      if (that instanceof getMBeanNames_args)
-        return this.equals((getMBeanNames_args)that);
+      if (that instanceof queryMBeanNames_args)
+        return this.equals((queryMBeanNames_args)that);
       return false;
     }
 
-    public boolean equals(getMBeanNames_args that) {
+    public boolean equals(queryMBeanNames_args that) {
       if (that == null)
         return false;
       if (this == that)
@@ -3468,7 +3635,7 @@ public class JMXService {
     }
 
     @Override
-    public int compareTo(getMBeanNames_args other) {
+    public int compareTo(queryMBeanNames_args other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
@@ -3503,7 +3670,7 @@ public class JMXService {
 
     @Override
     public java.lang.String toString() {
-      java.lang.StringBuilder sb = new java.lang.StringBuilder("getMBeanNames_args(");
+      java.lang.StringBuilder sb = new java.lang.StringBuilder("queryMBeanNames_args(");
       boolean first = true;
 
       sb.append("mBeanNamePattern:");
@@ -3538,15 +3705,15 @@ public class JMXService {
       }
     }
 
-    private static class getMBeanNames_argsStandardSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
-      public getMBeanNames_argsStandardScheme getScheme() {
-        return new getMBeanNames_argsStandardScheme();
+    private static class queryMBeanNames_argsStandardSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+      public queryMBeanNames_argsStandardScheme getScheme() {
+        return new queryMBeanNames_argsStandardScheme();
       }
     }
 
-    private static class getMBeanNames_argsStandardScheme extends org.apache.thrift.scheme.StandardScheme<getMBeanNames_args> {
+    private static class queryMBeanNames_argsStandardScheme extends org.apache.thrift.scheme.StandardScheme<queryMBeanNames_args> {
 
-      public void read(org.apache.thrift.protocol.TProtocol iprot, getMBeanNames_args struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol iprot, queryMBeanNames_args struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
         while (true)
@@ -3575,7 +3742,7 @@ public class JMXService {
         struct.validate();
       }
 
-      public void write(org.apache.thrift.protocol.TProtocol oprot, getMBeanNames_args struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol oprot, queryMBeanNames_args struct) throws org.apache.thrift.TException {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
@@ -3590,16 +3757,16 @@ public class JMXService {
 
     }
 
-    private static class getMBeanNames_argsTupleSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
-      public getMBeanNames_argsTupleScheme getScheme() {
-        return new getMBeanNames_argsTupleScheme();
+    private static class queryMBeanNames_argsTupleSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+      public queryMBeanNames_argsTupleScheme getScheme() {
+        return new queryMBeanNames_argsTupleScheme();
       }
     }
 
-    private static class getMBeanNames_argsTupleScheme extends org.apache.thrift.scheme.TupleScheme<getMBeanNames_args> {
+    private static class queryMBeanNames_argsTupleScheme extends org.apache.thrift.scheme.TupleScheme<queryMBeanNames_args> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, getMBeanNames_args struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol prot, queryMBeanNames_args struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol oprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
         java.util.BitSet optionals = new java.util.BitSet();
         if (struct.isSetMBeanNamePattern()) {
@@ -3612,7 +3779,7 @@ public class JMXService {
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, getMBeanNames_args struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol prot, queryMBeanNames_args struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
         java.util.BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
@@ -3627,15 +3794,15 @@ public class JMXService {
     }
   }
 
-  public static class getMBeanNames_result implements org.apache.thrift.TBase<getMBeanNames_result, getMBeanNames_result._Fields>, java.io.Serializable, Cloneable, Comparable<getMBeanNames_result>   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("getMBeanNames_result");
+  public static class queryMBeanNames_result implements org.apache.thrift.TBase<queryMBeanNames_result, queryMBeanNames_result._Fields>, java.io.Serializable, Cloneable, Comparable<queryMBeanNames_result>   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("queryMBeanNames_result");
 
     private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.LIST, (short)0);
     private static final org.apache.thrift.protocol.TField CONN_ERR_FIELD_DESC = new org.apache.thrift.protocol.TField("connErr", org.apache.thrift.protocol.TType.STRUCT, (short)1);
     private static final org.apache.thrift.protocol.TField JMX_ERR_FIELD_DESC = new org.apache.thrift.protocol.TField("jmxErr", org.apache.thrift.protocol.TType.STRUCT, (short)2);
 
-    private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new getMBeanNames_resultStandardSchemeFactory();
-    private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new getMBeanNames_resultTupleSchemeFactory();
+    private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new queryMBeanNames_resultStandardSchemeFactory();
+    private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new queryMBeanNames_resultTupleSchemeFactory();
 
     public @org.apache.thrift.annotation.Nullable java.util.List<java.lang.String> success; // required
     public @org.apache.thrift.annotation.Nullable JMXConnectionError connErr; // required
@@ -3719,13 +3886,13 @@ public class JMXService {
       tmpMap.put(_Fields.JMX_ERR, new org.apache.thrift.meta_data.FieldMetaData("jmxErr", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, JMXError.class)));
       metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
-      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(getMBeanNames_result.class, metaDataMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(queryMBeanNames_result.class, metaDataMap);
     }
 
-    public getMBeanNames_result() {
+    public queryMBeanNames_result() {
     }
 
-    public getMBeanNames_result(
+    public queryMBeanNames_result(
       java.util.List<java.lang.String> success,
       JMXConnectionError connErr,
       JMXError jmxErr)
@@ -3739,7 +3906,7 @@ public class JMXService {
     /**
      * Performs a deep copy on <i>other</i>.
      */
-    public getMBeanNames_result(getMBeanNames_result other) {
+    public queryMBeanNames_result(queryMBeanNames_result other) {
       if (other.isSetSuccess()) {
         java.util.List<java.lang.String> __this__success = new java.util.ArrayList<java.lang.String>(other.success);
         this.success = __this__success;
@@ -3752,8 +3919,8 @@ public class JMXService {
       }
     }
 
-    public getMBeanNames_result deepCopy() {
-      return new getMBeanNames_result(this);
+    public queryMBeanNames_result deepCopy() {
+      return new queryMBeanNames_result(this);
     }
 
     @Override
@@ -3784,7 +3951,7 @@ public class JMXService {
       return this.success;
     }
 
-    public getMBeanNames_result setSuccess(@org.apache.thrift.annotation.Nullable java.util.List<java.lang.String> success) {
+    public queryMBeanNames_result setSuccess(@org.apache.thrift.annotation.Nullable java.util.List<java.lang.String> success) {
       this.success = success;
       return this;
     }
@@ -3809,7 +3976,7 @@ public class JMXService {
       return this.connErr;
     }
 
-    public getMBeanNames_result setConnErr(@org.apache.thrift.annotation.Nullable JMXConnectionError connErr) {
+    public queryMBeanNames_result setConnErr(@org.apache.thrift.annotation.Nullable JMXConnectionError connErr) {
       this.connErr = connErr;
       return this;
     }
@@ -3834,7 +4001,7 @@ public class JMXService {
       return this.jmxErr;
     }
 
-    public getMBeanNames_result setJmxErr(@org.apache.thrift.annotation.Nullable JMXError jmxErr) {
+    public queryMBeanNames_result setJmxErr(@org.apache.thrift.annotation.Nullable JMXError jmxErr) {
       this.jmxErr = jmxErr;
       return this;
     }
@@ -3920,12 +4087,12 @@ public class JMXService {
     public boolean equals(java.lang.Object that) {
       if (that == null)
         return false;
-      if (that instanceof getMBeanNames_result)
-        return this.equals((getMBeanNames_result)that);
+      if (that instanceof queryMBeanNames_result)
+        return this.equals((queryMBeanNames_result)that);
       return false;
     }
 
-    public boolean equals(getMBeanNames_result that) {
+    public boolean equals(queryMBeanNames_result that) {
       if (that == null)
         return false;
       if (this == that)
@@ -3981,7 +4148,7 @@ public class JMXService {
     }
 
     @Override
-    public int compareTo(getMBeanNames_result other) {
+    public int compareTo(queryMBeanNames_result other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
@@ -4036,7 +4203,7 @@ public class JMXService {
 
     @Override
     public java.lang.String toString() {
-      java.lang.StringBuilder sb = new java.lang.StringBuilder("getMBeanNames_result(");
+      java.lang.StringBuilder sb = new java.lang.StringBuilder("queryMBeanNames_result(");
       boolean first = true;
 
       sb.append("success:");
@@ -4087,15 +4254,15 @@ public class JMXService {
       }
     }
 
-    private static class getMBeanNames_resultStandardSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
-      public getMBeanNames_resultStandardScheme getScheme() {
-        return new getMBeanNames_resultStandardScheme();
+    private static class queryMBeanNames_resultStandardSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+      public queryMBeanNames_resultStandardScheme getScheme() {
+        return new queryMBeanNames_resultStandardScheme();
       }
     }
 
-    private static class getMBeanNames_resultStandardScheme extends org.apache.thrift.scheme.StandardScheme<getMBeanNames_result> {
+    private static class queryMBeanNames_resultStandardScheme extends org.apache.thrift.scheme.StandardScheme<queryMBeanNames_result> {
 
-      public void read(org.apache.thrift.protocol.TProtocol iprot, getMBeanNames_result struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol iprot, queryMBeanNames_result struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
         while (true)
@@ -4152,7 +4319,7 @@ public class JMXService {
         struct.validate();
       }
 
-      public void write(org.apache.thrift.protocol.TProtocol oprot, getMBeanNames_result struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol oprot, queryMBeanNames_result struct) throws org.apache.thrift.TException {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
@@ -4184,16 +4351,16 @@ public class JMXService {
 
     }
 
-    private static class getMBeanNames_resultTupleSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
-      public getMBeanNames_resultTupleScheme getScheme() {
-        return new getMBeanNames_resultTupleScheme();
+    private static class queryMBeanNames_resultTupleSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+      public queryMBeanNames_resultTupleScheme getScheme() {
+        return new queryMBeanNames_resultTupleScheme();
       }
     }
 
-    private static class getMBeanNames_resultTupleScheme extends org.apache.thrift.scheme.TupleScheme<getMBeanNames_result> {
+    private static class queryMBeanNames_resultTupleScheme extends org.apache.thrift.scheme.TupleScheme<queryMBeanNames_result> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, getMBeanNames_result struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol prot, queryMBeanNames_result struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol oprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
         java.util.BitSet optionals = new java.util.BitSet();
         if (struct.isSetSuccess()) {
@@ -4224,7 +4391,7 @@ public class JMXService {
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, getMBeanNames_result struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol prot, queryMBeanNames_result struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
         java.util.BitSet incoming = iprot.readBitSet(3);
         if (incoming.get(0)) {
@@ -4258,13 +4425,13 @@ public class JMXService {
     }
   }
 
-  public static class getMBeanAttrNames_args implements org.apache.thrift.TBase<getMBeanAttrNames_args, getMBeanAttrNames_args._Fields>, java.io.Serializable, Cloneable, Comparable<getMBeanAttrNames_args>   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("getMBeanAttrNames_args");
+  public static class getMBeanAttributeNames_args implements org.apache.thrift.TBase<getMBeanAttributeNames_args, getMBeanAttributeNames_args._Fields>, java.io.Serializable, Cloneable, Comparable<getMBeanAttributeNames_args>   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("getMBeanAttributeNames_args");
 
     private static final org.apache.thrift.protocol.TField M_BEAN_NAME_FIELD_DESC = new org.apache.thrift.protocol.TField("mBeanName", org.apache.thrift.protocol.TType.STRING, (short)1);
 
-    private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new getMBeanAttrNames_argsStandardSchemeFactory();
-    private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new getMBeanAttrNames_argsTupleSchemeFactory();
+    private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new getMBeanAttributeNames_argsStandardSchemeFactory();
+    private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new getMBeanAttributeNames_argsTupleSchemeFactory();
 
     public @org.apache.thrift.annotation.Nullable java.lang.String mBeanName; // required
 
@@ -4335,13 +4502,13 @@ public class JMXService {
       tmpMap.put(_Fields.M_BEAN_NAME, new org.apache.thrift.meta_data.FieldMetaData("mBeanName", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
       metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
-      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(getMBeanAttrNames_args.class, metaDataMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(getMBeanAttributeNames_args.class, metaDataMap);
     }
 
-    public getMBeanAttrNames_args() {
+    public getMBeanAttributeNames_args() {
     }
 
-    public getMBeanAttrNames_args(
+    public getMBeanAttributeNames_args(
       java.lang.String mBeanName)
     {
       this();
@@ -4351,14 +4518,14 @@ public class JMXService {
     /**
      * Performs a deep copy on <i>other</i>.
      */
-    public getMBeanAttrNames_args(getMBeanAttrNames_args other) {
+    public getMBeanAttributeNames_args(getMBeanAttributeNames_args other) {
       if (other.isSetMBeanName()) {
         this.mBeanName = other.mBeanName;
       }
     }
 
-    public getMBeanAttrNames_args deepCopy() {
-      return new getMBeanAttrNames_args(this);
+    public getMBeanAttributeNames_args deepCopy() {
+      return new getMBeanAttributeNames_args(this);
     }
 
     @Override
@@ -4371,7 +4538,7 @@ public class JMXService {
       return this.mBeanName;
     }
 
-    public getMBeanAttrNames_args setMBeanName(@org.apache.thrift.annotation.Nullable java.lang.String mBeanName) {
+    public getMBeanAttributeNames_args setMBeanName(@org.apache.thrift.annotation.Nullable java.lang.String mBeanName) {
       this.mBeanName = mBeanName;
       return this;
     }
@@ -4431,12 +4598,12 @@ public class JMXService {
     public boolean equals(java.lang.Object that) {
       if (that == null)
         return false;
-      if (that instanceof getMBeanAttrNames_args)
-        return this.equals((getMBeanAttrNames_args)that);
+      if (that instanceof getMBeanAttributeNames_args)
+        return this.equals((getMBeanAttributeNames_args)that);
       return false;
     }
 
-    public boolean equals(getMBeanAttrNames_args that) {
+    public boolean equals(getMBeanAttributeNames_args that) {
       if (that == null)
         return false;
       if (this == that)
@@ -4466,7 +4633,7 @@ public class JMXService {
     }
 
     @Override
-    public int compareTo(getMBeanAttrNames_args other) {
+    public int compareTo(getMBeanAttributeNames_args other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
@@ -4501,7 +4668,7 @@ public class JMXService {
 
     @Override
     public java.lang.String toString() {
-      java.lang.StringBuilder sb = new java.lang.StringBuilder("getMBeanAttrNames_args(");
+      java.lang.StringBuilder sb = new java.lang.StringBuilder("getMBeanAttributeNames_args(");
       boolean first = true;
 
       sb.append("mBeanName:");
@@ -4536,15 +4703,15 @@ public class JMXService {
       }
     }
 
-    private static class getMBeanAttrNames_argsStandardSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
-      public getMBeanAttrNames_argsStandardScheme getScheme() {
-        return new getMBeanAttrNames_argsStandardScheme();
+    private static class getMBeanAttributeNames_argsStandardSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+      public getMBeanAttributeNames_argsStandardScheme getScheme() {
+        return new getMBeanAttributeNames_argsStandardScheme();
       }
     }
 
-    private static class getMBeanAttrNames_argsStandardScheme extends org.apache.thrift.scheme.StandardScheme<getMBeanAttrNames_args> {
+    private static class getMBeanAttributeNames_argsStandardScheme extends org.apache.thrift.scheme.StandardScheme<getMBeanAttributeNames_args> {
 
-      public void read(org.apache.thrift.protocol.TProtocol iprot, getMBeanAttrNames_args struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol iprot, getMBeanAttributeNames_args struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
         while (true)
@@ -4573,7 +4740,7 @@ public class JMXService {
         struct.validate();
       }
 
-      public void write(org.apache.thrift.protocol.TProtocol oprot, getMBeanAttrNames_args struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol oprot, getMBeanAttributeNames_args struct) throws org.apache.thrift.TException {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
@@ -4588,16 +4755,16 @@ public class JMXService {
 
     }
 
-    private static class getMBeanAttrNames_argsTupleSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
-      public getMBeanAttrNames_argsTupleScheme getScheme() {
-        return new getMBeanAttrNames_argsTupleScheme();
+    private static class getMBeanAttributeNames_argsTupleSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+      public getMBeanAttributeNames_argsTupleScheme getScheme() {
+        return new getMBeanAttributeNames_argsTupleScheme();
       }
     }
 
-    private static class getMBeanAttrNames_argsTupleScheme extends org.apache.thrift.scheme.TupleScheme<getMBeanAttrNames_args> {
+    private static class getMBeanAttributeNames_argsTupleScheme extends org.apache.thrift.scheme.TupleScheme<getMBeanAttributeNames_args> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, getMBeanAttrNames_args struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol prot, getMBeanAttributeNames_args struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol oprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
         java.util.BitSet optionals = new java.util.BitSet();
         if (struct.isSetMBeanName()) {
@@ -4610,7 +4777,7 @@ public class JMXService {
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, getMBeanAttrNames_args struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol prot, getMBeanAttributeNames_args struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
         java.util.BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
@@ -4625,15 +4792,15 @@ public class JMXService {
     }
   }
 
-  public static class getMBeanAttrNames_result implements org.apache.thrift.TBase<getMBeanAttrNames_result, getMBeanAttrNames_result._Fields>, java.io.Serializable, Cloneable, Comparable<getMBeanAttrNames_result>   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("getMBeanAttrNames_result");
+  public static class getMBeanAttributeNames_result implements org.apache.thrift.TBase<getMBeanAttributeNames_result, getMBeanAttributeNames_result._Fields>, java.io.Serializable, Cloneable, Comparable<getMBeanAttributeNames_result>   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("getMBeanAttributeNames_result");
 
     private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.LIST, (short)0);
     private static final org.apache.thrift.protocol.TField CONN_ERR_FIELD_DESC = new org.apache.thrift.protocol.TField("connErr", org.apache.thrift.protocol.TType.STRUCT, (short)1);
     private static final org.apache.thrift.protocol.TField JMX_ERR_FIELD_DESC = new org.apache.thrift.protocol.TField("jmxErr", org.apache.thrift.protocol.TType.STRUCT, (short)2);
 
-    private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new getMBeanAttrNames_resultStandardSchemeFactory();
-    private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new getMBeanAttrNames_resultTupleSchemeFactory();
+    private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new getMBeanAttributeNames_resultStandardSchemeFactory();
+    private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new getMBeanAttributeNames_resultTupleSchemeFactory();
 
     public @org.apache.thrift.annotation.Nullable java.util.List<java.lang.String> success; // required
     public @org.apache.thrift.annotation.Nullable JMXConnectionError connErr; // required
@@ -4717,13 +4884,13 @@ public class JMXService {
       tmpMap.put(_Fields.JMX_ERR, new org.apache.thrift.meta_data.FieldMetaData("jmxErr", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, JMXError.class)));
       metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
-      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(getMBeanAttrNames_result.class, metaDataMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(getMBeanAttributeNames_result.class, metaDataMap);
     }
 
-    public getMBeanAttrNames_result() {
+    public getMBeanAttributeNames_result() {
     }
 
-    public getMBeanAttrNames_result(
+    public getMBeanAttributeNames_result(
       java.util.List<java.lang.String> success,
       JMXConnectionError connErr,
       JMXError jmxErr)
@@ -4737,7 +4904,7 @@ public class JMXService {
     /**
      * Performs a deep copy on <i>other</i>.
      */
-    public getMBeanAttrNames_result(getMBeanAttrNames_result other) {
+    public getMBeanAttributeNames_result(getMBeanAttributeNames_result other) {
       if (other.isSetSuccess()) {
         java.util.List<java.lang.String> __this__success = new java.util.ArrayList<java.lang.String>(other.success);
         this.success = __this__success;
@@ -4750,8 +4917,8 @@ public class JMXService {
       }
     }
 
-    public getMBeanAttrNames_result deepCopy() {
-      return new getMBeanAttrNames_result(this);
+    public getMBeanAttributeNames_result deepCopy() {
+      return new getMBeanAttributeNames_result(this);
     }
 
     @Override
@@ -4782,7 +4949,7 @@ public class JMXService {
       return this.success;
     }
 
-    public getMBeanAttrNames_result setSuccess(@org.apache.thrift.annotation.Nullable java.util.List<java.lang.String> success) {
+    public getMBeanAttributeNames_result setSuccess(@org.apache.thrift.annotation.Nullable java.util.List<java.lang.String> success) {
       this.success = success;
       return this;
     }
@@ -4807,7 +4974,7 @@ public class JMXService {
       return this.connErr;
     }
 
-    public getMBeanAttrNames_result setConnErr(@org.apache.thrift.annotation.Nullable JMXConnectionError connErr) {
+    public getMBeanAttributeNames_result setConnErr(@org.apache.thrift.annotation.Nullable JMXConnectionError connErr) {
       this.connErr = connErr;
       return this;
     }
@@ -4832,7 +4999,7 @@ public class JMXService {
       return this.jmxErr;
     }
 
-    public getMBeanAttrNames_result setJmxErr(@org.apache.thrift.annotation.Nullable JMXError jmxErr) {
+    public getMBeanAttributeNames_result setJmxErr(@org.apache.thrift.annotation.Nullable JMXError jmxErr) {
       this.jmxErr = jmxErr;
       return this;
     }
@@ -4918,12 +5085,12 @@ public class JMXService {
     public boolean equals(java.lang.Object that) {
       if (that == null)
         return false;
-      if (that instanceof getMBeanAttrNames_result)
-        return this.equals((getMBeanAttrNames_result)that);
+      if (that instanceof getMBeanAttributeNames_result)
+        return this.equals((getMBeanAttributeNames_result)that);
       return false;
     }
 
-    public boolean equals(getMBeanAttrNames_result that) {
+    public boolean equals(getMBeanAttributeNames_result that) {
       if (that == null)
         return false;
       if (this == that)
@@ -4979,7 +5146,7 @@ public class JMXService {
     }
 
     @Override
-    public int compareTo(getMBeanAttrNames_result other) {
+    public int compareTo(getMBeanAttributeNames_result other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
@@ -5034,7 +5201,7 @@ public class JMXService {
 
     @Override
     public java.lang.String toString() {
-      java.lang.StringBuilder sb = new java.lang.StringBuilder("getMBeanAttrNames_result(");
+      java.lang.StringBuilder sb = new java.lang.StringBuilder("getMBeanAttributeNames_result(");
       boolean first = true;
 
       sb.append("success:");
@@ -5085,15 +5252,15 @@ public class JMXService {
       }
     }
 
-    private static class getMBeanAttrNames_resultStandardSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
-      public getMBeanAttrNames_resultStandardScheme getScheme() {
-        return new getMBeanAttrNames_resultStandardScheme();
+    private static class getMBeanAttributeNames_resultStandardSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+      public getMBeanAttributeNames_resultStandardScheme getScheme() {
+        return new getMBeanAttributeNames_resultStandardScheme();
       }
     }
 
-    private static class getMBeanAttrNames_resultStandardScheme extends org.apache.thrift.scheme.StandardScheme<getMBeanAttrNames_result> {
+    private static class getMBeanAttributeNames_resultStandardScheme extends org.apache.thrift.scheme.StandardScheme<getMBeanAttributeNames_result> {
 
-      public void read(org.apache.thrift.protocol.TProtocol iprot, getMBeanAttrNames_result struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol iprot, getMBeanAttributeNames_result struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
         while (true)
@@ -5150,7 +5317,7 @@ public class JMXService {
         struct.validate();
       }
 
-      public void write(org.apache.thrift.protocol.TProtocol oprot, getMBeanAttrNames_result struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol oprot, getMBeanAttributeNames_result struct) throws org.apache.thrift.TException {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
@@ -5182,16 +5349,16 @@ public class JMXService {
 
     }
 
-    private static class getMBeanAttrNames_resultTupleSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
-      public getMBeanAttrNames_resultTupleScheme getScheme() {
-        return new getMBeanAttrNames_resultTupleScheme();
+    private static class getMBeanAttributeNames_resultTupleSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+      public getMBeanAttributeNames_resultTupleScheme getScheme() {
+        return new getMBeanAttributeNames_resultTupleScheme();
       }
     }
 
-    private static class getMBeanAttrNames_resultTupleScheme extends org.apache.thrift.scheme.TupleScheme<getMBeanAttrNames_result> {
+    private static class getMBeanAttributeNames_resultTupleScheme extends org.apache.thrift.scheme.TupleScheme<getMBeanAttributeNames_result> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, getMBeanAttrNames_result struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol prot, getMBeanAttributeNames_result struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol oprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
         java.util.BitSet optionals = new java.util.BitSet();
         if (struct.isSetSuccess()) {
@@ -5222,7 +5389,7 @@ public class JMXService {
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, getMBeanAttrNames_result struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol prot, getMBeanAttributeNames_result struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
         java.util.BitSet incoming = iprot.readBitSet(3);
         if (incoming.get(0)) {
@@ -5256,22 +5423,22 @@ public class JMXService {
     }
   }
 
-  public static class getMBeanAttrs_args implements org.apache.thrift.TBase<getMBeanAttrs_args, getMBeanAttrs_args._Fields>, java.io.Serializable, Cloneable, Comparable<getMBeanAttrs_args>   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("getMBeanAttrs_args");
+  public static class getMBeanAttributes_args implements org.apache.thrift.TBase<getMBeanAttributes_args, getMBeanAttributes_args._Fields>, java.io.Serializable, Cloneable, Comparable<getMBeanAttributes_args>   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("getMBeanAttributes_args");
 
     private static final org.apache.thrift.protocol.TField M_BEAN_NAME_FIELD_DESC = new org.apache.thrift.protocol.TField("mBeanName", org.apache.thrift.protocol.TType.STRING, (short)1);
-    private static final org.apache.thrift.protocol.TField ATTR_NAME_FIELD_DESC = new org.apache.thrift.protocol.TField("attrName", org.apache.thrift.protocol.TType.STRING, (short)2);
+    private static final org.apache.thrift.protocol.TField ATTRIBUTES_FIELD_DESC = new org.apache.thrift.protocol.TField("attributes", org.apache.thrift.protocol.TType.LIST, (short)2);
 
-    private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new getMBeanAttrs_argsStandardSchemeFactory();
-    private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new getMBeanAttrs_argsTupleSchemeFactory();
+    private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new getMBeanAttributes_argsStandardSchemeFactory();
+    private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new getMBeanAttributes_argsTupleSchemeFactory();
 
     public @org.apache.thrift.annotation.Nullable java.lang.String mBeanName; // required
-    public @org.apache.thrift.annotation.Nullable java.lang.String attrName; // required
+    public @org.apache.thrift.annotation.Nullable java.util.List<java.lang.String> attributes; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
       M_BEAN_NAME((short)1, "mBeanName"),
-      ATTR_NAME((short)2, "attrName");
+      ATTRIBUTES((short)2, "attributes");
 
       private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -5289,8 +5456,8 @@ public class JMXService {
         switch(fieldId) {
           case 1: // M_BEAN_NAME
             return M_BEAN_NAME;
-          case 2: // ATTR_NAME
-            return ATTR_NAME;
+          case 2: // ATTRIBUTES
+            return ATTRIBUTES;
           default:
             return null;
         }
@@ -5337,44 +5504,46 @@ public class JMXService {
       java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
       tmpMap.put(_Fields.M_BEAN_NAME, new org.apache.thrift.meta_data.FieldMetaData("mBeanName", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
-      tmpMap.put(_Fields.ATTR_NAME, new org.apache.thrift.meta_data.FieldMetaData("attrName", org.apache.thrift.TFieldRequirementType.DEFAULT, 
-          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+      tmpMap.put(_Fields.ATTRIBUTES, new org.apache.thrift.meta_data.FieldMetaData("attributes", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
+              new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING))));
       metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
-      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(getMBeanAttrs_args.class, metaDataMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(getMBeanAttributes_args.class, metaDataMap);
     }
 
-    public getMBeanAttrs_args() {
+    public getMBeanAttributes_args() {
     }
 
-    public getMBeanAttrs_args(
+    public getMBeanAttributes_args(
       java.lang.String mBeanName,
-      java.lang.String attrName)
+      java.util.List<java.lang.String> attributes)
     {
       this();
       this.mBeanName = mBeanName;
-      this.attrName = attrName;
+      this.attributes = attributes;
     }
 
     /**
      * Performs a deep copy on <i>other</i>.
      */
-    public getMBeanAttrs_args(getMBeanAttrs_args other) {
+    public getMBeanAttributes_args(getMBeanAttributes_args other) {
       if (other.isSetMBeanName()) {
         this.mBeanName = other.mBeanName;
       }
-      if (other.isSetAttrName()) {
-        this.attrName = other.attrName;
+      if (other.isSetAttributes()) {
+        java.util.List<java.lang.String> __this__attributes = new java.util.ArrayList<java.lang.String>(other.attributes);
+        this.attributes = __this__attributes;
       }
     }
 
-    public getMBeanAttrs_args deepCopy() {
-      return new getMBeanAttrs_args(this);
+    public getMBeanAttributes_args deepCopy() {
+      return new getMBeanAttributes_args(this);
     }
 
     @Override
     public void clear() {
       this.mBeanName = null;
-      this.attrName = null;
+      this.attributes = null;
     }
 
     @org.apache.thrift.annotation.Nullable
@@ -5382,7 +5551,7 @@ public class JMXService {
       return this.mBeanName;
     }
 
-    public getMBeanAttrs_args setMBeanName(@org.apache.thrift.annotation.Nullable java.lang.String mBeanName) {
+    public getMBeanAttributes_args setMBeanName(@org.apache.thrift.annotation.Nullable java.lang.String mBeanName) {
       this.mBeanName = mBeanName;
       return this;
     }
@@ -5402,28 +5571,44 @@ public class JMXService {
       }
     }
 
-    @org.apache.thrift.annotation.Nullable
-    public java.lang.String getAttrName() {
-      return this.attrName;
+    public int getAttributesSize() {
+      return (this.attributes == null) ? 0 : this.attributes.size();
     }
 
-    public getMBeanAttrs_args setAttrName(@org.apache.thrift.annotation.Nullable java.lang.String attrName) {
-      this.attrName = attrName;
+    @org.apache.thrift.annotation.Nullable
+    public java.util.Iterator<java.lang.String> getAttributesIterator() {
+      return (this.attributes == null) ? null : this.attributes.iterator();
+    }
+
+    public void addToAttributes(java.lang.String elem) {
+      if (this.attributes == null) {
+        this.attributes = new java.util.ArrayList<java.lang.String>();
+      }
+      this.attributes.add(elem);
+    }
+
+    @org.apache.thrift.annotation.Nullable
+    public java.util.List<java.lang.String> getAttributes() {
+      return this.attributes;
+    }
+
+    public getMBeanAttributes_args setAttributes(@org.apache.thrift.annotation.Nullable java.util.List<java.lang.String> attributes) {
+      this.attributes = attributes;
       return this;
     }
 
-    public void unsetAttrName() {
-      this.attrName = null;
+    public void unsetAttributes() {
+      this.attributes = null;
     }
 
-    /** Returns true if field attrName is set (has been assigned a value) and false otherwise */
-    public boolean isSetAttrName() {
-      return this.attrName != null;
+    /** Returns true if field attributes is set (has been assigned a value) and false otherwise */
+    public boolean isSetAttributes() {
+      return this.attributes != null;
     }
 
-    public void setAttrNameIsSet(boolean value) {
+    public void setAttributesIsSet(boolean value) {
       if (!value) {
-        this.attrName = null;
+        this.attributes = null;
       }
     }
 
@@ -5437,11 +5622,11 @@ public class JMXService {
         }
         break;
 
-      case ATTR_NAME:
+      case ATTRIBUTES:
         if (value == null) {
-          unsetAttrName();
+          unsetAttributes();
         } else {
-          setAttrName((java.lang.String)value);
+          setAttributes((java.util.List<java.lang.String>)value);
         }
         break;
 
@@ -5454,8 +5639,8 @@ public class JMXService {
       case M_BEAN_NAME:
         return getMBeanName();
 
-      case ATTR_NAME:
-        return getAttrName();
+      case ATTRIBUTES:
+        return getAttributes();
 
       }
       throw new java.lang.IllegalStateException();
@@ -5470,8 +5655,8 @@ public class JMXService {
       switch (field) {
       case M_BEAN_NAME:
         return isSetMBeanName();
-      case ATTR_NAME:
-        return isSetAttrName();
+      case ATTRIBUTES:
+        return isSetAttributes();
       }
       throw new java.lang.IllegalStateException();
     }
@@ -5480,12 +5665,12 @@ public class JMXService {
     public boolean equals(java.lang.Object that) {
       if (that == null)
         return false;
-      if (that instanceof getMBeanAttrs_args)
-        return this.equals((getMBeanAttrs_args)that);
+      if (that instanceof getMBeanAttributes_args)
+        return this.equals((getMBeanAttributes_args)that);
       return false;
     }
 
-    public boolean equals(getMBeanAttrs_args that) {
+    public boolean equals(getMBeanAttributes_args that) {
       if (that == null)
         return false;
       if (this == that)
@@ -5500,12 +5685,12 @@ public class JMXService {
           return false;
       }
 
-      boolean this_present_attrName = true && this.isSetAttrName();
-      boolean that_present_attrName = true && that.isSetAttrName();
-      if (this_present_attrName || that_present_attrName) {
-        if (!(this_present_attrName && that_present_attrName))
+      boolean this_present_attributes = true && this.isSetAttributes();
+      boolean that_present_attributes = true && that.isSetAttributes();
+      if (this_present_attributes || that_present_attributes) {
+        if (!(this_present_attributes && that_present_attributes))
           return false;
-        if (!this.attrName.equals(that.attrName))
+        if (!this.attributes.equals(that.attributes))
           return false;
       }
 
@@ -5520,15 +5705,15 @@ public class JMXService {
       if (isSetMBeanName())
         hashCode = hashCode * 8191 + mBeanName.hashCode();
 
-      hashCode = hashCode * 8191 + ((isSetAttrName()) ? 131071 : 524287);
-      if (isSetAttrName())
-        hashCode = hashCode * 8191 + attrName.hashCode();
+      hashCode = hashCode * 8191 + ((isSetAttributes()) ? 131071 : 524287);
+      if (isSetAttributes())
+        hashCode = hashCode * 8191 + attributes.hashCode();
 
       return hashCode;
     }
 
     @Override
-    public int compareTo(getMBeanAttrs_args other) {
+    public int compareTo(getMBeanAttributes_args other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
@@ -5545,12 +5730,12 @@ public class JMXService {
           return lastComparison;
         }
       }
-      lastComparison = java.lang.Boolean.valueOf(isSetAttrName()).compareTo(other.isSetAttrName());
+      lastComparison = java.lang.Boolean.valueOf(isSetAttributes()).compareTo(other.isSetAttributes());
       if (lastComparison != 0) {
         return lastComparison;
       }
-      if (isSetAttrName()) {
-        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.attrName, other.attrName);
+      if (isSetAttributes()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.attributes, other.attributes);
         if (lastComparison != 0) {
           return lastComparison;
         }
@@ -5573,7 +5758,7 @@ public class JMXService {
 
     @Override
     public java.lang.String toString() {
-      java.lang.StringBuilder sb = new java.lang.StringBuilder("getMBeanAttrs_args(");
+      java.lang.StringBuilder sb = new java.lang.StringBuilder("getMBeanAttributes_args(");
       boolean first = true;
 
       sb.append("mBeanName:");
@@ -5584,11 +5769,11 @@ public class JMXService {
       }
       first = false;
       if (!first) sb.append(", ");
-      sb.append("attrName:");
-      if (this.attrName == null) {
+      sb.append("attributes:");
+      if (this.attributes == null) {
         sb.append("null");
       } else {
-        sb.append(this.attrName);
+        sb.append(this.attributes);
       }
       first = false;
       sb.append(")");
@@ -5616,15 +5801,15 @@ public class JMXService {
       }
     }
 
-    private static class getMBeanAttrs_argsStandardSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
-      public getMBeanAttrs_argsStandardScheme getScheme() {
-        return new getMBeanAttrs_argsStandardScheme();
+    private static class getMBeanAttributes_argsStandardSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+      public getMBeanAttributes_argsStandardScheme getScheme() {
+        return new getMBeanAttributes_argsStandardScheme();
       }
     }
 
-    private static class getMBeanAttrs_argsStandardScheme extends org.apache.thrift.scheme.StandardScheme<getMBeanAttrs_args> {
+    private static class getMBeanAttributes_argsStandardScheme extends org.apache.thrift.scheme.StandardScheme<getMBeanAttributes_args> {
 
-      public void read(org.apache.thrift.protocol.TProtocol iprot, getMBeanAttrs_args struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol iprot, getMBeanAttributes_args struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
         while (true)
@@ -5642,10 +5827,20 @@ public class JMXService {
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
               break;
-            case 2: // ATTR_NAME
-              if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
-                struct.attrName = iprot.readString();
-                struct.setAttrNameIsSet(true);
+            case 2: // ATTRIBUTES
+              if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
+                {
+                  org.apache.thrift.protocol.TList _list16 = iprot.readListBegin();
+                  struct.attributes = new java.util.ArrayList<java.lang.String>(_list16.size);
+                  @org.apache.thrift.annotation.Nullable java.lang.String _elem17;
+                  for (int _i18 = 0; _i18 < _list16.size; ++_i18)
+                  {
+                    _elem17 = iprot.readString();
+                    struct.attributes.add(_elem17);
+                  }
+                  iprot.readListEnd();
+                }
+                struct.setAttributesIsSet(true);
               } else { 
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
@@ -5661,7 +5856,7 @@ public class JMXService {
         struct.validate();
       }
 
-      public void write(org.apache.thrift.protocol.TProtocol oprot, getMBeanAttrs_args struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol oprot, getMBeanAttributes_args struct) throws org.apache.thrift.TException {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
@@ -5670,9 +5865,16 @@ public class JMXService {
           oprot.writeString(struct.mBeanName);
           oprot.writeFieldEnd();
         }
-        if (struct.attrName != null) {
-          oprot.writeFieldBegin(ATTR_NAME_FIELD_DESC);
-          oprot.writeString(struct.attrName);
+        if (struct.attributes != null) {
+          oprot.writeFieldBegin(ATTRIBUTES_FIELD_DESC);
+          {
+            oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.attributes.size()));
+            for (java.lang.String _iter19 : struct.attributes)
+            {
+              oprot.writeString(_iter19);
+            }
+            oprot.writeListEnd();
+          }
           oprot.writeFieldEnd();
         }
         oprot.writeFieldStop();
@@ -5681,35 +5883,41 @@ public class JMXService {
 
     }
 
-    private static class getMBeanAttrs_argsTupleSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
-      public getMBeanAttrs_argsTupleScheme getScheme() {
-        return new getMBeanAttrs_argsTupleScheme();
+    private static class getMBeanAttributes_argsTupleSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+      public getMBeanAttributes_argsTupleScheme getScheme() {
+        return new getMBeanAttributes_argsTupleScheme();
       }
     }
 
-    private static class getMBeanAttrs_argsTupleScheme extends org.apache.thrift.scheme.TupleScheme<getMBeanAttrs_args> {
+    private static class getMBeanAttributes_argsTupleScheme extends org.apache.thrift.scheme.TupleScheme<getMBeanAttributes_args> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, getMBeanAttrs_args struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol prot, getMBeanAttributes_args struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol oprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
         java.util.BitSet optionals = new java.util.BitSet();
         if (struct.isSetMBeanName()) {
           optionals.set(0);
         }
-        if (struct.isSetAttrName()) {
+        if (struct.isSetAttributes()) {
           optionals.set(1);
         }
         oprot.writeBitSet(optionals, 2);
         if (struct.isSetMBeanName()) {
           oprot.writeString(struct.mBeanName);
         }
-        if (struct.isSetAttrName()) {
-          oprot.writeString(struct.attrName);
+        if (struct.isSetAttributes()) {
+          {
+            oprot.writeI32(struct.attributes.size());
+            for (java.lang.String _iter20 : struct.attributes)
+            {
+              oprot.writeString(_iter20);
+            }
+          }
         }
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, getMBeanAttrs_args struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol prot, getMBeanAttributes_args struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
         java.util.BitSet incoming = iprot.readBitSet(2);
         if (incoming.get(0)) {
@@ -5717,8 +5925,17 @@ public class JMXService {
           struct.setMBeanNameIsSet(true);
         }
         if (incoming.get(1)) {
-          struct.attrName = iprot.readString();
-          struct.setAttrNameIsSet(true);
+          {
+            org.apache.thrift.protocol.TList _list21 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+            struct.attributes = new java.util.ArrayList<java.lang.String>(_list21.size);
+            @org.apache.thrift.annotation.Nullable java.lang.String _elem22;
+            for (int _i23 = 0; _i23 < _list21.size; ++_i23)
+            {
+              _elem22 = iprot.readString();
+              struct.attributes.add(_elem22);
+            }
+          }
+          struct.setAttributesIsSet(true);
         }
       }
     }
@@ -5728,17 +5945,17 @@ public class JMXService {
     }
   }
 
-  public static class getMBeanAttrs_result implements org.apache.thrift.TBase<getMBeanAttrs_result, getMBeanAttrs_result._Fields>, java.io.Serializable, Cloneable, Comparable<getMBeanAttrs_result>   {
-    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("getMBeanAttrs_result");
+  public static class getMBeanAttributes_result implements org.apache.thrift.TBase<getMBeanAttributes_result, getMBeanAttributes_result._Fields>, java.io.Serializable, Cloneable, Comparable<getMBeanAttributes_result>   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("getMBeanAttributes_result");
 
     private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.LIST, (short)0);
     private static final org.apache.thrift.protocol.TField CONN_ERR_FIELD_DESC = new org.apache.thrift.protocol.TField("connErr", org.apache.thrift.protocol.TType.STRUCT, (short)1);
     private static final org.apache.thrift.protocol.TField JMX_ERR_FIELD_DESC = new org.apache.thrift.protocol.TField("jmxErr", org.apache.thrift.protocol.TType.STRUCT, (short)2);
 
-    private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new getMBeanAttrs_resultStandardSchemeFactory();
-    private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new getMBeanAttrs_resultTupleSchemeFactory();
+    private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new getMBeanAttributes_resultStandardSchemeFactory();
+    private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new getMBeanAttributes_resultTupleSchemeFactory();
 
-    public @org.apache.thrift.annotation.Nullable java.util.List<JMXAttribute> success; // required
+    public @org.apache.thrift.annotation.Nullable java.util.List<AttributeResponse> success; // required
     public @org.apache.thrift.annotation.Nullable JMXConnectionError connErr; // required
     public @org.apache.thrift.annotation.Nullable JMXError jmxErr; // required
 
@@ -5814,20 +6031,20 @@ public class JMXService {
       java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
       tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
-              new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, JMXAttribute.class))));
+              new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, AttributeResponse.class))));
       tmpMap.put(_Fields.CONN_ERR, new org.apache.thrift.meta_data.FieldMetaData("connErr", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, JMXConnectionError.class)));
       tmpMap.put(_Fields.JMX_ERR, new org.apache.thrift.meta_data.FieldMetaData("jmxErr", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, JMXError.class)));
       metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
-      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(getMBeanAttrs_result.class, metaDataMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(getMBeanAttributes_result.class, metaDataMap);
     }
 
-    public getMBeanAttrs_result() {
+    public getMBeanAttributes_result() {
     }
 
-    public getMBeanAttrs_result(
-      java.util.List<JMXAttribute> success,
+    public getMBeanAttributes_result(
+      java.util.List<AttributeResponse> success,
       JMXConnectionError connErr,
       JMXError jmxErr)
     {
@@ -5840,11 +6057,11 @@ public class JMXService {
     /**
      * Performs a deep copy on <i>other</i>.
      */
-    public getMBeanAttrs_result(getMBeanAttrs_result other) {
+    public getMBeanAttributes_result(getMBeanAttributes_result other) {
       if (other.isSetSuccess()) {
-        java.util.List<JMXAttribute> __this__success = new java.util.ArrayList<JMXAttribute>(other.success.size());
-        for (JMXAttribute other_element : other.success) {
-          __this__success.add(new JMXAttribute(other_element));
+        java.util.List<AttributeResponse> __this__success = new java.util.ArrayList<AttributeResponse>(other.success.size());
+        for (AttributeResponse other_element : other.success) {
+          __this__success.add(new AttributeResponse(other_element));
         }
         this.success = __this__success;
       }
@@ -5856,8 +6073,8 @@ public class JMXService {
       }
     }
 
-    public getMBeanAttrs_result deepCopy() {
-      return new getMBeanAttrs_result(this);
+    public getMBeanAttributes_result deepCopy() {
+      return new getMBeanAttributes_result(this);
     }
 
     @Override
@@ -5872,23 +6089,23 @@ public class JMXService {
     }
 
     @org.apache.thrift.annotation.Nullable
-    public java.util.Iterator<JMXAttribute> getSuccessIterator() {
+    public java.util.Iterator<AttributeResponse> getSuccessIterator() {
       return (this.success == null) ? null : this.success.iterator();
     }
 
-    public void addToSuccess(JMXAttribute elem) {
+    public void addToSuccess(AttributeResponse elem) {
       if (this.success == null) {
-        this.success = new java.util.ArrayList<JMXAttribute>();
+        this.success = new java.util.ArrayList<AttributeResponse>();
       }
       this.success.add(elem);
     }
 
     @org.apache.thrift.annotation.Nullable
-    public java.util.List<JMXAttribute> getSuccess() {
+    public java.util.List<AttributeResponse> getSuccess() {
       return this.success;
     }
 
-    public getMBeanAttrs_result setSuccess(@org.apache.thrift.annotation.Nullable java.util.List<JMXAttribute> success) {
+    public getMBeanAttributes_result setSuccess(@org.apache.thrift.annotation.Nullable java.util.List<AttributeResponse> success) {
       this.success = success;
       return this;
     }
@@ -5913,7 +6130,7 @@ public class JMXService {
       return this.connErr;
     }
 
-    public getMBeanAttrs_result setConnErr(@org.apache.thrift.annotation.Nullable JMXConnectionError connErr) {
+    public getMBeanAttributes_result setConnErr(@org.apache.thrift.annotation.Nullable JMXConnectionError connErr) {
       this.connErr = connErr;
       return this;
     }
@@ -5938,7 +6155,7 @@ public class JMXService {
       return this.jmxErr;
     }
 
-    public getMBeanAttrs_result setJmxErr(@org.apache.thrift.annotation.Nullable JMXError jmxErr) {
+    public getMBeanAttributes_result setJmxErr(@org.apache.thrift.annotation.Nullable JMXError jmxErr) {
       this.jmxErr = jmxErr;
       return this;
     }
@@ -5964,7 +6181,7 @@ public class JMXService {
         if (value == null) {
           unsetSuccess();
         } else {
-          setSuccess((java.util.List<JMXAttribute>)value);
+          setSuccess((java.util.List<AttributeResponse>)value);
         }
         break;
 
@@ -6024,12 +6241,12 @@ public class JMXService {
     public boolean equals(java.lang.Object that) {
       if (that == null)
         return false;
-      if (that instanceof getMBeanAttrs_result)
-        return this.equals((getMBeanAttrs_result)that);
+      if (that instanceof getMBeanAttributes_result)
+        return this.equals((getMBeanAttributes_result)that);
       return false;
     }
 
-    public boolean equals(getMBeanAttrs_result that) {
+    public boolean equals(getMBeanAttributes_result that) {
       if (that == null)
         return false;
       if (this == that)
@@ -6085,7 +6302,7 @@ public class JMXService {
     }
 
     @Override
-    public int compareTo(getMBeanAttrs_result other) {
+    public int compareTo(getMBeanAttributes_result other) {
       if (!getClass().equals(other.getClass())) {
         return getClass().getName().compareTo(other.getClass().getName());
       }
@@ -6140,7 +6357,7 @@ public class JMXService {
 
     @Override
     public java.lang.String toString() {
-      java.lang.StringBuilder sb = new java.lang.StringBuilder("getMBeanAttrs_result(");
+      java.lang.StringBuilder sb = new java.lang.StringBuilder("getMBeanAttributes_result(");
       boolean first = true;
 
       sb.append("success:");
@@ -6191,15 +6408,15 @@ public class JMXService {
       }
     }
 
-    private static class getMBeanAttrs_resultStandardSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
-      public getMBeanAttrs_resultStandardScheme getScheme() {
-        return new getMBeanAttrs_resultStandardScheme();
+    private static class getMBeanAttributes_resultStandardSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+      public getMBeanAttributes_resultStandardScheme getScheme() {
+        return new getMBeanAttributes_resultStandardScheme();
       }
     }
 
-    private static class getMBeanAttrs_resultStandardScheme extends org.apache.thrift.scheme.StandardScheme<getMBeanAttrs_result> {
+    private static class getMBeanAttributes_resultStandardScheme extends org.apache.thrift.scheme.StandardScheme<getMBeanAttributes_result> {
 
-      public void read(org.apache.thrift.protocol.TProtocol iprot, getMBeanAttrs_result struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol iprot, getMBeanAttributes_result struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TField schemeField;
         iprot.readStructBegin();
         while (true)
@@ -6212,14 +6429,14 @@ public class JMXService {
             case 0: // SUCCESS
               if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
                 {
-                  org.apache.thrift.protocol.TList _list16 = iprot.readListBegin();
-                  struct.success = new java.util.ArrayList<JMXAttribute>(_list16.size);
-                  @org.apache.thrift.annotation.Nullable JMXAttribute _elem17;
-                  for (int _i18 = 0; _i18 < _list16.size; ++_i18)
+                  org.apache.thrift.protocol.TList _list24 = iprot.readListBegin();
+                  struct.success = new java.util.ArrayList<AttributeResponse>(_list24.size);
+                  @org.apache.thrift.annotation.Nullable AttributeResponse _elem25;
+                  for (int _i26 = 0; _i26 < _list24.size; ++_i26)
                   {
-                    _elem17 = new JMXAttribute();
-                    _elem17.read(iprot);
-                    struct.success.add(_elem17);
+                    _elem25 = new AttributeResponse();
+                    _elem25.read(iprot);
+                    struct.success.add(_elem25);
                   }
                   iprot.readListEnd();
                 }
@@ -6257,7 +6474,7 @@ public class JMXService {
         struct.validate();
       }
 
-      public void write(org.apache.thrift.protocol.TProtocol oprot, getMBeanAttrs_result struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol oprot, getMBeanAttributes_result struct) throws org.apache.thrift.TException {
         struct.validate();
 
         oprot.writeStructBegin(STRUCT_DESC);
@@ -6265,9 +6482,9 @@ public class JMXService {
           oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.success.size()));
-            for (JMXAttribute _iter19 : struct.success)
+            for (AttributeResponse _iter27 : struct.success)
             {
-              _iter19.write(oprot);
+              _iter27.write(oprot);
             }
             oprot.writeListEnd();
           }
@@ -6289,16 +6506,16 @@ public class JMXService {
 
     }
 
-    private static class getMBeanAttrs_resultTupleSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
-      public getMBeanAttrs_resultTupleScheme getScheme() {
-        return new getMBeanAttrs_resultTupleScheme();
+    private static class getMBeanAttributes_resultTupleSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+      public getMBeanAttributes_resultTupleScheme getScheme() {
+        return new getMBeanAttributes_resultTupleScheme();
       }
     }
 
-    private static class getMBeanAttrs_resultTupleScheme extends org.apache.thrift.scheme.TupleScheme<getMBeanAttrs_result> {
+    private static class getMBeanAttributes_resultTupleScheme extends org.apache.thrift.scheme.TupleScheme<getMBeanAttributes_result> {
 
       @Override
-      public void write(org.apache.thrift.protocol.TProtocol prot, getMBeanAttrs_result struct) throws org.apache.thrift.TException {
+      public void write(org.apache.thrift.protocol.TProtocol prot, getMBeanAttributes_result struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol oprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
         java.util.BitSet optionals = new java.util.BitSet();
         if (struct.isSetSuccess()) {
@@ -6314,9 +6531,9 @@ public class JMXService {
         if (struct.isSetSuccess()) {
           {
             oprot.writeI32(struct.success.size());
-            for (JMXAttribute _iter20 : struct.success)
+            for (AttributeResponse _iter28 : struct.success)
             {
-              _iter20.write(oprot);
+              _iter28.write(oprot);
             }
           }
         }
@@ -6329,19 +6546,1022 @@ public class JMXService {
       }
 
       @Override
-      public void read(org.apache.thrift.protocol.TProtocol prot, getMBeanAttrs_result struct) throws org.apache.thrift.TException {
+      public void read(org.apache.thrift.protocol.TProtocol prot, getMBeanAttributes_result struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
         java.util.BitSet incoming = iprot.readBitSet(3);
         if (incoming.get(0)) {
           {
-            org.apache.thrift.protocol.TList _list21 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-            struct.success = new java.util.ArrayList<JMXAttribute>(_list21.size);
-            @org.apache.thrift.annotation.Nullable JMXAttribute _elem22;
-            for (int _i23 = 0; _i23 < _list21.size; ++_i23)
+            org.apache.thrift.protocol.TList _list29 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+            struct.success = new java.util.ArrayList<AttributeResponse>(_list29.size);
+            @org.apache.thrift.annotation.Nullable AttributeResponse _elem30;
+            for (int _i31 = 0; _i31 < _list29.size; ++_i31)
             {
-              _elem22 = new JMXAttribute();
-              _elem22.read(iprot);
-              struct.success.add(_elem22);
+              _elem30 = new AttributeResponse();
+              _elem30.read(iprot);
+              struct.success.add(_elem30);
+            }
+          }
+          struct.setSuccessIsSet(true);
+        }
+        if (incoming.get(1)) {
+          struct.connErr = new JMXConnectionError();
+          struct.connErr.read(iprot);
+          struct.setConnErrIsSet(true);
+        }
+        if (incoming.get(2)) {
+          struct.jmxErr = new JMXError();
+          struct.jmxErr.read(iprot);
+          struct.setJmxErrIsSet(true);
+        }
+      }
+    }
+
+    private static <S extends org.apache.thrift.scheme.IScheme> S scheme(org.apache.thrift.protocol.TProtocol proto) {
+      return (org.apache.thrift.scheme.StandardScheme.class.equals(proto.getScheme()) ? STANDARD_SCHEME_FACTORY : TUPLE_SCHEME_FACTORY).getScheme();
+    }
+  }
+
+  public static class queryMBeanAttributes_args implements org.apache.thrift.TBase<queryMBeanAttributes_args, queryMBeanAttributes_args._Fields>, java.io.Serializable, Cloneable, Comparable<queryMBeanAttributes_args>   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("queryMBeanAttributes_args");
+
+    private static final org.apache.thrift.protocol.TField M_BEAN_NAME_PATTERN_FIELD_DESC = new org.apache.thrift.protocol.TField("mBeanNamePattern", org.apache.thrift.protocol.TType.STRING, (short)1);
+
+    private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new queryMBeanAttributes_argsStandardSchemeFactory();
+    private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new queryMBeanAttributes_argsTupleSchemeFactory();
+
+    public @org.apache.thrift.annotation.Nullable java.lang.String mBeanNamePattern; // required
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+      M_BEAN_NAME_PATTERN((short)1, "mBeanNamePattern");
+
+      private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
+
+      static {
+        for (_Fields field : java.util.EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      @org.apache.thrift.annotation.Nullable
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 1: // M_BEAN_NAME_PATTERN
+            return M_BEAN_NAME_PATTERN;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new java.lang.IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      @org.apache.thrift.annotation.Nullable
+      public static _Fields findByName(java.lang.String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final java.lang.String _fieldName;
+
+      _Fields(short thriftId, java.lang.String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public java.lang.String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+    public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.M_BEAN_NAME_PATTERN, new org.apache.thrift.meta_data.FieldMetaData("mBeanNamePattern", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+      metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(queryMBeanAttributes_args.class, metaDataMap);
+    }
+
+    public queryMBeanAttributes_args() {
+    }
+
+    public queryMBeanAttributes_args(
+      java.lang.String mBeanNamePattern)
+    {
+      this();
+      this.mBeanNamePattern = mBeanNamePattern;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public queryMBeanAttributes_args(queryMBeanAttributes_args other) {
+      if (other.isSetMBeanNamePattern()) {
+        this.mBeanNamePattern = other.mBeanNamePattern;
+      }
+    }
+
+    public queryMBeanAttributes_args deepCopy() {
+      return new queryMBeanAttributes_args(this);
+    }
+
+    @Override
+    public void clear() {
+      this.mBeanNamePattern = null;
+    }
+
+    @org.apache.thrift.annotation.Nullable
+    public java.lang.String getMBeanNamePattern() {
+      return this.mBeanNamePattern;
+    }
+
+    public queryMBeanAttributes_args setMBeanNamePattern(@org.apache.thrift.annotation.Nullable java.lang.String mBeanNamePattern) {
+      this.mBeanNamePattern = mBeanNamePattern;
+      return this;
+    }
+
+    public void unsetMBeanNamePattern() {
+      this.mBeanNamePattern = null;
+    }
+
+    /** Returns true if field mBeanNamePattern is set (has been assigned a value) and false otherwise */
+    public boolean isSetMBeanNamePattern() {
+      return this.mBeanNamePattern != null;
+    }
+
+    public void setMBeanNamePatternIsSet(boolean value) {
+      if (!value) {
+        this.mBeanNamePattern = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
+      switch (field) {
+      case M_BEAN_NAME_PATTERN:
+        if (value == null) {
+          unsetMBeanNamePattern();
+        } else {
+          setMBeanNamePattern((java.lang.String)value);
+        }
+        break;
+
+      }
+    }
+
+    @org.apache.thrift.annotation.Nullable
+    public java.lang.Object getFieldValue(_Fields field) {
+      switch (field) {
+      case M_BEAN_NAME_PATTERN:
+        return getMBeanNamePattern();
+
+      }
+      throw new java.lang.IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new java.lang.IllegalArgumentException();
+      }
+
+      switch (field) {
+      case M_BEAN_NAME_PATTERN:
+        return isSetMBeanNamePattern();
+      }
+      throw new java.lang.IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(java.lang.Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof queryMBeanAttributes_args)
+        return this.equals((queryMBeanAttributes_args)that);
+      return false;
+    }
+
+    public boolean equals(queryMBeanAttributes_args that) {
+      if (that == null)
+        return false;
+      if (this == that)
+        return true;
+
+      boolean this_present_mBeanNamePattern = true && this.isSetMBeanNamePattern();
+      boolean that_present_mBeanNamePattern = true && that.isSetMBeanNamePattern();
+      if (this_present_mBeanNamePattern || that_present_mBeanNamePattern) {
+        if (!(this_present_mBeanNamePattern && that_present_mBeanNamePattern))
+          return false;
+        if (!this.mBeanNamePattern.equals(that.mBeanNamePattern))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      int hashCode = 1;
+
+      hashCode = hashCode * 8191 + ((isSetMBeanNamePattern()) ? 131071 : 524287);
+      if (isSetMBeanNamePattern())
+        hashCode = hashCode * 8191 + mBeanNamePattern.hashCode();
+
+      return hashCode;
+    }
+
+    @Override
+    public int compareTo(queryMBeanAttributes_args other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+
+      lastComparison = java.lang.Boolean.valueOf(isSetMBeanNamePattern()).compareTo(other.isSetMBeanNamePattern());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetMBeanNamePattern()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.mBeanNamePattern, other.mBeanNamePattern);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    @org.apache.thrift.annotation.Nullable
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      scheme(iprot).read(iprot, this);
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      scheme(oprot).write(oprot, this);
+    }
+
+    @Override
+    public java.lang.String toString() {
+      java.lang.StringBuilder sb = new java.lang.StringBuilder("queryMBeanAttributes_args(");
+      boolean first = true;
+
+      sb.append("mBeanNamePattern:");
+      if (this.mBeanNamePattern == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.mBeanNamePattern);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+      // check for sub-struct validity
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, java.lang.ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private static class queryMBeanAttributes_argsStandardSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+      public queryMBeanAttributes_argsStandardScheme getScheme() {
+        return new queryMBeanAttributes_argsStandardScheme();
+      }
+    }
+
+    private static class queryMBeanAttributes_argsStandardScheme extends org.apache.thrift.scheme.StandardScheme<queryMBeanAttributes_args> {
+
+      public void read(org.apache.thrift.protocol.TProtocol iprot, queryMBeanAttributes_args struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TField schemeField;
+        iprot.readStructBegin();
+        while (true)
+        {
+          schemeField = iprot.readFieldBegin();
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+            break;
+          }
+          switch (schemeField.id) {
+            case 1: // M_BEAN_NAME_PATTERN
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+                struct.mBeanNamePattern = iprot.readString();
+                struct.setMBeanNamePatternIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            default:
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          iprot.readFieldEnd();
+        }
+        iprot.readStructEnd();
+
+        // check for required fields of primitive type, which can't be checked in the validate method
+        struct.validate();
+      }
+
+      public void write(org.apache.thrift.protocol.TProtocol oprot, queryMBeanAttributes_args struct) throws org.apache.thrift.TException {
+        struct.validate();
+
+        oprot.writeStructBegin(STRUCT_DESC);
+        if (struct.mBeanNamePattern != null) {
+          oprot.writeFieldBegin(M_BEAN_NAME_PATTERN_FIELD_DESC);
+          oprot.writeString(struct.mBeanNamePattern);
+          oprot.writeFieldEnd();
+        }
+        oprot.writeFieldStop();
+        oprot.writeStructEnd();
+      }
+
+    }
+
+    private static class queryMBeanAttributes_argsTupleSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+      public queryMBeanAttributes_argsTupleScheme getScheme() {
+        return new queryMBeanAttributes_argsTupleScheme();
+      }
+    }
+
+    private static class queryMBeanAttributes_argsTupleScheme extends org.apache.thrift.scheme.TupleScheme<queryMBeanAttributes_args> {
+
+      @Override
+      public void write(org.apache.thrift.protocol.TProtocol prot, queryMBeanAttributes_args struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TTupleProtocol oprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
+        java.util.BitSet optionals = new java.util.BitSet();
+        if (struct.isSetMBeanNamePattern()) {
+          optionals.set(0);
+        }
+        oprot.writeBitSet(optionals, 1);
+        if (struct.isSetMBeanNamePattern()) {
+          oprot.writeString(struct.mBeanNamePattern);
+        }
+      }
+
+      @Override
+      public void read(org.apache.thrift.protocol.TProtocol prot, queryMBeanAttributes_args struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
+        java.util.BitSet incoming = iprot.readBitSet(1);
+        if (incoming.get(0)) {
+          struct.mBeanNamePattern = iprot.readString();
+          struct.setMBeanNamePatternIsSet(true);
+        }
+      }
+    }
+
+    private static <S extends org.apache.thrift.scheme.IScheme> S scheme(org.apache.thrift.protocol.TProtocol proto) {
+      return (org.apache.thrift.scheme.StandardScheme.class.equals(proto.getScheme()) ? STANDARD_SCHEME_FACTORY : TUPLE_SCHEME_FACTORY).getScheme();
+    }
+  }
+
+  public static class queryMBeanAttributes_result implements org.apache.thrift.TBase<queryMBeanAttributes_result, queryMBeanAttributes_result._Fields>, java.io.Serializable, Cloneable, Comparable<queryMBeanAttributes_result>   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("queryMBeanAttributes_result");
+
+    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.LIST, (short)0);
+    private static final org.apache.thrift.protocol.TField CONN_ERR_FIELD_DESC = new org.apache.thrift.protocol.TField("connErr", org.apache.thrift.protocol.TType.STRUCT, (short)1);
+    private static final org.apache.thrift.protocol.TField JMX_ERR_FIELD_DESC = new org.apache.thrift.protocol.TField("jmxErr", org.apache.thrift.protocol.TType.STRUCT, (short)2);
+
+    private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new queryMBeanAttributes_resultStandardSchemeFactory();
+    private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new queryMBeanAttributes_resultTupleSchemeFactory();
+
+    public @org.apache.thrift.annotation.Nullable java.util.List<AttributeResponse> success; // required
+    public @org.apache.thrift.annotation.Nullable JMXConnectionError connErr; // required
+    public @org.apache.thrift.annotation.Nullable JMXError jmxErr; // required
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+      SUCCESS((short)0, "success"),
+      CONN_ERR((short)1, "connErr"),
+      JMX_ERR((short)2, "jmxErr");
+
+      private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
+
+      static {
+        for (_Fields field : java.util.EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      @org.apache.thrift.annotation.Nullable
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 0: // SUCCESS
+            return SUCCESS;
+          case 1: // CONN_ERR
+            return CONN_ERR;
+          case 2: // JMX_ERR
+            return JMX_ERR;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new java.lang.IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      @org.apache.thrift.annotation.Nullable
+      public static _Fields findByName(java.lang.String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final java.lang.String _fieldName;
+
+      _Fields(short thriftId, java.lang.String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public java.lang.String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+    public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
+              new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, AttributeResponse.class))));
+      tmpMap.put(_Fields.CONN_ERR, new org.apache.thrift.meta_data.FieldMetaData("connErr", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, JMXConnectionError.class)));
+      tmpMap.put(_Fields.JMX_ERR, new org.apache.thrift.meta_data.FieldMetaData("jmxErr", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, JMXError.class)));
+      metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(queryMBeanAttributes_result.class, metaDataMap);
+    }
+
+    public queryMBeanAttributes_result() {
+    }
+
+    public queryMBeanAttributes_result(
+      java.util.List<AttributeResponse> success,
+      JMXConnectionError connErr,
+      JMXError jmxErr)
+    {
+      this();
+      this.success = success;
+      this.connErr = connErr;
+      this.jmxErr = jmxErr;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public queryMBeanAttributes_result(queryMBeanAttributes_result other) {
+      if (other.isSetSuccess()) {
+        java.util.List<AttributeResponse> __this__success = new java.util.ArrayList<AttributeResponse>(other.success.size());
+        for (AttributeResponse other_element : other.success) {
+          __this__success.add(new AttributeResponse(other_element));
+        }
+        this.success = __this__success;
+      }
+      if (other.isSetConnErr()) {
+        this.connErr = new JMXConnectionError(other.connErr);
+      }
+      if (other.isSetJmxErr()) {
+        this.jmxErr = new JMXError(other.jmxErr);
+      }
+    }
+
+    public queryMBeanAttributes_result deepCopy() {
+      return new queryMBeanAttributes_result(this);
+    }
+
+    @Override
+    public void clear() {
+      this.success = null;
+      this.connErr = null;
+      this.jmxErr = null;
+    }
+
+    public int getSuccessSize() {
+      return (this.success == null) ? 0 : this.success.size();
+    }
+
+    @org.apache.thrift.annotation.Nullable
+    public java.util.Iterator<AttributeResponse> getSuccessIterator() {
+      return (this.success == null) ? null : this.success.iterator();
+    }
+
+    public void addToSuccess(AttributeResponse elem) {
+      if (this.success == null) {
+        this.success = new java.util.ArrayList<AttributeResponse>();
+      }
+      this.success.add(elem);
+    }
+
+    @org.apache.thrift.annotation.Nullable
+    public java.util.List<AttributeResponse> getSuccess() {
+      return this.success;
+    }
+
+    public queryMBeanAttributes_result setSuccess(@org.apache.thrift.annotation.Nullable java.util.List<AttributeResponse> success) {
+      this.success = success;
+      return this;
+    }
+
+    public void unsetSuccess() {
+      this.success = null;
+    }
+
+    /** Returns true if field success is set (has been assigned a value) and false otherwise */
+    public boolean isSetSuccess() {
+      return this.success != null;
+    }
+
+    public void setSuccessIsSet(boolean value) {
+      if (!value) {
+        this.success = null;
+      }
+    }
+
+    @org.apache.thrift.annotation.Nullable
+    public JMXConnectionError getConnErr() {
+      return this.connErr;
+    }
+
+    public queryMBeanAttributes_result setConnErr(@org.apache.thrift.annotation.Nullable JMXConnectionError connErr) {
+      this.connErr = connErr;
+      return this;
+    }
+
+    public void unsetConnErr() {
+      this.connErr = null;
+    }
+
+    /** Returns true if field connErr is set (has been assigned a value) and false otherwise */
+    public boolean isSetConnErr() {
+      return this.connErr != null;
+    }
+
+    public void setConnErrIsSet(boolean value) {
+      if (!value) {
+        this.connErr = null;
+      }
+    }
+
+    @org.apache.thrift.annotation.Nullable
+    public JMXError getJmxErr() {
+      return this.jmxErr;
+    }
+
+    public queryMBeanAttributes_result setJmxErr(@org.apache.thrift.annotation.Nullable JMXError jmxErr) {
+      this.jmxErr = jmxErr;
+      return this;
+    }
+
+    public void unsetJmxErr() {
+      this.jmxErr = null;
+    }
+
+    /** Returns true if field jmxErr is set (has been assigned a value) and false otherwise */
+    public boolean isSetJmxErr() {
+      return this.jmxErr != null;
+    }
+
+    public void setJmxErrIsSet(boolean value) {
+      if (!value) {
+        this.jmxErr = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
+      switch (field) {
+      case SUCCESS:
+        if (value == null) {
+          unsetSuccess();
+        } else {
+          setSuccess((java.util.List<AttributeResponse>)value);
+        }
+        break;
+
+      case CONN_ERR:
+        if (value == null) {
+          unsetConnErr();
+        } else {
+          setConnErr((JMXConnectionError)value);
+        }
+        break;
+
+      case JMX_ERR:
+        if (value == null) {
+          unsetJmxErr();
+        } else {
+          setJmxErr((JMXError)value);
+        }
+        break;
+
+      }
+    }
+
+    @org.apache.thrift.annotation.Nullable
+    public java.lang.Object getFieldValue(_Fields field) {
+      switch (field) {
+      case SUCCESS:
+        return getSuccess();
+
+      case CONN_ERR:
+        return getConnErr();
+
+      case JMX_ERR:
+        return getJmxErr();
+
+      }
+      throw new java.lang.IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new java.lang.IllegalArgumentException();
+      }
+
+      switch (field) {
+      case SUCCESS:
+        return isSetSuccess();
+      case CONN_ERR:
+        return isSetConnErr();
+      case JMX_ERR:
+        return isSetJmxErr();
+      }
+      throw new java.lang.IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(java.lang.Object that) {
+      if (that == null)
+        return false;
+      if (that instanceof queryMBeanAttributes_result)
+        return this.equals((queryMBeanAttributes_result)that);
+      return false;
+    }
+
+    public boolean equals(queryMBeanAttributes_result that) {
+      if (that == null)
+        return false;
+      if (this == that)
+        return true;
+
+      boolean this_present_success = true && this.isSetSuccess();
+      boolean that_present_success = true && that.isSetSuccess();
+      if (this_present_success || that_present_success) {
+        if (!(this_present_success && that_present_success))
+          return false;
+        if (!this.success.equals(that.success))
+          return false;
+      }
+
+      boolean this_present_connErr = true && this.isSetConnErr();
+      boolean that_present_connErr = true && that.isSetConnErr();
+      if (this_present_connErr || that_present_connErr) {
+        if (!(this_present_connErr && that_present_connErr))
+          return false;
+        if (!this.connErr.equals(that.connErr))
+          return false;
+      }
+
+      boolean this_present_jmxErr = true && this.isSetJmxErr();
+      boolean that_present_jmxErr = true && that.isSetJmxErr();
+      if (this_present_jmxErr || that_present_jmxErr) {
+        if (!(this_present_jmxErr && that_present_jmxErr))
+          return false;
+        if (!this.jmxErr.equals(that.jmxErr))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      int hashCode = 1;
+
+      hashCode = hashCode * 8191 + ((isSetSuccess()) ? 131071 : 524287);
+      if (isSetSuccess())
+        hashCode = hashCode * 8191 + success.hashCode();
+
+      hashCode = hashCode * 8191 + ((isSetConnErr()) ? 131071 : 524287);
+      if (isSetConnErr())
+        hashCode = hashCode * 8191 + connErr.hashCode();
+
+      hashCode = hashCode * 8191 + ((isSetJmxErr()) ? 131071 : 524287);
+      if (isSetJmxErr())
+        hashCode = hashCode * 8191 + jmxErr.hashCode();
+
+      return hashCode;
+    }
+
+    @Override
+    public int compareTo(queryMBeanAttributes_result other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+
+      lastComparison = java.lang.Boolean.valueOf(isSetSuccess()).compareTo(other.isSetSuccess());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetSuccess()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.success, other.success);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = java.lang.Boolean.valueOf(isSetConnErr()).compareTo(other.isSetConnErr());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetConnErr()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.connErr, other.connErr);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = java.lang.Boolean.valueOf(isSetJmxErr()).compareTo(other.isSetJmxErr());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetJmxErr()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.jmxErr, other.jmxErr);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    @org.apache.thrift.annotation.Nullable
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      scheme(iprot).read(iprot, this);
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      scheme(oprot).write(oprot, this);
+      }
+
+    @Override
+    public java.lang.String toString() {
+      java.lang.StringBuilder sb = new java.lang.StringBuilder("queryMBeanAttributes_result(");
+      boolean first = true;
+
+      sb.append("success:");
+      if (this.success == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.success);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("connErr:");
+      if (this.connErr == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.connErr);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("jmxErr:");
+      if (this.jmxErr == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.jmxErr);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+      // check for sub-struct validity
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, java.lang.ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private static class queryMBeanAttributes_resultStandardSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+      public queryMBeanAttributes_resultStandardScheme getScheme() {
+        return new queryMBeanAttributes_resultStandardScheme();
+      }
+    }
+
+    private static class queryMBeanAttributes_resultStandardScheme extends org.apache.thrift.scheme.StandardScheme<queryMBeanAttributes_result> {
+
+      public void read(org.apache.thrift.protocol.TProtocol iprot, queryMBeanAttributes_result struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TField schemeField;
+        iprot.readStructBegin();
+        while (true)
+        {
+          schemeField = iprot.readFieldBegin();
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+            break;
+          }
+          switch (schemeField.id) {
+            case 0: // SUCCESS
+              if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
+                {
+                  org.apache.thrift.protocol.TList _list32 = iprot.readListBegin();
+                  struct.success = new java.util.ArrayList<AttributeResponse>(_list32.size);
+                  @org.apache.thrift.annotation.Nullable AttributeResponse _elem33;
+                  for (int _i34 = 0; _i34 < _list32.size; ++_i34)
+                  {
+                    _elem33 = new AttributeResponse();
+                    _elem33.read(iprot);
+                    struct.success.add(_elem33);
+                  }
+                  iprot.readListEnd();
+                }
+                struct.setSuccessIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            case 1: // CONN_ERR
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+                struct.connErr = new JMXConnectionError();
+                struct.connErr.read(iprot);
+                struct.setConnErrIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            case 2: // JMX_ERR
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+                struct.jmxErr = new JMXError();
+                struct.jmxErr.read(iprot);
+                struct.setJmxErrIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            default:
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          iprot.readFieldEnd();
+        }
+        iprot.readStructEnd();
+
+        // check for required fields of primitive type, which can't be checked in the validate method
+        struct.validate();
+      }
+
+      public void write(org.apache.thrift.protocol.TProtocol oprot, queryMBeanAttributes_result struct) throws org.apache.thrift.TException {
+        struct.validate();
+
+        oprot.writeStructBegin(STRUCT_DESC);
+        if (struct.success != null) {
+          oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
+          {
+            oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.success.size()));
+            for (AttributeResponse _iter35 : struct.success)
+            {
+              _iter35.write(oprot);
+            }
+            oprot.writeListEnd();
+          }
+          oprot.writeFieldEnd();
+        }
+        if (struct.connErr != null) {
+          oprot.writeFieldBegin(CONN_ERR_FIELD_DESC);
+          struct.connErr.write(oprot);
+          oprot.writeFieldEnd();
+        }
+        if (struct.jmxErr != null) {
+          oprot.writeFieldBegin(JMX_ERR_FIELD_DESC);
+          struct.jmxErr.write(oprot);
+          oprot.writeFieldEnd();
+        }
+        oprot.writeFieldStop();
+        oprot.writeStructEnd();
+      }
+
+    }
+
+    private static class queryMBeanAttributes_resultTupleSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+      public queryMBeanAttributes_resultTupleScheme getScheme() {
+        return new queryMBeanAttributes_resultTupleScheme();
+      }
+    }
+
+    private static class queryMBeanAttributes_resultTupleScheme extends org.apache.thrift.scheme.TupleScheme<queryMBeanAttributes_result> {
+
+      @Override
+      public void write(org.apache.thrift.protocol.TProtocol prot, queryMBeanAttributes_result struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TTupleProtocol oprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
+        java.util.BitSet optionals = new java.util.BitSet();
+        if (struct.isSetSuccess()) {
+          optionals.set(0);
+        }
+        if (struct.isSetConnErr()) {
+          optionals.set(1);
+        }
+        if (struct.isSetJmxErr()) {
+          optionals.set(2);
+        }
+        oprot.writeBitSet(optionals, 3);
+        if (struct.isSetSuccess()) {
+          {
+            oprot.writeI32(struct.success.size());
+            for (AttributeResponse _iter36 : struct.success)
+            {
+              _iter36.write(oprot);
+            }
+          }
+        }
+        if (struct.isSetConnErr()) {
+          struct.connErr.write(oprot);
+        }
+        if (struct.isSetJmxErr()) {
+          struct.jmxErr.write(oprot);
+        }
+      }
+
+      @Override
+      public void read(org.apache.thrift.protocol.TProtocol prot, queryMBeanAttributes_result struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
+        java.util.BitSet incoming = iprot.readBitSet(3);
+        if (incoming.get(0)) {
+          {
+            org.apache.thrift.protocol.TList _list37 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+            struct.success = new java.util.ArrayList<AttributeResponse>(_list37.size);
+            @org.apache.thrift.annotation.Nullable AttributeResponse _elem38;
+            for (int _i39 = 0; _i39 < _list37.size; ++_i39)
+            {
+              _elem38 = new AttributeResponse();
+              _elem38.read(iprot);
+              struct.success.add(_elem38);
             }
           }
           struct.setSuccessIsSet(true);

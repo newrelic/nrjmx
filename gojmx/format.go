@@ -43,17 +43,17 @@ type attributeFormat struct {
 }
 
 // FormatJMXAttributes will prettify JMXAttributes.
-func FormatJMXAttributes(attrs []*JMXAttribute) string {
+func FormatJMXAttributes(attrs []*AttributeResponse) string {
 	result := map[string]queryFormat{}
 	separator := ",attr="
 
 	for _, attr := range attrs {
-		i := strings.LastIndex(attr.Attribute, separator)
+		i := strings.LastIndex(attr.Name, separator)
 		if i < 0 {
 			continue
 		}
 
-		split := strings.SplitN(attr.Attribute[:i], ":", 2)
+		split := strings.SplitN(attr.Name[:i], ":", 2)
 		if len(split) != 2 {
 			continue
 		}
@@ -65,9 +65,9 @@ func FormatJMXAttributes(attrs []*JMXAttribute) string {
 		}
 
 		result[domain][query] = append(result[domain][query], attributeFormat{
-			Attribute: attr.Attribute[i+len(separator):],
+			Attribute: attr.Name[i+len(separator):],
 			Value:     attr.GetValue(),
-			ValueType: fmt.Sprintf("%v", attr.ValueType),
+			ValueType: fmt.Sprintf("%v", attr.ResponseType),
 		})
 	}
 
@@ -125,7 +125,7 @@ func FormatConfig(config *JMXConfig, hideSecrets bool) string {
 		obfuscate(config.KeyStorePassword),
 	))
 
-	sb.WriteString(fmt.Sprintf(", RequestTimeoutMs: '%d'", config.RequestTimoutMs))
+	sb.WriteString(fmt.Sprintf(", RequestTimeoutMs: '%d'", config.RequestTimeoutMs))
 	if config.UriPath != nil {
 		sb.WriteString(fmt.Sprintf(", URIPath: '%v'", *config.UriPath))
 	}

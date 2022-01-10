@@ -14,24 +14,26 @@ struct JMXConfig {
   11: bool isRemote,
   12: bool isJBossStandaloneMode
   13: bool useSSL
-  14: i64 requestTimoutMs
+  14: i64 requestTimeoutMs
   15: bool verbose
 }
 
-enum ValueType {
+enum ResponseType {
   STRING = 1,
   DOUBLE = 2,
   INT    = 3,
   BOOL   = 4,
+  ERROR  = 5,
 }
 
-struct JMXAttribute {
-  1: string attribute
-  2: ValueType valueType,
-  3: string stringValue,
-  4: double doubleValue,
-  5: i64 intValue,
-  6: bool boolValue
+struct AttributeResponse {
+  1: string statusMsg,
+  2: string name,
+  3: ResponseType responseType,
+  4: string stringValue,
+  5: double doubleValue,
+  6: i64 intValue,
+  7: bool boolValue
 }
 
 exception JMXError {
@@ -51,9 +53,11 @@ service JMXService {
 
     string getClientVersion() throws (1:JMXError err),
 
-    list<string> getMBeanNames(1:string mBeanNamePattern) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr),
+    list<string> queryMBeanNames(1:string mBeanNamePattern) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr),
 
-    list<string> getMBeanAttrNames(1:string mBeanName) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr),
+    list<string> getMBeanAttributeNames(1:string mBeanName) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr),
 
-    list<JMXAttribute> getMBeanAttrs(1:string mBeanName, 2:string attrName) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr)
+    list<AttributeResponse> getMBeanAttributes(1:string mBeanName, 2:list<string> attributes) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr),
+
+    list<AttributeResponse> queryMBeanAttributes(1:string mBeanNamePattern) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr)
 }

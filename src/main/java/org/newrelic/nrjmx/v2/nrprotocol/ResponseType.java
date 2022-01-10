@@ -7,15 +7,16 @@
 package org.newrelic.nrjmx.v2.nrprotocol;
 
 
-public enum ValueType implements org.apache.thrift.TEnum {
+public enum ResponseType implements org.apache.thrift.TEnum {
   STRING(1),
   DOUBLE(2),
   INT(3),
-  BOOL(4);
+  BOOL(4),
+  ERROR(5);
 
   private final int value;
 
-  private ValueType(int value) {
+  private ResponseType(int value) {
     this.value = value;
   }
 
@@ -31,7 +32,7 @@ public enum ValueType implements org.apache.thrift.TEnum {
    * @return null if the value is not found.
    */
   @org.apache.thrift.annotation.Nullable
-  public static ValueType findByValue(int value) { 
+  public static ResponseType findByValue(int value) { 
     switch (value) {
       case 1:
         return STRING;
@@ -41,6 +42,8 @@ public enum ValueType implements org.apache.thrift.TEnum {
         return INT;
       case 4:
         return BOOL;
+      case 5:
+        return ERROR;
       default:
         return null;
     }

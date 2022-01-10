@@ -31,7 +31,7 @@ public class JMXServiceHandler implements JMXService.Iface {
 
     @Override
     public void connect(JMXConfig config) throws TException {
-        this.requestTimeoutMs = config.requestTimoutMs;
+        this.requestTimeoutMs = config.requestTimeoutMs;
         jmxFetcher.connect(config, requestTimeoutMs);
     }
 
@@ -44,18 +44,23 @@ public class JMXServiceHandler implements JMXService.Iface {
     }
 
     @Override
-    public List<String> getMBeanNames(String mBeanNamePattern) throws TException {
-        return jmxFetcher.getMBeanNames(mBeanNamePattern, requestTimeoutMs);
+    public List<String> queryMBeanNames(String mBeanNamePattern) throws TException {
+        return jmxFetcher.queryMBeanNames(mBeanNamePattern, requestTimeoutMs);
     }
 
     @Override
-    public List<String> getMBeanAttrNames(String mBeanName) throws TException {
-        return jmxFetcher.getMBeanAttrNames(mBeanName, requestTimeoutMs);
+    public List<String> getMBeanAttributeNames(String mBeanName) throws TException {
+        return jmxFetcher.getMBeanAttributeNames(mBeanName, requestTimeoutMs);
     }
 
     @Override
-    public List<JMXAttribute> getMBeanAttrs(String mBeanName, String attrName) throws TException {
-        return jmxFetcher.getMBeanAttrs(mBeanName, attrName, requestTimeoutMs);
+    public List<AttributeResponse> getMBeanAttributes(String mBeanName, List<String> attributes) throws TException {
+        return jmxFetcher.getMBeanAttributes(mBeanName, attributes, requestTimeoutMs);
+    }
+
+    @Override
+    public List<AttributeResponse> queryMBeanAttributes(String mBeanNamePattern) throws TException {
+        return jmxFetcher.queryMBeanAttributes(mBeanNamePattern, requestTimeoutMs);
     }
 
     public void addServer(TServer server) {
