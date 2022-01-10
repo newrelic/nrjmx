@@ -42,16 +42,18 @@ func main() {
 		mBeanAttrNames, err := client.GetMBeanAttributeNames(mBeanName)
 		handleError(err)
 
-		for _, mBeanAttrName := range mBeanAttrNames {
-			// Get the attribute value for each mBeanName and mBeanAttributeName.
-			jmxAttrs, err := client.GetMBeanAttributes(mBeanName, mBeanAttrName)
-			if err != nil {
-				fmt.Println(err)
+		// Get the attribute value for each mBeanName and mBeanAttributeName.
+		jmxAttrs, err := client.GetMBeanAttributes(mBeanName, mBeanAttrNames...)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		for _, attr := range jmxAttrs {
+			if attr.ResponseType == gojmx.ResponseTypeErr {
+				fmt.Println(attr.StatusMsg)
 				continue
 			}
-			for _, jmxAttr := range jmxAttrs {
-				printAttr(jmxAttr)
-			}
+			printAttr(attr)
 		}
 	}
 

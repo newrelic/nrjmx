@@ -44,9 +44,9 @@ TRACKED_GEN_DIR=src/main/java/org/newrelic/nrjmx/v2/nrprotocol \
 .PHONY : ci/check-gen-code
 ci/check-gen-code: code-gen
 	@echo "Checking the generated code..." ; \
-	if [ `git status --porcelain --untracked-files=no $(TRACKED_GEN_DIR) | wc -l` -gt 0 ]; then \
+	if [ `git status --porcelain $(TRACKED_GEN_DIR) | wc -l` -gt 0 ]; then \
 		echo "Code generator produced different code, make sure you pushed the latest changes!"; \
-		git --no-pager diff; \
+		git --no-pager diff $(TRACKED_GEN_DIR); \
 		exit 1;	\
 	fi ; \
 	echo "Success!"
