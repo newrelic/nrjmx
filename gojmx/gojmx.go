@@ -8,7 +8,6 @@ package gojmx
 import (
 	"context"
 	"github.com/apache/thrift/lib/go/thrift"
-	"github.com/pkg/errors"
 	"time"
 
 	"github.com/newrelic/nrjmx/gojmx/internal/nrprotocol"
@@ -108,7 +107,7 @@ func (c *Client) Close() error {
 	}
 	err := c.jmxService.Disconnect(c.ctx)
 	if waitErr := c.nrJMXProcess.waitExit(nrJMXExitTimeout); waitErr != nil {
-		err = errors.Wrap(err, waitErr.Error())
+		return waitErr
 	}
 	return err
 }
