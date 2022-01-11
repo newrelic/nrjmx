@@ -117,7 +117,10 @@ func (p *process) error() error {
 func (p *process) waitExit(timeout time.Duration) error {
 	select {
 	case err := <-p.state.ErrorC():
-		return err
+		if err != nil {
+			return newJMXConnectionError("nrjmx process exited with error: %v", err)
+		}
+		return nil
 	case <-time.After(timeout):
 		err := p.terminate()
 		return newJMXConnectionError(
