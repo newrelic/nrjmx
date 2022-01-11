@@ -105,11 +105,11 @@ func (c *Client) Close() error {
 	if err := c.nrJMXProcess.error(); err != nil {
 		return err
 	}
-	err := c.jmxService.Disconnect(c.ctx)
+	c.jmxService.Disconnect(c.ctx)
 	if waitErr := c.nrJMXProcess.waitExit(nrJMXExitTimeout); waitErr != nil {
 		return waitErr
 	}
-	return err
+	return nil
 }
 
 // GetClientVersion returns nrjmx version.
