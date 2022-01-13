@@ -32,6 +32,8 @@ func main() {
 	// Connect to JMX endpoint.
 	client, err := gojmx.NewClient(context.Background()).Open(config)
 	handleError(err)
+	
+	defer client.Close()
 
 	// Get the mBean names.
 	mBeanNames, err := client.QueryMBeanNames("java.lang:type=*")
