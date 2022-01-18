@@ -7,7 +7,7 @@ A tool for extracting data out of any application exposing a JMX interface. It a
 ## Golang library
 
 Starting from `v2` you can call nrjmx from Go applications by using our [gojmx](https://github.com/newrelic/nrjmx/tree/master/gojmx) module.
-If you want to read more about or to contribute you can check our develop [docs](https://github.com/newrelic/nrjmx/blob/jmx_improvements/DEVELOP_V2.md).
+If you want to read more about or to contribute you can check our develop [docs](https://github.com/newrelic/nrjmx/blob/master/DEVELOP_V2.md).
 
 ## Installation
 
