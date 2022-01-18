@@ -38,7 +38,7 @@ import "github.com/newrelic/nrjmx/gojmx"
 ```
 
 For more information about how to use `gojmx` you can check
-the [example](https://github.com/newrelic/nrjmx/blob/jmx_improvements/gojmx/README.md).
+the [example](https://github.com/newrelic/nrjmx/blob/master/gojmx/README.md).
 
 # Contributing
 
