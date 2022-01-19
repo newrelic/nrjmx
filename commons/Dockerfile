@@ -1,4 +1,3 @@
-FROM ubuntu:20.04
+FROM alpine:3.15.0
 
-RUN apt-get update && \
-    apt-get install -y thrift-compiler=0.13.0*
+RUN apk add thrift=0.15.0-r1

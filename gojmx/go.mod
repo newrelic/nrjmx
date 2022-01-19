@@ -3,7 +3,7 @@ module github.com/newrelic/nrjmx/gojmx
 go 1.16
 
 require (
-	github.com/apache/thrift v0.13.0
+	github.com/apache/thrift v0.15.0
 	github.com/docker/docker v20.10.11+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/pkg/errors v0.9.1
