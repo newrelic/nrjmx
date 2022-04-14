@@ -45,7 +45,7 @@
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
-            <version>1.13</version>
+            <version>1.15</version>
         </dependency>
         <!-- This dependency is required to fix a security issue in thrift dependency -->
         <dependency>
@@ -283,7 +283,7 @@
                         </executions>
                         <configuration>
                             <license>https://newrelic.com/terms (also see LICENSE installed with this package)</license>
-                            <packager>New Relic Infrastructure Team &lt;infrastructure-eng@newrelic.com&gt;</packager>
+                            <packager>New Relic Infrastructure Team &lt;infrastructure-eng@newrelic.com></packager>
                             <group>Application/System</group>
                             <sourceEncoding>utf-8</sourceEncoding>
                             <targetOS>linux</targetOS>
