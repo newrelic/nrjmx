@@ -62,7 +62,7 @@
         <dependency>
             <groupId>org.apache.thrift</groupId>
             <artifactId>libthrift</artifactId>
-            <version>0.14.0</version>
+            <version>0.16.0</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -283,7 +283,7 @@
                         </executions>
                         <configuration>
                             <license>https://newrelic.com/terms (also see LICENSE installed with this package)</license>
-                            <packager>New Relic Infrastructure Team &lt;infrastructure-eng@newrelic.com&gt;</packager>
+                            <packager>New Relic Infrastructure Team &lt;infrastructure-eng@newrelic.com></packager>
                             <group>Application/System</group>
                             <sourceEncoding>utf-8</sourceEncoding>
                             <targetOS>linux</targetOS>
