@@ -72,7 +72,7 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-            <version>1.7.32</version>
+            <version>1.7.36</version>
         </dependency>
     </dependencies>
     <build>
@@ -283,7 +283,7 @@
                         </executions>
                         <configuration>
                             <license>https://newrelic.com/terms (also see LICENSE installed with this package)</license>
-                            <packager>New Relic Infrastructure Team &lt;infrastructure-eng@newrelic.com&gt;</packager>
+                            <packager>New Relic Infrastructure Team &lt;infrastructure-eng@newrelic.com></packager>
                             <group>Application/System</group>
                             <sourceEncoding>utf-8</sourceEncoding>
                             <targetOS>linux</targetOS>
