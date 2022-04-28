@@ -31,6 +31,14 @@ public class Service {
             return "ok!\n";
         });
 
+        // Registers a cat as an ComplexDataCat
+        post("/complex_data_cat", (req, res) -> {
+            ComplexDataCat complexDataCat = gson.fromJson(req.body(), ComplexDataCat.class);
+            log.info("registering composite data cat {}", complexDataCat);
+            server.registerMBean(complexDataCat, null);
+            return "ok!\n";
+        });
+
         // Registers a cat as an MBean
         post("/cat", (req, res) -> {
             Cat cat = gson.fromJson(req.body(), Cat.class);

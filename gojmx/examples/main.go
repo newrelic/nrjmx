@@ -18,7 +18,7 @@ func init() {
 	_ = os.Setenv("NR_JMX_TOOL", filepath.Join("..", "bin", "nrjmx"))
 
 	// Uncomment this when you want to run both: golang debugger and java debugger.
-	//_ = os.Setenv("NRIA_NRJMX_DEBUG", "true")
+	_ = os.Setenv("NRIA_NRJMX_DEBUG", "true")
 }
 
 func main() {
@@ -26,41 +26,42 @@ func main() {
 	config := &gojmx.JMXConfig{
 		Hostname:         "localhost",
 		Port:             7199,
-		RequestTimeoutMs: 10000,
+		RequestTimeoutMs: 100000,
+		Verbose:          true,
 	}
 
 	// Connect to JMX endpoint.
 	client, err := gojmx.NewClient(context.Background()).Open(config)
 	handleError(err)
-	
+
 	defer client.Close()
 
-	// Get the mBean names.
-	mBeanNames, err := client.QueryMBeanNames("java.lang:type=*")
-	handleError(err)
-
-	// Get the Attribute names for each mBeanName.
-	for _, mBeanName := range mBeanNames {
-		mBeanAttrNames, err := client.GetMBeanAttributeNames(mBeanName)
-		handleError(err)
-
-		// Get the attribute value for each mBeanName and mBeanAttributeName.
-		jmxAttrs, err := client.GetMBeanAttributes(mBeanName, mBeanAttrNames...)
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
-		for _, attr := range jmxAttrs {
-			if attr.ResponseType == gojmx.ResponseTypeErr {
-				fmt.Println(attr.StatusMsg)
-				continue
-			}
-			printAttr(attr)
-		}
-	}
+	//// Get the mBean names.
+	//mBeanNames, err := client.QueryMBeanNames("java.lang:type=*")
+	//handleError(err)
+	//
+	//// Get the Attribute names for each mBeanName.
+	//for _, mBeanName := range mBeanNames {
+	//	mBeanAttrNames, err := client.GetMBeanAttributeNames(mBeanName)
+	//	handleError(err)
+	//
+	//	// Get the attribute value for each mBeanName and mBeanAttributeName.
+	//	jmxAttrs, err := client.GetMBeanAttributes(mBeanName, mBeanAttrNames...)
+	//	if err != nil {
+	//		fmt.Println(err)
+	//		continue
+	//	}
+	//	for _, attr := range jmxAttrs {
+	//		if attr.ResponseType == gojmx.ResponseTypeErr {
+	//			fmt.Println(attr.StatusMsg)
+	//			continue
+	//		}
+	//		printAttr(attr)
+	//	}
+	//}
 
 	// Or use QueryMBean call which wraps all the necessary requests to get the values for an MBeanNamePattern.
-	response, err := client.QueryMBeanAttributes("java.lang:type=*")
+	response, err := client.QueryMBeanAttributes("*:*")
 	handleError(err)
 	for _, attr := range response {
 		if attr.ResponseType == gojmx.ResponseTypeErr {

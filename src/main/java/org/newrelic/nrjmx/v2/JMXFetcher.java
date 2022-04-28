@@ -10,6 +10,7 @@ import org.newrelic.nrjmx.v2.nrprotocol.*;
 
 import javax.management.*;
 import javax.management.openmbean.CompositeData;
+import javax.management.openmbean.TabularData;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
@@ -453,6 +454,20 @@ public class JMXFetcher {
         }
     }
 
+    private String getMultiKey(Collection keys) {
+        StringBuilder sb = new StringBuilder();
+        boolean first = true;
+        for (Object key : keys) {
+            if (!first) {
+                sb.append(",");
+            }
+            // I hope these have sane toString() methods
+            sb.append(key.toString());
+            first = false;
+        }
+        return sb.toString();
+    }
+
     /**
      * parseValue converts the received value from JMX into an JMXAttribute object.
      *
@@ -461,6 +476,9 @@ public class JMXFetcher {
      * @throws JMXError JMX related Exception
      */
     private void parseValue(String mBeanAttributeName, Object value, List<AttributeResponse> output) throws JMXError {
+        if (mBeanAttributeName.contains("java.lang:type=Runtime,attr=InputArguments")) {
+            mBeanAttributeName = mBeanAttributeName;
+        }
         if (output == null) {
             output = new ArrayList<>();
         }
@@ -488,6 +506,25 @@ public class JMXFetcher {
         } else if (value instanceof java.util.Date) {
             attr.stringValue = dateFormat.format(value);
             attr.responseType = ResponseType.STRING;
+        } else if (value instanceof TabularData) {
+            JMXError jmxError = null;
+
+            TabularData data = (TabularData) value;
+            for (Object rowKey : data.keySet()) {
+                Collection keys = (Collection) rowKey;
+                CompositeData compositeData = data.get(keys.toArray());
+                String pathKey = getMultiKey(keys);
+
+                try {
+                    parseValue(String.format("%s.Tabular.%s", mBeanAttributeName, pathKey), compositeData, output);
+                } catch (JMXError e) {
+                    jmxError = e;
+                }
+            }
+            if (output.size() == 0 && jmxError != null) {
+                throw jmxError;
+            }
+            return;
         } else if (value instanceof CompositeData) {
             CompositeData cdata = (CompositeData) value;
             Set<String> fieldKeys = cdata.getCompositeType().keySet();
@@ -503,6 +540,68 @@ public class JMXFetcher {
                     parseValue(String.format("%s.%s", mBeanAttributeName, fieldKey), cdata.get(field), output);
                 } catch (JMXError e) {
                     jmxError = e;
+                }
+            }
+            if (output.size() == 0 && jmxError != null) {
+                throw jmxError;
+            }
+            return;
+        } else if (value instanceof Map) {
+            Map<Object, Object> mdata = (Map<Object, Object>) value;
+            Set<Object> fieldKeys = mdata.keySet();
+            JMXError jmxError = null;
+
+            for (Object field : fieldKeys) {
+                String fieldName = field.toString();
+                if (fieldName.length() < 1) {
+                    continue;
+                }
+
+                String fieldKey = fieldName.substring(0, 1).toUpperCase() + fieldName.substring(1);
+                try {
+                    parseValue(String.format("%s.%s", mBeanAttributeName, fieldKey), mdata.get(field), output);
+                } catch (JMXError e) {
+                    jmxError = e;
+                }
+            }
+            if (output.size() == 0 && jmxError != null) {
+                throw jmxError;
+            }
+            return;
+        } else if (value instanceof List) {
+            List<Object> ldata = (List<Object>) value;
+            JMXError jmxError = null;
+
+            for (int i = 0; i < ldata.size(); i++) {
+                try {
+                    parseValue(String.format("%s.%d", mBeanAttributeName, i), ldata.get(i), output);
+                } catch (JMXError e) {
+                    jmxError = e;
+                } catch (Exception e) {
+                    jmxError = null;
+                }
+            }
+            if (output.size() == 0 && jmxError != null) {
+                throw jmxError;
+            }
+            return;
+        } else if (value instanceof ObjectName) {
+            ObjectName odata = (ObjectName) value;
+
+            attr.stringValue = odata.toString();
+            attr.responseType = ResponseType.STRING;
+
+        } else if (value instanceof Object[]) {
+            Object[] ldata = (Object[]) value;
+            JMXError jmxError = null;
+
+            for (int i = 0; i < ldata.length; i++) {
+                try {
+                    parseValue(String.format("%s.%d", mBeanAttributeName, i), ldata[i], output);
+                } catch (JMXError e) {
+                    jmxError = e;
+                } catch (Exception e) {
+                    jmxError = null;
                 }
             }
             if (output.size() == 0 && jmxError != null) {
