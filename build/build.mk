@@ -41,15 +41,6 @@ code-gen-utils:
 						-t ohaiops/nrjmx-code-generator:latest \
 						--build-arg THRIFT_VERSION=$(THRIFT_VERSION) ./commons/.)
 
-
-.PHONY: docker/publish
-docker/publish: code-gen-utils
-	@printf '\n------------------------------------------------------\n'
-	@printf 'Publishing docker image\n'
-	@($(DOCKER_BIN) push ohaiops/nrjmx-code-generator:$(THRIFT_VERSION))
-	@($(DOCKER_BIN) push ohaiops/nrjmx-code-generator:latest)
-
-
 .PHONY : code-gen
 code-gen: validate-thrift-version
 	rm -rf src/main/java/org/newrelic/nrjmx/v2/nrprotocol

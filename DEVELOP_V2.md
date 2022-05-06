@@ -120,7 +120,7 @@ make code-gen
 ```
 
 This command will generate the code for both: `gojmx` project and `nrjmx` project. Is running inside a 
-[docker container](commons/Dockerfile) so no dependencies are required. Push the changes for the generated files on your branch to make sure `go get` command
+docker container so no dependencies are required. Push the changes for the generated files on your branch to make sure `go get` command
 doesn't fail.
 
 The implementation of the interface can be found here:
@@ -139,10 +139,7 @@ In order to update the Go version, you need to change the version in the followi
 In order to update the thrift version, you need to change the version in the following places:
 
 1. ./commons/Dockerfile
-   1. After updating Dockerfile you need to re-build the docker image and push it to the registry with:
-   ```shell
-   make docker/publish
-   ```
+   1. After updating Dockerfile you need to re-build the docker image running the GH manual workflow [Build Thrift Docker Image](https://github.com/newrelic/nrjmx/actions/workflows/build_thrift_image.yml)
 2. pom.xml
 3. go.mod using `go get` command
 
