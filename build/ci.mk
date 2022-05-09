@@ -50,3 +50,11 @@ ci/check-gen-code: code-gen
 		exit 1;	\
 	fi ; \
 	echo "Success!"
+
+
+.PHONY: ci/docker/publish
+ci/docker/publish: code-gen-utils
+	@printf '\n------------------------------------------------------\n'
+	@printf 'Publishing docker image\n'
+	@($(DOCKER_BIN) push ohaiops/nrjmx-code-generator:$(THRIFT_VERSION))
+	@($(DOCKER_BIN) push ohaiops/nrjmx-code-generator:latest)
