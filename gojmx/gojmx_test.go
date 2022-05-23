@@ -873,7 +873,7 @@ func TestProcessExits(t *testing.T) {
 
 		stderrBytes, err := io.ReadAll(&stderr)
 		assert.NoError(t, err)
-		// A message will appear o stderr depending on the OS when the process is killed.
+		// A message will appear on stderr, depending on the OS, when the process is killed.
 		assert.NotEmpty(t, string(stderrBytes))
 	}()
 
@@ -907,7 +907,7 @@ func findChildProcessByName(t *testing.T, parentProcess *gopsutil.Process, child
 	var err error
 	var children []*gopsutil.Process
 
-	require.Eventually(t, func() bool {
+	require.Eventuallyf(t, func() bool {
 		children, err = parentProcess.Children()
 		if err != nil {
 			return false
@@ -915,7 +915,7 @@ func findChildProcessByName(t *testing.T, parentProcess *gopsutil.Process, child
 
 		return len(children) > 0
 	}, 5*time.Second, 50*time.Millisecond,
-		"couldn't found the java subprocess")
+		"couldn't found the %s subprocess", childName)
 
 	// We check only the first child since we don't start multiple processes in parallel.
 	name, err := children[0].Name()

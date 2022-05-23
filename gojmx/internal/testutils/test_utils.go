@@ -310,11 +310,7 @@ func isRunningInDockerContainer() bool {
 func NrJMXAsSubprocess(ctx context.Context, host, port string) *exec.Cmd {
 	cmdPath := fmt.Sprintf("%s/gojmx/internal/testutils/cmd/main.go", PrjDir)
 
-	args := []string{
-		"run",
-		cmdPath,
-		host,
-		port,
-	}
-	return exec.CommandContext(ctx, "go", args...)
+	return exec.CommandContext(ctx,
+		"go", "run", cmdPath, host, port,
+	)
 }
