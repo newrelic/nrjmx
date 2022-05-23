@@ -6,16 +6,16 @@
 package gojmx
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"fmt"
-	"github.com/newrelic/nrjmx/gojmx/internal/nrjmx"
 	"github.com/newrelic/nrjmx/gojmx/internal/testutils"
 	gopsutil "github.com/shirou/gopsutil/v3/process"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"io/ioutil"
+	"io"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -817,93 +817,114 @@ func TestClientClose(t *testing.T) {
 }
 
 func TestProcessExits(t *testing.T) {
-	// gojmx starts nrjmx bash script which stats a java process.
-	// We want to make sure that if gojmx process dies, java process stops also.
-	// To reproduce this scenario, we run the current test twice:
-	// - subprocess SHOULD_RUN_EXIT = 1
-	// - main test SHOULD_RUN_EXIT unset.
-	if os.Getenv("IS_SUBPROCESS") == "1" {
-		ctx := context.Background()
+	ctx := context.Background()
 
-		// GIVEN a JMX Server running inside a container
-		container, err := testutils.RunJMXServiceContainer(ctx)
-		require.NoError(t, err)
-		defer container.Terminate(ctx)
-
-		jmxHost, jmxPort, err := testutils.GetContainerMappedPort(ctx, container, testutils.TestServerJMXPort)
-		require.NoError(t, err)
-
-		// THEN JMX connection can be opened
-		config := &JMXConfig{
-			Hostname:         jmxHost,
-			Port:             int32(jmxPort.Int()),
-			RequestTimeoutMs: testutils.DefaultTimeoutMs,
-		}
-		client, err := NewClient(ctx).Open(config)
-		require.NoError(t, err)
-
-		f, err := os.OpenFile(os.Getenv("TMP_FILE"), os.O_WRONLY|os.O_TRUNC, 0644)
-		require.NoError(t, err)
-		defer f.Close()
-		_, err = fmt.Fprintf(f, "%d\n", client.nrJMXProcess.getPID())
-		require.NoError(t, err)
-		<-time.After(5 * time.Minute)
-	}
-
-	// Create a temporary file to communicate get the pid of the subprocess.
-	tmpFile, err := ioutil.TempFile("", "nrjmx_pid_test")
+	// GIVEN a JMX Server running inside a container
+	container, err := testutils.RunJMXServiceContainer(ctx)
 	require.NoError(t, err)
-	defer os.Remove(tmpFile.Name())
+	defer container.Terminate(ctx)
 
-	// Run again the current test function with IS_SUBPROCESS=1
-	cmd := exec.Command(os.Args[0], "-test.run="+t.Name())
-	cmd.Env = append(os.Environ(), "IS_SUBPROCESS=1", "TMP_FILE="+tmpFile.Name())
+	// Populate the JMX Server with mbeans
+	resp, err := testutils.AddMBeans(ctx, container, map[string]interface{}{
+		"name":        "tomas",
+		"doubleValue": 1.2,
+		// test-server can delay the answer for doubleValue by specifying a millisecond timeout value.
+		// we need a delay in processing to simulate when the java process is stuck, and we want to terminate it.
+		"timeout": 60000,
+	})
 
-	stdErrBuffer := nrjmx.NewDefaultLimitedBuffer()
-	stdOutBuffer := nrjmx.NewDefaultLimitedBuffer()
-	cmd.Stderr = stdErrBuffer
-	cmd.Stdout = stdOutBuffer
-	err = cmd.Start()
+	assert.NoError(t, err)
+	assert.Equal(t, "ok!\n", string(resp))
 
-	ctx, waitCancel := context.WithCancel(context.Background())
+	defer testutils.CleanMBeans(ctx, container)
+
+	jmxHost, jmxPort, err := testutils.GetContainerMappedPort(ctx, container, testutils.TestServerJMXPort)
+	require.NoError(t, err)
+
+	// Run gojmx library as a child process.
+	cmd := testutils.NrJMXAsSubprocess(ctx, jmxHost, jmxPort.Port())
+
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	cmd.Start()
+
+	// Call wait() to avoid defunct process.
+	go cmd.Wait()
+
+	// The subprocess will write the gojmx version to stdout. At that point we know that java process is initialized.
+	waitToStart := make(chan string)
 	go func() {
-		err := cmd.Wait()
-		if ctx.Err() == nil && err != nil {
-			assert.NoError(t, err)
-			panic(fmt.Errorf("stdout: %s\nstderr: %s", stdOutBuffer, stdErrBuffer))
-		}
+		r := bufio.NewReader(&stdout)
+		assert.Eventually(t, func() bool {
+			_, err := r.ReadString('\n')
+			return err == nil
+		}, 5*time.Second, 50*time.Millisecond,
+			"didn't managed to read the gojmx version",
+		)
+
+		close(waitToStart)
 	}()
 
-	// Get the pid from the subprocess.
-	var pid int32
-	require.Eventually(t, func() bool {
-		var err error
-		pid, err = testutils.ReadPidFile(tmpFile.Name())
-		if err != nil {
-			return false
-		}
-		return true
-	}, 30*time.Second, 50*time.Millisecond)
+	defer func() {
+		stdoutBytes, err := io.ReadAll(&stdout)
+		assert.NoError(t, err)
+		assert.Empty(t, string(stdoutBytes))
 
-	p, err := gopsutil.NewProcess(pid)
-	assert.NoError(t, err)
-	ch, err := p.Children()
-	assert.NoError(t, err)
+		stderrBytes, err := io.ReadAll(&stderr)
+		assert.NoError(t, err)
+		// A message will appear o stderr depending on the OS when the process is killed.
+		assert.NotEmpty(t, string(stderrBytes))
+	}()
 
-	// Stop listening for cmd.Wait() error. We want to kill the subprocess, at this point an error is expected.
-	waitCancel()
-	err = cmd.Process.Kill()
+	<-waitToStart
+
+	// The process tree is much larger, we want to identify the main go process and the java process.
+	subProcess, err := gopsutil.NewProcess(int32(cmd.Process.Pid))
 	require.NoError(t, err)
 
-	// Check that java pid does not exist anymore.
-	require.Eventually(t, func() bool {
-		up, err := ch[0].IsRunning()
+	mainProcess := findChildProcessByName(t, subProcess, "main")
+
+	javaProcess := findChildProcessByName(t, mainProcess, "java")
+
+	// WHEN main process is terminated.
+	mainProcess.Kill()
+
+	// THEN Java child also terminates.
+	assert.Eventually(t, func() bool {
+		up, err := javaProcess.IsRunning()
 		if err != nil {
 			return false
 		}
 		// assert is not running
 		return !up
-	}, 5*time.Second, 50*time.Millisecond)
+	}, 5*time.Second, 50*time.Millisecond,
+		"java subprocess was not properly terminated")
+}
+
+// findChildProcessByName will search for a java process in a given process tree.
+func findChildProcessByName(t *testing.T, parentProcess *gopsutil.Process, childName string) *gopsutil.Process {
+	var err error
+	var children []*gopsutil.Process
+
+	require.Eventually(t, func() bool {
+		children, err = parentProcess.Children()
+		if err != nil {
+			return false
+		}
+
+		return len(children) > 0
+	}, 5*time.Second, 50*time.Millisecond,
+		"couldn't found the java subprocess")
+
+	// We check only the first child since we don't start multiple processes in parallel.
+	name, err := children[0].Name()
+	require.NoError(t, err)
+	if name == childName {
+		return children[0]
+	}
+
+	return findChildProcessByName(t, children[0], childName)
 }
 
 func assertCloseClientNoError(t *testing.T, client *Client) {
