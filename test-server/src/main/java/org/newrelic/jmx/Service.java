@@ -50,6 +50,13 @@ public class Service {
             return "ok!\n";
         });
 
+        post("/custom_cat", (req, res) -> {
+            CustomCat cat = gson.fromJson(req.body(), CustomCat.class);
+            log.info("registering {}", cat);
+            server.registerMBean(cat, null);
+            return "ok!\n";
+        });
+
         final ObjectName queryObject = new ObjectName("*:type=Cat,*");
 
         // Removes all registered MBean cats

@@ -865,14 +865,14 @@ func TestProcessExits(t *testing.T) {
 
 		close(waitToStart)
 	}()
-	
+
 	// For troubleshooting purposes.
 	defer func() {
 		stdoutBytes, _ := io.ReadAll(&stdout)
-		fmt.Println(stdoutBytes)
+		fmt.Println(fmt.Sprintf("[DEBUG] Stdout: '%s'", stdoutBytes))
 
 		stderrBytes, _ := io.ReadAll(&stderr)
-		fmt.Println(stderrBytes)
+		fmt.Println(fmt.Sprintf("[DEBUG] Stderr: '%s'", stderrBytes))
 	}()
 
 	<-waitToStart
