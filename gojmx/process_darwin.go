@@ -5,6 +5,12 @@
 
 package gojmx
 
+import (
+	"context"
+	"os/exec"
+	"path/filepath"
+)
+
 const (
 	// defaultNRJMXExec default nrjmx tool executable path.
 	defaultNRJMXExec = "/usr/local/bin/nrjmx"
