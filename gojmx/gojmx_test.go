@@ -865,7 +865,7 @@ func TestProcessExits(t *testing.T) {
 
 		close(waitToStart)
 	}()
-
+	
 	// For troubleshooting purposes.
 	defer func() {
 		stdoutBytes, _ := io.ReadAll(&stdout)

@@ -111,7 +111,7 @@ jobs:
 
   packaging-msi:
     name: Build and upload MSI packages into GH Release assets
-    runs-on: windows-latest
+    runs-on: windows-2019
     needs: [ packaging ]
 
     steps:
@@ -147,7 +147,7 @@ jobs:
           password: ${{ env.DOCKER_HUB_PASSWORD }}
 
       - name: Publish all to S3 action
-        uses: newrelic/infrastructure-publish-action@v1.1.0
+        uses: newrelic/infrastructure-publish-action@v1
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.OHAI_AWS_ACCESS_KEY_ID_STAGING }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.OHAI_AWS_SECRET_ACCESS_KEY_STAGING }}
