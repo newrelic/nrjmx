@@ -11,7 +11,6 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"time"
 )
 
@@ -52,7 +51,7 @@ func (p *process) start() (*process, error) {
 		return p, errProcessAlreadyRunning
 	}
 
-	p.cmd = exec.CommandContext(p.ctx, filepath.Clean(getNRJMXExec()), nrJMXV2Flag)
+	p.cmd = buildExecCommand(p.ctx)
 
 	var err error
 

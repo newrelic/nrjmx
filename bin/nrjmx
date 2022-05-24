@@ -26,5 +26,5 @@ if [ ! -z "${NRIA_NRJMX_DEBUG}" ]; then
   JAVA_OPTS="-agentlib:jdwp=transport=dt_socket,server=n,address=localhost:5005,suspend=y"
 fi
 
-${java_tool} ${JAVA_OPTS} -cp ${CLASSPATH} org.newrelic.nrjmx.Application $@
+exec ${java_tool} ${JAVA_OPTS} -cp ${CLASSPATH} org.newrelic.nrjmx.Application $@
 

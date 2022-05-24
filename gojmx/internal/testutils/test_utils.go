@@ -6,7 +6,6 @@
 package testutils
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -17,9 +16,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
-	"strconv"
-	"strings"
 	"time"
 )
 
@@ -275,22 +273,6 @@ func DoHttpRequest(method, url string, body []byte) ([]byte, error) {
 	return ioutil.ReadAll(resp.Body)
 }
 
-// ReadFirstLine will return just the first line of the file.
-func ReadFirstLine(filename string) (string, error) {
-	file, err := os.Open(filename)
-	if err != nil {
-		return "", err
-	}
-	defer file.Close()
-	scanner := bufio.NewScanner(file)
-	scanner.Scan()
-	output := scanner.Text()
-	if err := scanner.Err(); err != nil {
-		return "", err
-	}
-	return strings.TrimSpace(output), nil
-}
-
 // GetContainerMappedPort returns the hostname and the port for a given container.
 func GetContainerMappedPort(ctx context.Context, container testcontainers.Container, targetPort nat.Port) (host string, port nat.Port, err error) {
 
@@ -311,19 +293,6 @@ func GetContainerMappedPort(ctx context.Context, container testcontainers.Contai
 	return
 }
 
-// ReadPidFile will read a given file and extract the pid form it.
-func ReadPidFile(fileName string) (int32, error) {
-	line, err := ReadFirstLine(fileName)
-	if err != nil {
-		return -1, err
-	}
-	pid, err := strconv.Atoi(line)
-	if err != nil {
-		return -1, err
-	}
-	return int32(pid), nil
-}
-
 func isRunningInDockerContainer() bool {
 	// docker creates a .dockerenv file at the root
 	// of the directory tree inside the container.
@@ -335,4 +304,13 @@ func isRunningInDockerContainer() bool {
 	}
 
 	return false
+}
+
+// NrJMXAsSubprocess will return an exec.Cmd that will be configured to run the main function from testutils.
+func NrJMXAsSubprocess(ctx context.Context, host, port string) *exec.Cmd {
+	cmdPath := fmt.Sprintf("%s/gojmx/internal/testutils/cmd/main.go", PrjDir)
+
+	return exec.CommandContext(ctx,
+		"go", "run", cmdPath, host, port,
+	)
 }
