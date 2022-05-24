@@ -49,6 +49,12 @@ In the port `4567`:
 * `POST /cat`
     * BODY: `{"name":"Isidoro"}` would register in JMX a cat named Isidoro to the registry name
 
+
+* `POST /custom_cat`
+  * BODY: `{"name": "TombstoneScannedHistogram", "mBeanName":"org.apache.cassandra.metrics:type=Table,keyspace=test2,scope=test2,name=TombstoneScannedHistogram","floatValue":1.1,"doubleValue":3.2,"timeout": 60000}`
+  * would register in JMX a custom mBean named 'org.apache.cassandra.metrics:type=Table,keyspace=test2,scope=test2,name=TombstoneScannedHistogram'
+  * notice the 'timeout' attribute, it allows specifying a delay before the mBean will be returned by JMX endpoint.
+
 * `PUT /clear`
     * Will clear all the cats from JMX
 
@@ -68,5 +74,6 @@ $ ./nrjmx
 test:type=Cat,*
 {}
 ```
+## Troubleshooting
 
-    
+If registering mBeans fails, you can check the container logs for errors.
