@@ -377,7 +377,12 @@ public class JMXFetcher {
     public List<AttributeResponse> queryMBeanAttributes(String mBeanGlobPattern) throws JMXError, JMXConnectionError {
         ObjectName pattern = getObjectName(mBeanGlobPattern);
 
-        Set<ObjectInstance> mBeans = queryMBeans(pattern);
+        Set<ObjectInstance> mBeans;
+        if (mBeanGlobPattern.contains("*")) {
+            mBeans = queryMBeans(pattern);
+        } else {
+            mBeans = new HashSet<>(Arrays.asList(new ObjectInstance(pattern, "")));
+        }
 
         List<AttributeResponse> result = new ArrayList<>();
 
