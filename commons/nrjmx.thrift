@@ -59,5 +59,5 @@ service JMXService {
 
     list<AttributeResponse> getMBeanAttributes(1:string mBeanName, 2:list<string> attributes) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr),
 
-    list<AttributeResponse> queryMBeanAttributes(1:string mBeanNamePattern) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr)
+    list<AttributeResponse> queryMBeanAttributes(1:string mBeanNamePattern, 2:list<string> attributes) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr)
 }

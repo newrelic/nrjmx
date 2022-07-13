@@ -42,7 +42,7 @@ ci/go-test-jdk11: deps go-test-utils
 TRACKED_GEN_DIR=src/main/java/org/newrelic/nrjmx/v2/nrprotocol \
 				gojmx/internal/nrprotocol
 .PHONY : ci/check-gen-code
-ci/check-gen-code: code-gen
+ci/check-gen-code: validate-thrift-version code-gen
 	@echo "Checking the generated code..." ; \
 	if [ `git status --porcelain $(TRACKED_GEN_DIR) | wc -l` -gt 0 ]; then \
 		echo "Code generator produced different code, make sure you pushed the latest changes!"; \
@@ -51,6 +51,11 @@ ci/check-gen-code: code-gen
 	fi ; \
 	echo "Success!"
 
+.PHONY : validate-thrift-version
+validate-thrift-version: deps
+	@printf '\n------------------------------------------------------\n'
+	@printf 'Validating thrift version\n'
+	@($(DOCKER_CMD) build/validate_thrift_version.sh)
 
 .PHONY: ci/docker/publish
 ci/docker/publish: code-gen-utils

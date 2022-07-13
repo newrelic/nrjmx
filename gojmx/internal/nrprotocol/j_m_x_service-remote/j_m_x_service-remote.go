@@ -28,7 +28,7 @@ func Usage() {
   fmt.Fprintln(os.Stderr, "   queryMBeanNames(string mBeanNamePattern)")
   fmt.Fprintln(os.Stderr, "   getMBeanAttributeNames(string mBeanName)")
   fmt.Fprintln(os.Stderr, "   getMBeanAttributes(string mBeanName,  attributes)")
-  fmt.Fprintln(os.Stderr, "   queryMBeanAttributes(string mBeanNamePattern)")
+  fmt.Fprintln(os.Stderr, "   queryMBeanAttributes(string mBeanNamePattern,  attributes)")
   fmt.Fprintln(os.Stderr)
   os.Exit(0)
 }
@@ -156,19 +156,19 @@ func main() {
       fmt.Fprintln(os.Stderr, "Connect requires 1 args")
       flag.Usage()
     }
-    arg28 := flag.Arg(1)
-    mbTrans29 := thrift.NewTMemoryBufferLen(len(arg28))
-    defer mbTrans29.Close()
-    _, err30 := mbTrans29.WriteString(arg28)
-    if err30 != nil {
+    arg29 := flag.Arg(1)
+    mbTrans30 := thrift.NewTMemoryBufferLen(len(arg29))
+    defer mbTrans30.Close()
+    _, err31 := mbTrans30.WriteString(arg29)
+    if err31 != nil {
       Usage()
       return
     }
-    factory31 := thrift.NewTJSONProtocolFactory()
-    jsProt32 := factory31.GetProtocol(mbTrans29)
+    factory32 := thrift.NewTJSONProtocolFactory()
+    jsProt33 := factory32.GetProtocol(mbTrans30)
     argvalue0 := nrprotocol.NewJMXConfig()
-    err33 := argvalue0.Read(context.Background(), jsProt32)
-    if err33 != nil {
+    err34 := argvalue0.Read(context.Background(), jsProt33)
+    if err34 != nil {
       Usage()
       return
     }
@@ -219,19 +219,19 @@ func main() {
     }
     argvalue0 := flag.Arg(1)
     value0 := argvalue0
-    arg37 := flag.Arg(2)
-    mbTrans38 := thrift.NewTMemoryBufferLen(len(arg37))
-    defer mbTrans38.Close()
-    _, err39 := mbTrans38.WriteString(arg37)
-    if err39 != nil { 
+    arg38 := flag.Arg(2)
+    mbTrans39 := thrift.NewTMemoryBufferLen(len(arg38))
+    defer mbTrans39.Close()
+    _, err40 := mbTrans39.WriteString(arg38)
+    if err40 != nil { 
       Usage()
       return
     }
-    factory40 := thrift.NewTJSONProtocolFactory()
-    jsProt41 := factory40.GetProtocol(mbTrans38)
+    factory41 := thrift.NewTJSONProtocolFactory()
+    jsProt42 := factory41.GetProtocol(mbTrans39)
     containerStruct1 := nrprotocol.NewJMXServiceGetMBeanAttributesArgs()
-    err42 := containerStruct1.ReadField2(context.Background(), jsProt41)
-    if err42 != nil {
+    err43 := containerStruct1.ReadField2(context.Background(), jsProt42)
+    if err43 != nil {
       Usage()
       return
     }
@@ -241,13 +241,31 @@ func main() {
     fmt.Print("\n")
     break
   case "queryMBeanAttributes":
-    if flag.NArg() - 1 != 1 {
-      fmt.Fprintln(os.Stderr, "QueryMBeanAttributes requires 1 args")
+    if flag.NArg() - 1 != 2 {
+      fmt.Fprintln(os.Stderr, "QueryMBeanAttributes requires 2 args")
       flag.Usage()
     }
     argvalue0 := flag.Arg(1)
     value0 := argvalue0
-    fmt.Print(client.QueryMBeanAttributes(context.Background(), value0))
+    arg45 := flag.Arg(2)
+    mbTrans46 := thrift.NewTMemoryBufferLen(len(arg45))
+    defer mbTrans46.Close()
+    _, err47 := mbTrans46.WriteString(arg45)
+    if err47 != nil { 
+      Usage()
+      return
+    }
+    factory48 := thrift.NewTJSONProtocolFactory()
+    jsProt49 := factory48.GetProtocol(mbTrans46)
+    containerStruct1 := nrprotocol.NewJMXServiceQueryMBeanAttributesArgs()
+    err50 := containerStruct1.ReadField2(context.Background(), jsProt49)
+    if err50 != nil {
+      Usage()
+      return
+    }
+    argvalue1 := containerStruct1.Attributes
+    value1 := argvalue1
+    fmt.Print(client.QueryMBeanAttributes(context.Background(), value0, value1))
     fmt.Print("\n")
     break
   case "":

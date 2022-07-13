@@ -10,16 +10,17 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/newrelic/nrjmx/gojmx/internal/testutils"
-	gopsutil "github.com/shirou/gopsutil/v3/process"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/newrelic/nrjmx/gojmx/internal/testutils"
+	gopsutil "github.com/shirou/gopsutil/v3/process"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var timeStamp = time.Date(2022, time.January, 1, 01, 23, 45, 0, time.Local).UnixNano() / 1000000

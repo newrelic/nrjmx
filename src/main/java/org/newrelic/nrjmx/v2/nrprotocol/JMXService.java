@@ -23,7 +23,7 @@ public class JMXService {
 
     public java.util.List<AttributeResponse> getMBeanAttributes(java.lang.String mBeanName, java.util.List<java.lang.String> attributes) throws JMXConnectionError, JMXError, org.apache.thrift.TException;
 
-    public java.util.List<AttributeResponse> queryMBeanAttributes(java.lang.String mBeanNamePattern) throws JMXConnectionError, JMXError, org.apache.thrift.TException;
+    public java.util.List<AttributeResponse> queryMBeanAttributes(java.lang.String mBeanNamePattern, java.util.List<java.lang.String> attributes) throws JMXConnectionError, JMXError, org.apache.thrift.TException;
 
   }
 
@@ -41,7 +41,7 @@ public class JMXService {
 
     public void getMBeanAttributes(java.lang.String mBeanName, java.util.List<java.lang.String> attributes, org.apache.thrift.async.AsyncMethodCallback<java.util.List<AttributeResponse>> resultHandler) throws org.apache.thrift.TException;
 
-    public void queryMBeanAttributes(java.lang.String mBeanNamePattern, org.apache.thrift.async.AsyncMethodCallback<java.util.List<AttributeResponse>> resultHandler) throws org.apache.thrift.TException;
+    public void queryMBeanAttributes(java.lang.String mBeanNamePattern, java.util.List<java.lang.String> attributes, org.apache.thrift.async.AsyncMethodCallback<java.util.List<AttributeResponse>> resultHandler) throws org.apache.thrift.TException;
 
   }
 
@@ -226,16 +226,17 @@ public class JMXService {
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "getMBeanAttributes failed: unknown result");
     }
 
-    public java.util.List<AttributeResponse> queryMBeanAttributes(java.lang.String mBeanNamePattern) throws JMXConnectionError, JMXError, org.apache.thrift.TException
+    public java.util.List<AttributeResponse> queryMBeanAttributes(java.lang.String mBeanNamePattern, java.util.List<java.lang.String> attributes) throws JMXConnectionError, JMXError, org.apache.thrift.TException
     {
-      send_queryMBeanAttributes(mBeanNamePattern);
+      send_queryMBeanAttributes(mBeanNamePattern, attributes);
       return recv_queryMBeanAttributes();
     }
 
-    public void send_queryMBeanAttributes(java.lang.String mBeanNamePattern) throws org.apache.thrift.TException
+    public void send_queryMBeanAttributes(java.lang.String mBeanNamePattern, java.util.List<java.lang.String> attributes) throws org.apache.thrift.TException
     {
       queryMBeanAttributes_args args = new queryMBeanAttributes_args();
       args.setMBeanNamePattern(mBeanNamePattern);
+      args.setAttributes(attributes);
       sendBase("queryMBeanAttributes", args);
     }
 
@@ -462,24 +463,27 @@ public class JMXService {
       }
     }
 
-    public void queryMBeanAttributes(java.lang.String mBeanNamePattern, org.apache.thrift.async.AsyncMethodCallback<java.util.List<AttributeResponse>> resultHandler) throws org.apache.thrift.TException {
+    public void queryMBeanAttributes(java.lang.String mBeanNamePattern, java.util.List<java.lang.String> attributes, org.apache.thrift.async.AsyncMethodCallback<java.util.List<AttributeResponse>> resultHandler) throws org.apache.thrift.TException {
       checkReady();
-      queryMBeanAttributes_call method_call = new queryMBeanAttributes_call(mBeanNamePattern, resultHandler, this, ___protocolFactory, ___transport);
+      queryMBeanAttributes_call method_call = new queryMBeanAttributes_call(mBeanNamePattern, attributes, resultHandler, this, ___protocolFactory, ___transport);
       this.___currentMethod = method_call;
       ___manager.call(method_call);
     }
 
     public static class queryMBeanAttributes_call extends org.apache.thrift.async.TAsyncMethodCall<java.util.List<AttributeResponse>> {
       private java.lang.String mBeanNamePattern;
-      public queryMBeanAttributes_call(java.lang.String mBeanNamePattern, org.apache.thrift.async.AsyncMethodCallback<java.util.List<AttributeResponse>> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+      private java.util.List<java.lang.String> attributes;
+      public queryMBeanAttributes_call(java.lang.String mBeanNamePattern, java.util.List<java.lang.String> attributes, org.apache.thrift.async.AsyncMethodCallback<java.util.List<AttributeResponse>> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
         super(client, protocolFactory, transport, resultHandler, false);
         this.mBeanNamePattern = mBeanNamePattern;
+        this.attributes = attributes;
       }
 
       public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
         prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("queryMBeanAttributes", org.apache.thrift.protocol.TMessageType.CALL, 0));
         queryMBeanAttributes_args args = new queryMBeanAttributes_args();
         args.setMBeanNamePattern(mBeanNamePattern);
+        args.setAttributes(attributes);
         args.write(prot);
         prot.writeMessageEnd();
       }
@@ -720,7 +724,7 @@ public class JMXService {
       public queryMBeanAttributes_result getResult(I iface, queryMBeanAttributes_args args) throws org.apache.thrift.TException {
         queryMBeanAttributes_result result = new queryMBeanAttributes_result();
         try {
-          result.success = iface.queryMBeanAttributes(args.mBeanNamePattern);
+          result.success = iface.queryMBeanAttributes(args.mBeanNamePattern, args.attributes);
         } catch (JMXConnectionError connErr) {
           result.connErr = connErr;
         } catch (JMXError jmxErr) {
@@ -1222,7 +1226,7 @@ public class JMXService {
       }
 
       public void start(I iface, queryMBeanAttributes_args args, org.apache.thrift.async.AsyncMethodCallback<java.util.List<AttributeResponse>> resultHandler) throws org.apache.thrift.TException {
-        iface.queryMBeanAttributes(args.mBeanNamePattern,resultHandler);
+        iface.queryMBeanAttributes(args.mBeanNamePattern, args.attributes,resultHandler);
       }
     }
 
@@ -6561,15 +6565,18 @@ public class JMXService {
     private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("queryMBeanAttributes_args");
 
     private static final org.apache.thrift.protocol.TField M_BEAN_NAME_PATTERN_FIELD_DESC = new org.apache.thrift.protocol.TField("mBeanNamePattern", org.apache.thrift.protocol.TType.STRING, (short)1);
+    private static final org.apache.thrift.protocol.TField ATTRIBUTES_FIELD_DESC = new org.apache.thrift.protocol.TField("attributes", org.apache.thrift.protocol.TType.LIST, (short)2);
 
     private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new queryMBeanAttributes_argsStandardSchemeFactory();
     private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new queryMBeanAttributes_argsTupleSchemeFactory();
 
     public @org.apache.thrift.annotation.Nullable java.lang.String mBeanNamePattern; // required
+    public @org.apache.thrift.annotation.Nullable java.util.List<java.lang.String> attributes; // required
 
     /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
     public enum _Fields implements org.apache.thrift.TFieldIdEnum {
-      M_BEAN_NAME_PATTERN((short)1, "mBeanNamePattern");
+      M_BEAN_NAME_PATTERN((short)1, "mBeanNamePattern"),
+      ATTRIBUTES((short)2, "attributes");
 
       private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -6587,6 +6594,8 @@ public class JMXService {
         switch(fieldId) {
           case 1: // M_BEAN_NAME_PATTERN
             return M_BEAN_NAME_PATTERN;
+          case 2: // ATTRIBUTES
+            return ATTRIBUTES;
           default:
             return null;
         }
@@ -6633,6 +6642,9 @@ public class JMXService {
       java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
       tmpMap.put(_Fields.M_BEAN_NAME_PATTERN, new org.apache.thrift.meta_data.FieldMetaData("mBeanNamePattern", org.apache.thrift.TFieldRequirementType.DEFAULT, 
           new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
+      tmpMap.put(_Fields.ATTRIBUTES, new org.apache.thrift.meta_data.FieldMetaData("attributes", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
+              new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING))));
       metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
       org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(queryMBeanAttributes_args.class, metaDataMap);
     }
@@ -6641,10 +6653,12 @@ public class JMXService {
     }
 
     public queryMBeanAttributes_args(
-      java.lang.String mBeanNamePattern)
+      java.lang.String mBeanNamePattern,
+      java.util.List<java.lang.String> attributes)
     {
       this();
       this.mBeanNamePattern = mBeanNamePattern;
+      this.attributes = attributes;
     }
 
     /**
@@ -6653,6 +6667,10 @@ public class JMXService {
     public queryMBeanAttributes_args(queryMBeanAttributes_args other) {
       if (other.isSetMBeanNamePattern()) {
         this.mBeanNamePattern = other.mBeanNamePattern;
+      }
+      if (other.isSetAttributes()) {
+        java.util.List<java.lang.String> __this__attributes = new java.util.ArrayList<java.lang.String>(other.attributes);
+        this.attributes = __this__attributes;
       }
     }
 
@@ -6663,6 +6681,7 @@ public class JMXService {
     @Override
     public void clear() {
       this.mBeanNamePattern = null;
+      this.attributes = null;
     }
 
     @org.apache.thrift.annotation.Nullable
@@ -6690,6 +6709,47 @@ public class JMXService {
       }
     }
 
+    public int getAttributesSize() {
+      return (this.attributes == null) ? 0 : this.attributes.size();
+    }
+
+    @org.apache.thrift.annotation.Nullable
+    public java.util.Iterator<java.lang.String> getAttributesIterator() {
+      return (this.attributes == null) ? null : this.attributes.iterator();
+    }
+
+    public void addToAttributes(java.lang.String elem) {
+      if (this.attributes == null) {
+        this.attributes = new java.util.ArrayList<java.lang.String>();
+      }
+      this.attributes.add(elem);
+    }
+
+    @org.apache.thrift.annotation.Nullable
+    public java.util.List<java.lang.String> getAttributes() {
+      return this.attributes;
+    }
+
+    public queryMBeanAttributes_args setAttributes(@org.apache.thrift.annotation.Nullable java.util.List<java.lang.String> attributes) {
+      this.attributes = attributes;
+      return this;
+    }
+
+    public void unsetAttributes() {
+      this.attributes = null;
+    }
+
+    /** Returns true if field attributes is set (has been assigned a value) and false otherwise */
+    public boolean isSetAttributes() {
+      return this.attributes != null;
+    }
+
+    public void setAttributesIsSet(boolean value) {
+      if (!value) {
+        this.attributes = null;
+      }
+    }
+
     public void setFieldValue(_Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
       switch (field) {
       case M_BEAN_NAME_PATTERN:
@@ -6697,6 +6757,14 @@ public class JMXService {
           unsetMBeanNamePattern();
         } else {
           setMBeanNamePattern((java.lang.String)value);
+        }
+        break;
+
+      case ATTRIBUTES:
+        if (value == null) {
+          unsetAttributes();
+        } else {
+          setAttributes((java.util.List<java.lang.String>)value);
         }
         break;
 
@@ -6708,6 +6776,9 @@ public class JMXService {
       switch (field) {
       case M_BEAN_NAME_PATTERN:
         return getMBeanNamePattern();
+
+      case ATTRIBUTES:
+        return getAttributes();
 
       }
       throw new java.lang.IllegalStateException();
@@ -6722,6 +6793,8 @@ public class JMXService {
       switch (field) {
       case M_BEAN_NAME_PATTERN:
         return isSetMBeanNamePattern();
+      case ATTRIBUTES:
+        return isSetAttributes();
       }
       throw new java.lang.IllegalStateException();
     }
@@ -6748,6 +6821,15 @@ public class JMXService {
           return false;
       }
 
+      boolean this_present_attributes = true && this.isSetAttributes();
+      boolean that_present_attributes = true && that.isSetAttributes();
+      if (this_present_attributes || that_present_attributes) {
+        if (!(this_present_attributes && that_present_attributes))
+          return false;
+        if (!this.attributes.equals(that.attributes))
+          return false;
+      }
+
       return true;
     }
 
@@ -6758,6 +6840,10 @@ public class JMXService {
       hashCode = hashCode * 8191 + ((isSetMBeanNamePattern()) ? 131071 : 524287);
       if (isSetMBeanNamePattern())
         hashCode = hashCode * 8191 + mBeanNamePattern.hashCode();
+
+      hashCode = hashCode * 8191 + ((isSetAttributes()) ? 131071 : 524287);
+      if (isSetAttributes())
+        hashCode = hashCode * 8191 + attributes.hashCode();
 
       return hashCode;
     }
@@ -6776,6 +6862,16 @@ public class JMXService {
       }
       if (isSetMBeanNamePattern()) {
         lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.mBeanNamePattern, other.mBeanNamePattern);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = java.lang.Boolean.compare(isSetAttributes(), other.isSetAttributes());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetAttributes()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.attributes, other.attributes);
         if (lastComparison != 0) {
           return lastComparison;
         }
@@ -6806,6 +6902,14 @@ public class JMXService {
         sb.append("null");
       } else {
         sb.append(this.mBeanNamePattern);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("attributes:");
+      if (this.attributes == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.attributes);
       }
       first = false;
       sb.append(")");
@@ -6859,6 +6963,24 @@ public class JMXService {
                 org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
               }
               break;
+            case 2: // ATTRIBUTES
+              if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
+                {
+                  org.apache.thrift.protocol.TList _list32 = iprot.readListBegin();
+                  struct.attributes = new java.util.ArrayList<java.lang.String>(_list32.size);
+                  @org.apache.thrift.annotation.Nullable java.lang.String _elem33;
+                  for (int _i34 = 0; _i34 < _list32.size; ++_i34)
+                  {
+                    _elem33 = iprot.readString();
+                    struct.attributes.add(_elem33);
+                  }
+                  iprot.readListEnd();
+                }
+                struct.setAttributesIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
             default:
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
           }
@@ -6877,6 +6999,18 @@ public class JMXService {
         if (struct.mBeanNamePattern != null) {
           oprot.writeFieldBegin(M_BEAN_NAME_PATTERN_FIELD_DESC);
           oprot.writeString(struct.mBeanNamePattern);
+          oprot.writeFieldEnd();
+        }
+        if (struct.attributes != null) {
+          oprot.writeFieldBegin(ATTRIBUTES_FIELD_DESC);
+          {
+            oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.attributes.size()));
+            for (java.lang.String _iter35 : struct.attributes)
+            {
+              oprot.writeString(_iter35);
+            }
+            oprot.writeListEnd();
+          }
           oprot.writeFieldEnd();
         }
         oprot.writeFieldStop();
@@ -6900,19 +7034,44 @@ public class JMXService {
         if (struct.isSetMBeanNamePattern()) {
           optionals.set(0);
         }
-        oprot.writeBitSet(optionals, 1);
+        if (struct.isSetAttributes()) {
+          optionals.set(1);
+        }
+        oprot.writeBitSet(optionals, 2);
         if (struct.isSetMBeanNamePattern()) {
           oprot.writeString(struct.mBeanNamePattern);
+        }
+        if (struct.isSetAttributes()) {
+          {
+            oprot.writeI32(struct.attributes.size());
+            for (java.lang.String _iter36 : struct.attributes)
+            {
+              oprot.writeString(_iter36);
+            }
+          }
         }
       }
 
       @Override
       public void read(org.apache.thrift.protocol.TProtocol prot, queryMBeanAttributes_args struct) throws org.apache.thrift.TException {
         org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-        java.util.BitSet incoming = iprot.readBitSet(1);
+        java.util.BitSet incoming = iprot.readBitSet(2);
         if (incoming.get(0)) {
           struct.mBeanNamePattern = iprot.readString();
           struct.setMBeanNamePatternIsSet(true);
+        }
+        if (incoming.get(1)) {
+          {
+            org.apache.thrift.protocol.TList _list37 = iprot.readListBegin(org.apache.thrift.protocol.TType.STRING);
+            struct.attributes = new java.util.ArrayList<java.lang.String>(_list37.size);
+            @org.apache.thrift.annotation.Nullable java.lang.String _elem38;
+            for (int _i39 = 0; _i39 < _list37.size; ++_i39)
+            {
+              _elem38 = iprot.readString();
+              struct.attributes.add(_elem38);
+            }
+          }
+          struct.setAttributesIsSet(true);
         }
       }
     }
@@ -7404,14 +7563,14 @@ public class JMXService {
             case 0: // SUCCESS
               if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
                 {
-                  org.apache.thrift.protocol.TList _list32 = iprot.readListBegin();
-                  struct.success = new java.util.ArrayList<AttributeResponse>(_list32.size);
-                  @org.apache.thrift.annotation.Nullable AttributeResponse _elem33;
-                  for (int _i34 = 0; _i34 < _list32.size; ++_i34)
+                  org.apache.thrift.protocol.TList _list40 = iprot.readListBegin();
+                  struct.success = new java.util.ArrayList<AttributeResponse>(_list40.size);
+                  @org.apache.thrift.annotation.Nullable AttributeResponse _elem41;
+                  for (int _i42 = 0; _i42 < _list40.size; ++_i42)
                   {
-                    _elem33 = new AttributeResponse();
-                    _elem33.read(iprot);
-                    struct.success.add(_elem33);
+                    _elem41 = new AttributeResponse();
+                    _elem41.read(iprot);
+                    struct.success.add(_elem41);
                   }
                   iprot.readListEnd();
                 }
@@ -7457,9 +7616,9 @@ public class JMXService {
           oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.success.size()));
-            for (AttributeResponse _iter35 : struct.success)
+            for (AttributeResponse _iter43 : struct.success)
             {
-              _iter35.write(oprot);
+              _iter43.write(oprot);
             }
             oprot.writeListEnd();
           }
@@ -7506,9 +7665,9 @@ public class JMXService {
         if (struct.isSetSuccess()) {
           {
             oprot.writeI32(struct.success.size());
-            for (AttributeResponse _iter36 : struct.success)
+            for (AttributeResponse _iter44 : struct.success)
             {
-              _iter36.write(oprot);
+              _iter44.write(oprot);
             }
           }
         }
@@ -7526,14 +7685,14 @@ public class JMXService {
         java.util.BitSet incoming = iprot.readBitSet(3);
         if (incoming.get(0)) {
           {
-            org.apache.thrift.protocol.TList _list37 = iprot.readListBegin(org.apache.thrift.protocol.TType.STRUCT);
-            struct.success = new java.util.ArrayList<AttributeResponse>(_list37.size);
-            @org.apache.thrift.annotation.Nullable AttributeResponse _elem38;
-            for (int _i39 = 0; _i39 < _list37.size; ++_i39)
+            org.apache.thrift.protocol.TList _list45 = iprot.readListBegin(org.apache.thrift.protocol.TType.STRUCT);
+            struct.success = new java.util.ArrayList<AttributeResponse>(_list45.size);
+            @org.apache.thrift.annotation.Nullable AttributeResponse _elem46;
+            for (int _i47 = 0; _i47 < _list45.size; ++_i47)
             {
-              _elem38 = new AttributeResponse();
-              _elem38.read(iprot);
-              struct.success.add(_elem38);
+              _elem46 = new AttributeResponse();
+              _elem46.read(iprot);
+              struct.success.add(_elem46);
             }
           }
           struct.setSuccessIsSet(true);
