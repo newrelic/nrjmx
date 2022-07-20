@@ -12,8 +12,8 @@
     </organization>
     <properties>
         <main.class>org.newrelic.jmx.Service</main.class>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
     </properties>
     <dependencies>
         <dependency>
@@ -25,19 +25,19 @@
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
-            <version>9.4.45.v20220203</version>
+            <version>10.0.10</version>
         </dependency>
         <!-- This dependency is required to fix a security issue in a dependency -->
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-io</artifactId>
-            <version>9.4.45.v20220203</version>
+            <version>10.0.10</version>
         </dependency>
         <!-- This dependency is required to fix a security issue in a dependency -->
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-webapp</artifactId>
-            <version>9.4.45.v20220203</version>
+            <version>10.0.10</version>
         </dependency>
         <dependency>
             <groupId>com.sparkjava</groupId>
@@ -80,6 +80,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.0</version>
                 <configuration>
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>

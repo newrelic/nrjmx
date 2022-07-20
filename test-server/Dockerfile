@@ -1,10 +1,10 @@
-FROM maven:3.6-jdk-8 as builder
+FROM maven:3.6-jdk-11 as builder
 
 ADD . .
 
 RUN mvn package
 
-FROM openjdk:8-jre
+FROM openjdk:11-jre
 
 EXPOSE 4567
 EXPOSE 7199
