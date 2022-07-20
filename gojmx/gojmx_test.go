@@ -237,7 +237,7 @@ func Test_QueryMBean_Success(t *testing.T) {
 	}{
 		{
 			name:  "With_attributes_specified",
-			query: "test:type=Cat,name=tomas",
+			query: "test:type=Cat,name=*",
 			attributes: []string{
 				"NumberValue",
 				"BoolValue",
@@ -303,7 +303,7 @@ func Test_QueryMBean_Success(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			// AND Query returns expected data
-			actualResponse, err := client.QueryMBeanAttributes("test:type=Cat,name=tomas", testCase.attributes...)
+			actualResponse, err := client.QueryMBeanAttributes(testCase.query, testCase.attributes...)
 			require.NoError(t, err)
 
 			assert.ElementsMatch(t, testCase.expected, actualResponse)
