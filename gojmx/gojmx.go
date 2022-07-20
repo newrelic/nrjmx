@@ -7,8 +7,9 @@ package gojmx
 
 import (
 	"context"
-	"github.com/apache/thrift/lib/go/thrift"
 	"time"
+
+	"github.com/apache/thrift/lib/go/thrift"
 
 	"github.com/newrelic/nrjmx/gojmx/internal/nrprotocol"
 )
@@ -122,12 +123,12 @@ func (c *Client) GetClientVersion() string {
 // 2. GetMBeanAttributeNames
 // 3. GetMBeanAttributes
 // If an error occur it checks if it's a collection error (it can recover) or a connection error (that blocks all the collection).
-func (c *Client) QueryMBeanAttributes(mBeanNamePattern string) ([]*AttributeResponse, error) {
+func (c *Client) QueryMBeanAttributes(mBeanNamePattern string, mBeanAttrName ...string) ([]*AttributeResponse, error) {
 	if err := c.nrJMXProcess.error(); err != nil {
 		return nil, err
 	}
 
-	result, err := c.jmxService.QueryMBeanAttributes(c.ctx, mBeanNamePattern)
+	result, err := c.jmxService.QueryMBeanAttributes(c.ctx, mBeanNamePattern, mBeanAttrName)
 	return toAttributeResponseList(result), c.handleError(err)
 }
 

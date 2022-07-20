@@ -10,16 +10,17 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/newrelic/nrjmx/gojmx/internal/testutils"
-	gopsutil "github.com/shirou/gopsutil/v3/process"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/newrelic/nrjmx/gojmx/internal/testutils"
+	gopsutil "github.com/shirou/gopsutil/v3/process"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var timeStamp = time.Date(2022, time.January, 1, 01, 23, 45, 0, time.Local).UnixNano() / 1000000
@@ -228,49 +229,86 @@ func Test_QueryMBean_Success(t *testing.T) {
 	assert.NoError(t, err)
 	defer assertCloseClientNoError(t, client)
 
-	// AND Query returns expected data
-	actualResponse, err := client.QueryMBeanAttributes("test:type=Cat,name=tomas")
-	require.NoError(t, err)
-
-	expectedResponse := []*AttributeResponse{
+	testCases := []struct {
+		name       string
+		query      string
+		attributes []string
+		expected   []*AttributeResponse
+	}{
 		{
-			Name: "test:type=Cat,name=tomas,attr=FloatValue",
+			name:  "With_attributes_specified",
+			query: "test:type=Cat,name=*",
+			attributes: []string{
+				"NumberValue",
+				"BoolValue",
+			},
+			expected: []*AttributeResponse{
+				{
+					Name:         "test:type=Cat,name=tomas,attr=NumberValue",
+					ResponseType: ResponseTypeInt,
+					IntValue:     3,
+				},
+				{
+					Name: "test:type=Cat,name=tomas,attr=BoolValue",
 
-			ResponseType: ResponseTypeDouble,
-			DoubleValue:  2.222222,
+					ResponseType: ResponseTypeBool,
+					BoolValue:    true,
+				},
+			},
 		},
 		{
-			Name: "test:type=Cat,name=tomas,attr=NumberValue",
+			name:       "Without_attributes_specified",
+			query:      "test:type=Cat,name=tomas",
+			attributes: nil,
+			expected: []*AttributeResponse{
+				{
+					Name: "test:type=Cat,name=tomas,attr=FloatValue",
 
-			ResponseType: ResponseTypeInt,
-			IntValue:     3,
-		},
-		{
-			Name: "test:type=Cat,name=tomas,attr=BoolValue",
+					ResponseType: ResponseTypeDouble,
+					DoubleValue:  2.222222,
+				},
+				{
+					Name: "test:type=Cat,name=tomas,attr=NumberValue",
 
-			ResponseType: ResponseTypeBool,
-			BoolValue:    true,
-		},
-		{
-			Name: "test:type=Cat,name=tomas,attr=DoubleValue",
+					ResponseType: ResponseTypeInt,
+					IntValue:     3,
+				},
+				{
+					Name: "test:type=Cat,name=tomas,attr=BoolValue",
 
-			ResponseType: ResponseTypeDouble,
-			DoubleValue:  1.2,
-		},
-		{
-			Name: "test:type=Cat,name=tomas,attr=Name",
+					ResponseType: ResponseTypeBool,
+					BoolValue:    true,
+				},
+				{
+					Name: "test:type=Cat,name=tomas,attr=DoubleValue",
 
-			ResponseType: ResponseTypeString,
-			StringValue:  "tomas",
-		},
-		{
-			Name:         "test:type=Cat,name=tomas,attr=DateValue",
-			ResponseType: ResponseTypeErr,
-			StatusMsg:    `can't parse attribute, error: 'found a null value for bean: test:type=Cat,name=tomas,attr=DateValue', cause: 'null', stacktrace: 'null'`,
+					ResponseType: ResponseTypeDouble,
+					DoubleValue:  1.2,
+				},
+				{
+					Name: "test:type=Cat,name=tomas,attr=Name",
+
+					ResponseType: ResponseTypeString,
+					StringValue:  "tomas",
+				},
+				{
+					Name:         "test:type=Cat,name=tomas,attr=DateValue",
+					ResponseType: ResponseTypeErr,
+					StatusMsg:    `can't parse attribute, error: 'found a null value for bean: test:type=Cat,name=tomas,attr=DateValue', cause: 'null', stacktrace: 'null'`,
+				},
+			},
 		},
 	}
 
-	assert.ElementsMatch(t, expectedResponse, actualResponse)
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			// AND Query returns expected data
+			actualResponse, err := client.QueryMBeanAttributes(testCase.query, testCase.attributes...)
+			require.NoError(t, err)
+
+			assert.ElementsMatch(t, testCase.expected, actualResponse)
+		})
+	}
 }
 
 func Test_Query_CompositeData(t *testing.T) {

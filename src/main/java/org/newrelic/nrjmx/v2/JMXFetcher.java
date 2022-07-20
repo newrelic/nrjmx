@@ -242,14 +242,13 @@ public class JMXFetcher {
                     .setMessage("can't get attribute value, provided objectName is Null");
         }
 
-        if (attributes == null) {
-            throw new JMXError()
-                    .setMessage("can't get attribute value, provided attribute name is Null");
-        }
-
         if (output == null) {
             throw new JMXError()
                     .setMessage("can't deserialize attribute value, provided output list is Null");
+        }
+
+        if (attributes == null || attributes.size() == 0) {
+            attributes = getMBeanAttributeNames(objectName);
         }
 
         List<Attribute> attrValues = new ArrayList<>();
@@ -359,9 +358,9 @@ public class JMXFetcher {
      * @throws JMXError           JMX related Exception
      * @throws JMXConnectionError JMX connection related exception
      */
-    public List<AttributeResponse> queryMBeanAttributes(String mBeanGlobPattern, long timeoutMs) throws JMXError, JMXConnectionError {
+    public List<AttributeResponse> queryMBeanAttributes(String mBeanGlobPattern, List<String> attributes, long timeoutMs) throws JMXError, JMXConnectionError {
         return withTimeout(
-                executor.submit(() -> queryMBeanAttributes(mBeanGlobPattern)),
+                executor.submit(() -> queryMBeanAttributes(mBeanGlobPattern, attributes)),
                 timeoutMs
         );
     }
@@ -374,10 +373,15 @@ public class JMXFetcher {
      * @throws JMXError           JMX related Exception
      * @throws JMXConnectionError JMX connection related exception
      */
-    public List<AttributeResponse> queryMBeanAttributes(String mBeanGlobPattern) throws JMXError, JMXConnectionError {
+    public List<AttributeResponse> queryMBeanAttributes(String mBeanGlobPattern, List<String> attributes) throws JMXError, JMXConnectionError {
         ObjectName pattern = getObjectName(mBeanGlobPattern);
 
-        Set<ObjectInstance> mBeans = queryMBeans(pattern);
+        Set<ObjectInstance> mBeans;
+        if (mBeanGlobPattern.contains("*")) {
+            mBeans = queryMBeans(pattern);
+        } else {
+            mBeans = new HashSet<>(Arrays.asList(new ObjectInstance(pattern, "")));
+        }
 
         List<AttributeResponse> result = new ArrayList<>();
 
@@ -386,8 +390,6 @@ public class JMXFetcher {
                 continue;
             }
             ObjectName objectName = mBean.getObjectName();
-
-            List<String> attributes = getMBeanAttributeNames(objectName);
 
             getMBeanAttributes(objectName, attributes, result);
         }

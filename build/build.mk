@@ -1,11 +1,5 @@
-.PHONY : validate-thrift-version
-validate-thrift-version:
-	@printf '\n------------------------------------------------------\n'
-	@printf 'Validating thrift version\n'
-	@build/validate_thrift_version.sh
-
 .PHONY : build
-build: validate-thrift-version
+build:
 	@($(MAVEN_BIN) clean package -DskipTests -P \!deb,\!rpm,\!tarball,\!test,\!tarball)
 
 .PHONY : test
@@ -42,7 +36,7 @@ code-gen-utils:
 						--build-arg THRIFT_VERSION=$(THRIFT_VERSION) ./commons/.)
 
 .PHONY : code-gen
-code-gen: validate-thrift-version
+code-gen:
 	rm -rf src/main/java/org/newrelic/nrjmx/v2/nrprotocol
 	rm -rf gojmx/internal/nrprotocol
 	@($(DOCKER_THRIFT) thrift -r --out src/main/java/ --gen java:generated_annotations=suppress ./commons/nrjmx.thrift)
