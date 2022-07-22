@@ -347,7 +347,7 @@ public class JMXFetcher {
                     .setMBean(objectName.toString())
                     .setAttrs(attributes);
         }
-
+        
         List<Attribute> attrValues = new ArrayList<>();
         AttributeList attributeList;
         try {
