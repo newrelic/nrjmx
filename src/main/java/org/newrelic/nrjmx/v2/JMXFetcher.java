@@ -34,10 +34,11 @@ public class JMXFetcher {
     /* ExecutorService is required to run JMX requests with timeout. */
     private final ExecutorService executor;
 
+    /* JMXConnector is used to connect to JMX endpoint. */
+    private JMXConnector connector;
+
     /* MBeanServerConnection is the connection to JMX endpoint. */
     private MBeanServerConnection connection;
-
-    private JMXConnector connector;
 
     /* Date format used for Date type mBeans. */
     private final DateFormat dateFormat = DateFormat.getDateTimeInstance(2, 2, Locale.US);
@@ -347,7 +348,7 @@ public class JMXFetcher {
                     .setMBean(objectName.toString())
                     .setAttrs(attributes);
         }
-        
+
         List<Attribute> attrValues = new ArrayList<>();
         AttributeList attributeList;
         try {
