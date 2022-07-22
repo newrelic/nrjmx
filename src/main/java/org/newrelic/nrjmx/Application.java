@@ -116,6 +116,7 @@ public class Application {
             executor.shutdownNow();
         }
 
+        // Add ShutdownHook to disconnect the fetcher.
         Runtime.getRuntime().addShutdownHook(
                 new Thread() {
                     @Override
