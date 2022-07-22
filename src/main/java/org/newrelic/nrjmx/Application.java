@@ -115,6 +115,20 @@ public class Application {
             serverTransport.close();
             executor.shutdownNow();
         }
+
+        Runtime.getRuntime().addShutdownHook(
+                new Thread() {
+                    @Override
+                    public void run() {
+                        if (jmxFetcher != null) {
+                            try {
+                                jmxFetcher.disconnect();
+                            } catch (Exception e) {
+                            }
+                        }
+                    }
+                }
+        );
     }
 
     private static void logTrace(Arguments cliArgs, Logger logger, Exception e) {

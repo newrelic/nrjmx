@@ -7,9 +7,10 @@ package gojmx
 
 import (
 	"fmt"
-	"github.com/newrelic/nrjmx/gojmx/internal/nrprotocol"
 	"strings"
 	"unsafe"
+
+	"github.com/newrelic/nrjmx/gojmx/internal/nrprotocol"
 )
 
 /*
@@ -133,3 +134,22 @@ var (
 	// ResponseTypeErr AttributeResponse with error
 	ResponseTypeErr = nrprotocol.ResponseType_ERROR
 )
+
+// InternalStat gathers stats about queries performed by nrjmx.
+type InternalStat nrprotocol.InternalStat
+
+func (is *InternalStat) String() string {
+	return fmt.Sprintf("StatType: '%s', MBean: '%s', Attributes: '%v', TotalObjCount: %d, StartTimeMs: %d,  Duration: %.3fms, Successful: %t",
+		is.StatType,
+		is.MBean,
+		is.Attrs,
+		is.ResponseCount,
+		is.StartTimestamp,
+		is.Milliseconds,
+		is.Successful,
+	)
+}
+
+func toInternalStatList(in []*nrprotocol.InternalStat) []*InternalStat {
+	return *(*[]*InternalStat)(unsafe.Pointer(&in))
+}

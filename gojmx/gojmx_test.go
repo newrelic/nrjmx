@@ -854,6 +854,85 @@ func TestClientClose(t *testing.T) {
 	assert.True(t, client.nrJMXProcess.getOSProcessState().Success())
 }
 
+func TestGetInternalStats(t *testing.T) {
+	ctx := context.Background()
+
+	// GIVEN a JMX Server running inside a container
+	container, err := testutils.RunJMXServiceContainer(ctx)
+	require.NoError(t, err)
+	defer container.Terminate(ctx)
+
+	var data []map[string]interface{}
+
+	name := strings.Repeat("tomas", 100)
+
+	for i := 0; i < 1500; i++ {
+		data = append(data, map[string]interface{}{
+			"name":        fmt.Sprintf("%s-%d", name, i),
+			"doubleValue": 1.2,
+			"floatValue":  2.2,
+			"numberValue": 3,
+			"boolValue":   true,
+			"dateValue":   timeStamp,
+		})
+	}
+
+	// Populate the JMX Server with mbeans
+	resp, err := testutils.AddMBeansBatch(ctx, container, data)
+	assert.NoError(t, err)
+	assert.Equal(t, "ok!\n", string(resp))
+
+	defer testutils.CleanMBeans(ctx, container)
+
+	jmxHost, jmxPort, err := testutils.GetContainerMappedPort(ctx, container, testutils.TestServerJMXPort)
+	require.NoError(t, err)
+
+	// THEN JMX connection can be oppened
+	config := &JMXConfig{
+		Hostname:             jmxHost,
+		Port:                 int32(jmxPort.Int()),
+		EnableInternalStats:  true,
+		MaxInternalStatsSize: 3000, // We expect 3002 stats. With MaxInternalStatsSize we test the limit.
+	}
+	client, err := NewClient(ctx).Open(config)
+	assert.NoError(t, err)
+	defer assertCloseClientNoError(t, client)
+
+	_, err = client.QueryMBeanAttributes("test:type=Cat,*")
+	assert.NoError(t, err)
+
+	// AND query generates the expected internal stats
+	internalStats, err := client.GetInternalStats()
+	assert.NoError(t, err)
+
+	totalCalls := 0
+	totalObjects := 0
+	totalTimeMs := 0
+	totalAttrs := 0
+	totalSucessful := 0
+
+	for _, stat := range internalStats {
+		totalCalls++
+		totalObjects += int(stat.ResponseCount)
+		totalTimeMs += int(stat.Milliseconds)
+		totalAttrs += len(stat.Attrs)
+
+		if stat.Successful {
+			totalSucessful++
+		}
+	}
+
+	assert.Equal(t, 3000, totalCalls)
+	assert.Equal(t, 18000, totalObjects)
+	assert.True(t, totalTimeMs > 0)
+	assert.Equal(t, 9000, totalAttrs)
+	assert.Equal(t, 3000, totalSucessful)
+
+	// AND internal stats get cleaned
+	internalStats, err = client.GetInternalStats()
+	assert.NoError(t, err)
+	assert.True(t, len(internalStats) == 0)
+}
 func TestProcessExits(t *testing.T) {
 	ctx := context.Background()
 
