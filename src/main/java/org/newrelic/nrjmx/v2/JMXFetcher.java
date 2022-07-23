@@ -136,7 +136,7 @@ public class JMXFetcher {
         }
         try {
             connector.close();
-        } catch (IOException e) {
+        } catch (Exception e) {
         }
     }
 
