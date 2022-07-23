@@ -375,6 +375,9 @@ public class JMXFetcher {
             return;
         }
 
+        // Keep a track of requested attributes to report the ones that we fail to retrieve.
+        List<String> missingAttrs = new ArrayList<>(attributes);
+
         for (Object value : attributeList) {
             if (internalStat != null) {
                 internalStat.setResponseCount(internalStat.responseCount + 1);
@@ -383,7 +386,18 @@ public class JMXFetcher {
             if (value instanceof Attribute) {
                 Attribute attr = (Attribute) value;
                 attrValues.add(attr);
+
+                missingAttrs.remove(attr.getName());
             }
+        }
+
+        // Report requested attributes that we didn't retrieve.
+        for (String attr : missingAttrs) {
+            String formattedAttrName = formatAttributeName(objectName, attr);
+            output.add(new AttributeResponse()
+                    .setName(formattedAttrName)
+                    .setResponseType(ResponseType.ERROR)
+                    .setStatusMsg("failed to retrieve attribute value from server"));
         }
 
         for (Attribute attrValue : attrValues) {
