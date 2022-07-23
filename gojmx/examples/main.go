@@ -56,7 +56,7 @@ func main() {
 		}
 		for _, attr := range jmxAttrs {
 			if attr.ResponseType == gojmx.ResponseTypeErr {
-				fmt.Println(attr.StatusMsg)
+				fmt.Println(attr.Name, attr.StatusMsg)
 				continue
 			}
 			printAttr(attr)
@@ -70,7 +70,7 @@ func main() {
 	handleError(err)
 	for _, attr := range response {
 		if attr.ResponseType == gojmx.ResponseTypeErr {
-			fmt.Println(attr.StatusMsg)
+			fmt.Println(attr.Name, attr.StatusMsg)
 			continue
 		}
 		printAttr(attr)

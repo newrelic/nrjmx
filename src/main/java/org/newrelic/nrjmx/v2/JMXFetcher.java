@@ -186,15 +186,21 @@ public class JMXFetcher {
             throw new JMXError()
                     .setMessage("can't query MBeans, provided objectName is Null");
         }
+
+        Set<ObjectInstance> result = null;
+
         InternalStat internalStat = null;
         if (this.internalStats != null) {
             internalStat = internalStats.record("queryMBeans")
                     .setMBean(objectName.toString());
         }
 
-        Set<ObjectInstance> result = null;
         try {
             result = getConnection().queryMBeans(objectName, null);
+
+            if (internalStat != null) {
+                internalStat.setSuccessful(true);
+            }
         } catch (ConnectException ce) {
             String message = String.format("can't connect to JMX server, error: '%s'", ce.getMessage());
             throw new JMXConnectionError(message);
@@ -211,10 +217,6 @@ public class JMXFetcher {
                     internalStat.setResponseCount(result.size());
                 }
             }
-        }
-
-        if (internalStat != null) {
-            internalStat.setSuccessful(true);
         }
 
         return result;
@@ -260,6 +262,10 @@ public class JMXFetcher {
 
         try {
             info = getConnection().getMBeanInfo(objectName);
+
+            if (internalStat != null) {
+                internalStat.setSuccessful(true);
+            }
         } catch (ConnectException ce) {
             String message = String.format("can't connect to JMX server, error: '%s'", ce.getMessage());
             throw new JMXConnectionError(message);
@@ -272,10 +278,6 @@ public class JMXFetcher {
             if (internalStat != null) {
                 InternalStats.setElapsedMs(internalStat);
             }
-        }
-
-        if (internalStat != null) {
-            internalStat.setSuccessful(true);
         }
 
         List<String> result = new ArrayList<>();
@@ -353,6 +355,10 @@ public class JMXFetcher {
         AttributeList attributeList;
         try {
             attributeList = getConnection().getAttributes(objectName, attributes.toArray(new String[0]));
+
+            if (internalStat != null) {
+                internalStat.setSuccessful(true);
+            }
         } catch (ConnectException ce) {
             String message = String.format("can't connect to JMX server, error: '%s'", ce.getMessage());
             throw new JMXConnectionError(message);
@@ -367,50 +373,48 @@ public class JMXFetcher {
             }
         }
 
-        if (internalStat != null) {
-            internalStat.setSuccessful(true);
-        }
-
-        if (attributeList == null) {
-            return;
-        }
-
         // Keep a track of requested attributes to report the ones that we fail to retrieve.
         List<String> missingAttrs = new ArrayList<>(attributes);
 
-        for (Object value : attributeList) {
-            if (internalStat != null) {
-                internalStat.setResponseCount(internalStat.responseCount + 1);
+        try {
+            if (attributeList == null) {
+                return;
             }
 
-            if (value instanceof Attribute) {
-                Attribute attr = (Attribute) value;
-                attrValues.add(attr);
+            for (Object value : attributeList) {
+                if (internalStat != null) {
+                    internalStat.setResponseCount(internalStat.responseCount + 1);
+                }
 
-                missingAttrs.remove(attr.getName());
+                if (value instanceof Attribute) {
+                    Attribute attr = (Attribute) value;
+                    attrValues.add(attr);
+
+                    missingAttrs.remove(attr.getName());
+                }
             }
-        }
 
-        // Report requested attributes that we didn't retrieve.
-        for (String attr : missingAttrs) {
-            String formattedAttrName = formatAttributeName(objectName, attr);
-            output.add(new AttributeResponse()
-                    .setName(formattedAttrName)
-                    .setResponseType(ResponseType.ERROR)
-                    .setStatusMsg("failed to retrieve attribute value from server"));
-        }
+            for (Attribute attrValue : attrValues) {
+                String formattedAttrName = formatAttributeName(objectName, attrValue.getName());
 
-        for (Attribute attrValue : attrValues) {
-            String formattedAttrName = formatAttributeName(objectName, attrValue.getName());
-
-            try {
-                parseValue(formattedAttrName, attrValue.getValue(), output);
-            } catch (JMXError je) {
-                String statusMessage = String.format("can't parse attribute, error: '%s', cause: '%s', stacktrace: '%s'", je.message, je.causeMessage, je.stacktrace);
+                try {
+                    parseValue(formattedAttrName, attrValue.getValue(), output);
+                } catch (JMXError je) {
+                    String statusMessage = String.format("can't parse attribute, error: '%s', cause: '%s', stacktrace: '%s'", je.message, je.causeMessage, je.stacktrace);
+                    output.add(new AttributeResponse()
+                            .setName(formattedAttrName)
+                            .setResponseType(ResponseType.ERROR)
+                            .setStatusMsg(statusMessage));
+                }
+            }
+        } finally {
+            // Report requested attributes that we didn't retrieve.
+            for (String attr : missingAttrs) {
+                String formattedAttrName = formatAttributeName(objectName, attr);
                 output.add(new AttributeResponse()
                         .setName(formattedAttrName)
                         .setResponseType(ResponseType.ERROR)
-                        .setStatusMsg(statusMessage));
+                        .setStatusMsg("failed to retrieve attribute value from server"));
             }
         }
     }
