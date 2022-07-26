@@ -58,13 +58,19 @@ func init() {
 
 // RunJMXServiceContainer will start a container running test-server with JMX.
 func RunJMXServiceContainer(ctx context.Context) (testcontainers.Container, error) {
+	return RunJMXServiceContainerWithSkipReap(ctx, false)
+}
+
+// RunJMXServiceContainerWithSkipReap will start a container running test-server with JMX.
+func RunJMXServiceContainerWithSkipReap(ctx context.Context, skipReap bool) (testcontainers.Container, error) {
 	var hostnameOpt string
 	if !isRunningInDockerContainer() {
 		hostnameOpt = "-Djava.rmi.server.hostname=0.0.0.0"
 	}
 
 	req := testcontainers.ContainerRequest{
-		Image: "test-server:latest",
+		SkipReaper: skipReap,
+		Image:      "test-server:latest",
 		ExposedPorts: []string{
 			fmt.Sprintf("%[1]s:%[1]s", TestServerPort),
 			fmt.Sprintf("%[1]s:%[1]s", TestServerJMXPort),

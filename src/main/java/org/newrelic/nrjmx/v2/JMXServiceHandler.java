@@ -39,12 +39,15 @@ public class JMXServiceHandler implements JMXService.Iface {
 
     @Override
     public void disconnect() throws TException {
-        jmxFetcher.disconnect(requestTimeoutMs);
-
         if (server == null) {
             throw new TException("cannot disconnect, nrjmx handler null");
         }
-        server.stop();
+
+        try {
+            jmxFetcher.disconnect(requestTimeoutMs);
+        } finally {
+            server.stop();
+        }
     }
 
     @Override

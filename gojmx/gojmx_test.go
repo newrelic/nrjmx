@@ -6,11 +6,8 @@
 package gojmx
 
 import (
-	"bufio"
-	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -938,17 +935,18 @@ func TestConnectionRecovers(t *testing.T) {
 	ctx := context.Background()
 
 	// GIVEN a JMX Server running inside a container
-	container, err := testutils.RunJMXServiceContainer(ctx)
+	container, err := testutils.RunJMXServiceContainerWithSkipReap(ctx, true)
 	require.NoError(t, err)
 
 	jmxHost, jmxPort, err := testutils.GetContainerMappedPort(ctx, container, testutils.TestServerJMXPort)
 	require.NoError(t, err)
 
-	// THEN JMX connection can be oppened
+	// THEN JMX connection can be opened.
 	config := &JMXConfig{
-		Hostname:         jmxHost,
-		Port:             int32(jmxPort.Int()),
-		RequestTimeoutMs: testutils.DefaultTimeoutMs,
+		Hostname:            jmxHost,
+		Port:                int32(jmxPort.Int()),
+		RequestTimeoutMs:    5000,
+		EnableInternalStats: true,
 	}
 
 	query := "java.lang:type=*"
@@ -957,27 +955,28 @@ func TestConnectionRecovers(t *testing.T) {
 	assert.NoError(t, err)
 	defer assertCloseClientNoError(t, client)
 
-	_, err = client.QueryMBeanNames(query)
+	res, err := client.QueryMBeanNames(query)
 	assert.NoError(t, err)
+	assert.NotEmpty(t, res)
 
 	assert.NoError(t, container.Terminate(ctx))
 
-	_, err = client.QueryMBeanNames(query)
-	err, ok := IsJMXConnectionError(err)
-
-	assert.True(t, ok)
+	res, err = client.QueryMBeanNames(query)
 	assert.Error(t, err)
 
-	container, err = testutils.RunJMXServiceContainer(ctx)
-	assert.NoError(t, err)
-	defer container.Terminate(ctx)
-
+	_, ok := IsJMXClientError(err)
+	assert.False(t, ok)
 	assert.True(t, client.IsRunning())
+
+	container, err = testutils.RunJMXServiceContainerWithSkipReap(ctx, true)
+	assert.NoError(t, err)
+
+	defer container.Terminate(ctx)
 
 	assert.Eventually(t, func() bool {
 		_, err = client.QueryMBeanNames(query)
 		return err == nil
-	}, 5*time.Second, 50*time.Millisecond,
+	}, 20*time.Second, 50*time.Millisecond,
 		"didn't managed to recover connection")
 }
 

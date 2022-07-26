@@ -25,6 +25,7 @@ public class StandardIOTransportServer extends TServerTransport {
     public void close() {
         if (transport != null) {
             transport.close();
+            transport = null;
         }
     }
 

@@ -139,6 +139,11 @@ public class JMXFetcher {
                     .setMessage("cannot disconnect, connection to JMX endpoint is not established");
         }
 
+        InternalStat internalStat = null;
+        if (this.internalStats != null) {
+            internalStat = internalStats.record("disconnect");
+        }
+
         // Move this to a different variable in case close operation timeouts.
         JMXConnector oldConnector = this.connector;
 
@@ -147,7 +152,14 @@ public class JMXFetcher {
 
         try {
             oldConnector.close();
+            if (internalStat != null) {
+                internalStat.setSuccessful(true);
+            }
         } catch (Exception e) {
+        } finally {
+            if (internalStat != null) {
+                InternalStats.setElapsedMs(internalStat);
+            }
         }
     }
 
@@ -631,7 +643,7 @@ public class JMXFetcher {
         }
 
         if (this.connector == null) {
-                connect(jmxConfig);
+            connect(jmxConfig);
         }
 
         if (this.connection == null) {
@@ -690,11 +702,6 @@ public class JMXFetcher {
         Map<String, Object> connectionEnv = new HashMap<>();
         if (!"".equals(jmxConfig.username)) {
             connectionEnv.put(JMXConnector.CREDENTIALS, new String[]{jmxConfig.username, jmxConfig.password});
-        }
-
-        if (jmxConfig.requestTimeoutMs > 0) {
-            connectionEnv.put("attribute.remote.x.request.waiting.timeout", jmxConfig.requestTimeoutMs);
-            connectionEnv.put("sun.rmi.transport.tcp.responseTimeout", jmxConfig.requestTimeoutMs);
         }
 
         if (!"".equals(jmxConfig.keyStore) && !"".equals(jmxConfig.trustStore)) {

@@ -16,8 +16,7 @@ import org.newrelic.nrjmx.v2.StandardIOServer;
 import org.newrelic.nrjmx.v2.StandardIOTransportServer;
 import org.newrelic.nrjmx.v2.nrprotocol.JMXService;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.logging.Logger;
 
 public class Application {
@@ -106,6 +105,19 @@ public class Application {
 
         handler.addServer(server);
 
+        // Add ShutdownHook to disconnect the fetcher.
+        Runtime.getRuntime().addShutdownHook(
+                new Thread(() -> {
+                    try {
+                        jmxFetcher.disconnect();
+                    } catch (Exception e) {
+                    } finally {
+                        serverTransport.close();
+                        executor.shutdownNow();
+                    }
+                })
+        );
+
         try {
             server.listen();
         } catch (Exception e) {
@@ -115,21 +127,7 @@ public class Application {
             serverTransport.close();
             executor.shutdownNow();
         }
-
-        // Add ShutdownHook to disconnect the fetcher.
-        Runtime.getRuntime().addShutdownHook(
-                new Thread() {
-                    @Override
-                    public void run() {
-                        if (jmxFetcher != null) {
-                            try {
-                                jmxFetcher.disconnect();
-                            } catch (Exception e) {
-                            }
-                        }
-                    }
-                }
-        );
+        System.exit(0);
     }
 
     private static void logTrace(Arguments cliArgs, Logger logger, Exception e) {
