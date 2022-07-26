@@ -399,7 +399,7 @@ func Test_Query_Timeout(t *testing.T) {
 	client, err := NewClient(ctx).Open(config)
 	assert.NotNil(t, client)
 	assert.Error(t, err)
-	defer assertCloseClientError(t, client)
+	defer assertCloseClientNoError(t, client)
 
 	// AND Query returns expected error
 	actual, err := client.GetMBeanAttributeNames("*:*")
@@ -610,7 +610,7 @@ func Test_Wrong_Credentials(t *testing.T) {
 	client, err := NewClient(ctx).Open(config)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Authentication failed! Invalid username or password")
-	defer assertCloseClientError(t, client)
+	defer assertCloseClientNoError(t, client)
 
 	// AND Query returns expected error
 	actual, err := client.QueryMBeanNames("test:type=Cat,*")
@@ -646,7 +646,7 @@ func Test_Wrong_Certificate_password(t *testing.T) {
 	client, err := NewClient(ctx).Open(config)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "SSLContext")
-	defer assertCloseClientError(t, client)
+	defer assertCloseClientNoError(t, client)
 
 	// AND Query returns expected error
 	actual, err := client.QueryMBeanNames("test:type=Cat,*")
