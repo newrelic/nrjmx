@@ -158,7 +158,7 @@ func (c *Client) GetInternalStats() ([]*InternalStat, error) {
 // connect will pass the JMXConfig to nrjmx subprocess and establish the
 // connection with the JMX endpoint.
 func (c *Client) connect(config *JMXConfig) (err error) {
-	if err := c.checkNRJMXProccessError(); err != nil {
+	if err = c.checkNRJMXProccessError(); err != nil {
 		return err
 	}
 	err = c.jmxService.Connect(c.ctx, config.convertToProtocol())
