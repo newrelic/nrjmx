@@ -938,7 +938,7 @@ func TestConnectionRecovers(t *testing.T) {
 	ctx := context.Background()
 
 	// GIVEN a JMX Server running inside a container
-	container, err := testutils.RunJMXServiceContainerWithSkipReap(ctx, true)
+	container, err := testutils.RunJMXServiceContainer(ctx)
 	require.NoError(t, err)
 
 	jmxHost, jmxPort, err := testutils.GetContainerMappedPort(ctx, container, testutils.TestServerJMXPort)
@@ -965,14 +965,18 @@ func TestConnectionRecovers(t *testing.T) {
 	assert.NoError(t, container.Terminate(ctx))
 
 	res, err = client.QueryMBeanNames(query)
+	assert.Nil(t, res)
 	assert.Error(t, err)
 
 	_, ok := IsJMXClientError(err)
 	assert.False(t, ok)
 	assert.True(t, client.IsRunning())
 
-	container, err = testutils.RunJMXServiceContainerWithSkipReap(ctx, true)
-	assert.NoError(t, err)
+	assert.Eventually(t, func() bool {
+		container, err = testutils.RunJMXServiceContainer(ctx)
+		return err == nil
+	}, 200*time.Second, 50*time.Millisecond,
+		"didn't managed to restart the container")
 
 	defer container.Terminate(ctx)
 
