@@ -7,9 +7,10 @@ package gojmx
 
 import (
 	"fmt"
-	"github.com/newrelic/nrjmx/gojmx/internal/nrprotocol"
 	"strings"
 	"unsafe"
+
+	"github.com/newrelic/nrjmx/gojmx/internal/nrprotocol"
 )
 
 /*
@@ -133,3 +134,56 @@ var (
 	// ResponseTypeErr AttributeResponse with error
 	ResponseTypeErr = nrprotocol.ResponseType_ERROR
 )
+
+// InternalStat gathers stats about queries performed by nrjmx.
+type InternalStat nrprotocol.InternalStat
+
+func (is *InternalStat) String() string {
+	return fmt.Sprintf("StatType: '%s', MBean: '%s', Attributes: '%v', TotalObjCount: %d, StartTimeMs: %d,  Duration: %.3fms, Successful: %t",
+		is.StatType,
+		is.MBean,
+		is.Attrs,
+		is.ResponseCount,
+		is.StartTimestamp,
+		is.Milliseconds,
+		is.Successful,
+	)
+}
+
+func toInternalStatList(in []*nrprotocol.InternalStat) []*InternalStat {
+	return *(*[]*InternalStat)(unsafe.Pointer(&in))
+}
+
+// JMXClientError is returned when there is an nrjmx process error.
+// Those errors require opening a new client.
+type JMXClientError struct {
+	Message string
+}
+
+func (e *JMXClientError) String() string {
+	if e == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("nrjmx client error: %s", removeNewLines(e.Message))
+}
+
+func (e *JMXClientError) Error() string {
+	return e.String()
+}
+
+func newJMXClientError(message string, args ...interface{}) *JMXClientError {
+	if len(args) > 0 {
+		message = fmt.Sprintf(message, args...)
+	}
+	return &JMXClientError{
+		Message: message,
+	}
+}
+
+// IsJMXClientError checks if the err is JMXJMXClientError.
+func IsJMXClientError(err error) (*JMXClientError, bool) {
+	if e, ok := err.(*JMXClientError); ok {
+		return e, ok
+	}
+	return nil, false
+}

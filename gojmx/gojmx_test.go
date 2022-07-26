@@ -27,7 +27,7 @@ var timeStamp = time.Date(2022, time.January, 1, 01, 23, 45, 0, time.Local).Unix
 
 func init() {
 	_ = os.Setenv("NR_JMX_TOOL", filepath.Join(testutils.PrjDir, "bin", "nrjmx"))
-	//_ = os.Setenv("NRIA_NRJMX_DEBUG", "true")
+	// _ = os.Setenv("NRIA_NRJMX_DEBUG", "true")
 }
 
 func Test_Query_Success_LargeAmountOfData(t *testing.T) {
@@ -399,7 +399,7 @@ func Test_Query_Timeout(t *testing.T) {
 	client, err := NewClient(ctx).Open(config)
 	assert.NotNil(t, client)
 	assert.Error(t, err)
-	defer assertCloseClientError(t, client)
+	defer assertCloseClientNoError(t, client)
 
 	// AND Query returns expected error
 	actual, err := client.GetMBeanAttributeNames("*:*")
@@ -516,7 +516,7 @@ func Test_Wrong_Connection(t *testing.T) {
 	client, err := NewClient(ctx).Open(config)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Connection refused to host: localhost;")
-	defer assertCloseClientError(t, client)
+	defer assertCloseClientNoError(t, client)
 
 	// AND query returns expected error
 	assert.Contains(t, err.Error(), "Connection refused to host: localhost;") // TODO: fix this, doesn't return the correct error
@@ -610,7 +610,7 @@ func Test_Wrong_Credentials(t *testing.T) {
 	client, err := NewClient(ctx).Open(config)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Authentication failed! Invalid username or password")
-	defer assertCloseClientError(t, client)
+	defer assertCloseClientNoError(t, client)
 
 	// AND Query returns expected error
 	actual, err := client.QueryMBeanNames("test:type=Cat,*")
@@ -646,7 +646,7 @@ func Test_Wrong_Certificate_password(t *testing.T) {
 	client, err := NewClient(ctx).Open(config)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "SSLContext")
-	defer assertCloseClientError(t, client)
+	defer assertCloseClientNoError(t, client)
 
 	// AND Query returns expected error
 	actual, err := client.QueryMBeanNames("test:type=Cat,*")
@@ -852,6 +852,139 @@ func TestClientClose(t *testing.T) {
 	assert.ErrorIs(t, err, errProcessNotRunning)
 
 	assert.True(t, client.nrJMXProcess.getOSProcessState().Success())
+}
+
+func TestGetInternalStats(t *testing.T) {
+	ctx := context.Background()
+
+	// GIVEN a JMX Server running inside a container
+	container, err := testutils.RunJMXServiceContainer(ctx)
+	require.NoError(t, err)
+	defer container.Terminate(ctx)
+
+	var data []map[string]interface{}
+
+	name := strings.Repeat("tomas", 100)
+
+	for i := 0; i < 1500; i++ {
+		data = append(data, map[string]interface{}{
+			"name":        fmt.Sprintf("%s-%d", name, i),
+			"doubleValue": 1.2,
+			"floatValue":  2.2,
+			"numberValue": 3,
+			"boolValue":   true,
+			"dateValue":   timeStamp,
+		})
+	}
+
+	// Populate the JMX Server with mbeans
+	resp, err := testutils.AddMBeansBatch(ctx, container, data)
+	assert.NoError(t, err)
+	assert.Equal(t, "ok!\n", string(resp))
+
+	defer testutils.CleanMBeans(ctx, container)
+
+	jmxHost, jmxPort, err := testutils.GetContainerMappedPort(ctx, container, testutils.TestServerJMXPort)
+	require.NoError(t, err)
+
+	// THEN JMX connection can be oppened
+	config := &JMXConfig{
+		Hostname:             jmxHost,
+		Port:                 int32(jmxPort.Int()),
+		EnableInternalStats:  true,
+		MaxInternalStatsSize: 3000, // We expect 3002 stats. With MaxInternalStatsSize we test the limit.
+	}
+	client, err := NewClient(ctx).Open(config)
+	assert.NoError(t, err)
+	defer assertCloseClientNoError(t, client)
+
+	_, err = client.QueryMBeanAttributes("test:type=Cat,*")
+	assert.NoError(t, err)
+
+	// AND query generates the expected internal stats
+	internalStats, err := client.GetInternalStats()
+	assert.NoError(t, err)
+
+	totalCalls := 0
+	totalObjects := 0
+	totalTimeMs := 0
+	totalAttrs := 0
+	totalSucessful := 0
+
+	for _, stat := range internalStats {
+		totalCalls++
+		totalObjects += int(stat.ResponseCount)
+		totalTimeMs += int(stat.Milliseconds)
+		totalAttrs += len(stat.Attrs)
+
+		if stat.Successful {
+			totalSucessful++
+		}
+	}
+
+	assert.Equal(t, 3000, totalCalls)
+	assert.Equal(t, 18000, totalObjects)
+	assert.True(t, totalTimeMs > 0)
+	assert.Equal(t, 9000, totalAttrs)
+	assert.Equal(t, 3000, totalSucessful)
+
+	// AND internal stats get cleaned
+	internalStats, err = client.GetInternalStats()
+	assert.NoError(t, err)
+	assert.True(t, len(internalStats) == 0)
+}
+
+func TestConnectionRecovers(t *testing.T) {
+	ctx := context.Background()
+
+	// GIVEN a JMX Server running inside a container
+	container, err := testutils.RunJMXServiceContainer(ctx)
+	require.NoError(t, err)
+
+	jmxHost, jmxPort, err := testutils.GetContainerMappedPort(ctx, container, testutils.TestServerJMXPort)
+	require.NoError(t, err)
+
+	// THEN JMX connection can be opened.
+	config := &JMXConfig{
+		Hostname:            jmxHost,
+		Port:                int32(jmxPort.Int()),
+		RequestTimeoutMs:    5000,
+		EnableInternalStats: true,
+	}
+
+	query := "java.lang:type=*"
+
+	client, err := NewClient(ctx).Open(config)
+	assert.NoError(t, err)
+	defer assertCloseClientNoError(t, client)
+
+	res, err := client.QueryMBeanNames(query)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, res)
+
+	assert.NoError(t, container.Terminate(ctx))
+
+	res, err = client.QueryMBeanNames(query)
+	assert.Nil(t, res)
+	assert.Error(t, err)
+
+	_, ok := IsJMXClientError(err)
+	assert.False(t, ok)
+	assert.True(t, client.IsRunning())
+
+	assert.Eventually(t, func() bool {
+		container, err = testutils.RunJMXServiceContainer(ctx)
+		return err == nil
+	}, 200*time.Second, 50*time.Millisecond,
+		"didn't managed to restart the container")
+
+	defer container.Terminate(ctx)
+
+	assert.Eventually(t, func() bool {
+		_, err = client.QueryMBeanNames(query)
+		return err == nil
+	}, 20*time.Second, 50*time.Millisecond,
+		"didn't managed to recover connection")
 }
 
 func TestProcessExits(t *testing.T) {

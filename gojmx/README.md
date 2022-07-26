@@ -87,3 +87,40 @@ JMX allows the use of custom connectors to communicate with the application. In 
 By default, the sub-folder connectors is in the classpath. If this folder does not exist, create it under the folder where nrjmx is installed.
 
 For example, to add support for JBoss, create a folder named connectors under the default (Linux) library path /usr/lib/nrjmx/ (/usr/lib/nrjmx/connectors/) and copy the custom connector jar ($JBOSS_HOME/bin/client/jboss-cli-client.jar) into it. You can now execute JMX queries against JBoss.
+
+# Internal nrjmx query stats
+If `InternalStats` feature is enabled (gojmx.JMXConfig.EnableInternalStats = true), the `nrjmx` java subprocess will collect
+information about each JMX request. This feature can be used to give more insights while troubleshooting performance issues.
+
+The `InternalStats` are collected in memory (up to 10000 samples by default). When the maximum limit is reached, old samples
+will be discarded. You can increase the maximum limit using `gojmx.JMXConfig.MaxInternalStatsSize` config option.
+After the stats are retrieved (using `client.GetInternalStats()`) `nrjmx` java subprocess will clean the sample storage.
+
+e.g.:
+
+```go
+    // JMX Client configuration.
+	config := &gojmx.JMXConfig{
+		Hostname:         "localhost",
+		Port:             7199,
+
+		// Enable internal gojmx stats for troubleshooting.
+		EnableInternalStats: true,
+	}
+
+    // Connect to JMX endpoint.
+	client, err := gojmx.NewClient(context.Background()).Open(config)
+	handleError(err)
+
+	defer client.Close()
+
+    ... queries ...
+   
+	// Collecting gojmx internal query stats. Use this only for troubleshooting.
+	internalStats, err := client.GetInternalStats()
+	handleError(err)
+
+	for _, internalStat := range internalStats {
+		fmt.Println(internalStat.String())
+	}
+```

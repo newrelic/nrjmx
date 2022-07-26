@@ -76,6 +76,9 @@ public class StandardIOServer extends TServer {
      * stop StandardIOServer listen.
      */
     public void stop() {
+        if (stopped_) {
+            return;
+        }
         stopped_ = true;
         serverTransport_.interrupt();
     }

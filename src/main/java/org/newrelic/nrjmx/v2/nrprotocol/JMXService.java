@@ -25,6 +25,8 @@ public class JMXService {
 
     public java.util.List<AttributeResponse> queryMBeanAttributes(java.lang.String mBeanNamePattern, java.util.List<java.lang.String> attributes) throws JMXConnectionError, JMXError, org.apache.thrift.TException;
 
+    public java.util.List<InternalStat> getInternalStats() throws JMXError, org.apache.thrift.TException;
+
   }
 
   public interface AsyncIface {
@@ -42,6 +44,8 @@ public class JMXService {
     public void getMBeanAttributes(java.lang.String mBeanName, java.util.List<java.lang.String> attributes, org.apache.thrift.async.AsyncMethodCallback<java.util.List<AttributeResponse>> resultHandler) throws org.apache.thrift.TException;
 
     public void queryMBeanAttributes(java.lang.String mBeanNamePattern, java.util.List<java.lang.String> attributes, org.apache.thrift.async.AsyncMethodCallback<java.util.List<AttributeResponse>> resultHandler) throws org.apache.thrift.TException;
+
+    public void getInternalStats(org.apache.thrift.async.AsyncMethodCallback<java.util.List<InternalStat>> resultHandler) throws org.apache.thrift.TException;
 
   }
 
@@ -254,6 +258,31 @@ public class JMXService {
         throw result.jmxErr;
       }
       throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "queryMBeanAttributes failed: unknown result");
+    }
+
+    public java.util.List<InternalStat> getInternalStats() throws JMXError, org.apache.thrift.TException
+    {
+      send_getInternalStats();
+      return recv_getInternalStats();
+    }
+
+    public void send_getInternalStats() throws org.apache.thrift.TException
+    {
+      getInternalStats_args args = new getInternalStats_args();
+      sendBase("getInternalStats", args);
+    }
+
+    public java.util.List<InternalStat> recv_getInternalStats() throws JMXError, org.apache.thrift.TException
+    {
+      getInternalStats_result result = new getInternalStats_result();
+      receiveBase(result, "getInternalStats");
+      if (result.isSetSuccess()) {
+        return result.success;
+      }
+      if (result.jmxErr != null) {
+        throw result.jmxErr;
+      }
+      throw new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.MISSING_RESULT, "getInternalStats failed: unknown result");
     }
 
   }
@@ -498,6 +527,35 @@ public class JMXService {
       }
     }
 
+    public void getInternalStats(org.apache.thrift.async.AsyncMethodCallback<java.util.List<InternalStat>> resultHandler) throws org.apache.thrift.TException {
+      checkReady();
+      getInternalStats_call method_call = new getInternalStats_call(resultHandler, this, ___protocolFactory, ___transport);
+      this.___currentMethod = method_call;
+      ___manager.call(method_call);
+    }
+
+    public static class getInternalStats_call extends org.apache.thrift.async.TAsyncMethodCall<java.util.List<InternalStat>> {
+      public getInternalStats_call(org.apache.thrift.async.AsyncMethodCallback<java.util.List<InternalStat>> resultHandler, org.apache.thrift.async.TAsyncClient client, org.apache.thrift.protocol.TProtocolFactory protocolFactory, org.apache.thrift.transport.TNonblockingTransport transport) throws org.apache.thrift.TException {
+        super(client, protocolFactory, transport, resultHandler, false);
+      }
+
+      public void write_args(org.apache.thrift.protocol.TProtocol prot) throws org.apache.thrift.TException {
+        prot.writeMessageBegin(new org.apache.thrift.protocol.TMessage("getInternalStats", org.apache.thrift.protocol.TMessageType.CALL, 0));
+        getInternalStats_args args = new getInternalStats_args();
+        args.write(prot);
+        prot.writeMessageEnd();
+      }
+
+      public java.util.List<InternalStat> getResult() throws JMXError, org.apache.thrift.TException {
+        if (getState() != org.apache.thrift.async.TAsyncMethodCall.State.RESPONSE_READ) {
+          throw new java.lang.IllegalStateException("Method call not finished!");
+        }
+        org.apache.thrift.transport.TMemoryInputTransport memoryTransport = new org.apache.thrift.transport.TMemoryInputTransport(getFrameBuffer().array());
+        org.apache.thrift.protocol.TProtocol prot = client.getProtocolFactory().getProtocol(memoryTransport);
+        return (new Client(prot)).recv_getInternalStats();
+      }
+    }
+
   }
 
   public static class Processor<I extends Iface> extends org.apache.thrift.TBaseProcessor<I> implements org.apache.thrift.TProcessor {
@@ -518,6 +576,7 @@ public class JMXService {
       processMap.put("getMBeanAttributeNames", new getMBeanAttributeNames());
       processMap.put("getMBeanAttributes", new getMBeanAttributes());
       processMap.put("queryMBeanAttributes", new queryMBeanAttributes());
+      processMap.put("getInternalStats", new getInternalStats());
       return processMap;
     }
 
@@ -734,6 +793,35 @@ public class JMXService {
       }
     }
 
+    public static class getInternalStats<I extends Iface> extends org.apache.thrift.ProcessFunction<I, getInternalStats_args> {
+      public getInternalStats() {
+        super("getInternalStats");
+      }
+
+      public getInternalStats_args getEmptyArgsInstance() {
+        return new getInternalStats_args();
+      }
+
+      protected boolean isOneway() {
+        return false;
+      }
+
+      @Override
+      protected boolean rethrowUnhandledExceptions() {
+        return false;
+      }
+
+      public getInternalStats_result getResult(I iface, getInternalStats_args args) throws org.apache.thrift.TException {
+        getInternalStats_result result = new getInternalStats_result();
+        try {
+          result.success = iface.getInternalStats();
+        } catch (JMXError jmxErr) {
+          result.jmxErr = jmxErr;
+        }
+        return result;
+      }
+    }
+
   }
 
   public static class AsyncProcessor<I extends AsyncIface> extends org.apache.thrift.TBaseAsyncProcessor<I> {
@@ -754,6 +842,7 @@ public class JMXService {
       processMap.put("getMBeanAttributeNames", new getMBeanAttributeNames());
       processMap.put("getMBeanAttributes", new getMBeanAttributes());
       processMap.put("queryMBeanAttributes", new queryMBeanAttributes());
+      processMap.put("getInternalStats", new getInternalStats());
       return processMap;
     }
 
@@ -1227,6 +1316,71 @@ public class JMXService {
 
       public void start(I iface, queryMBeanAttributes_args args, org.apache.thrift.async.AsyncMethodCallback<java.util.List<AttributeResponse>> resultHandler) throws org.apache.thrift.TException {
         iface.queryMBeanAttributes(args.mBeanNamePattern, args.attributes,resultHandler);
+      }
+    }
+
+    public static class getInternalStats<I extends AsyncIface> extends org.apache.thrift.AsyncProcessFunction<I, getInternalStats_args, java.util.List<InternalStat>> {
+      public getInternalStats() {
+        super("getInternalStats");
+      }
+
+      public getInternalStats_args getEmptyArgsInstance() {
+        return new getInternalStats_args();
+      }
+
+      public org.apache.thrift.async.AsyncMethodCallback<java.util.List<InternalStat>> getResultHandler(final org.apache.thrift.server.AbstractNonblockingServer.AsyncFrameBuffer fb, final int seqid) {
+        final org.apache.thrift.AsyncProcessFunction fcall = this;
+        return new org.apache.thrift.async.AsyncMethodCallback<java.util.List<InternalStat>>() { 
+          public void onComplete(java.util.List<InternalStat> o) {
+            getInternalStats_result result = new getInternalStats_result();
+            result.success = o;
+            try {
+              fcall.sendResponse(fb, result, org.apache.thrift.protocol.TMessageType.REPLY,seqid);
+            } catch (org.apache.thrift.transport.TTransportException e) {
+              _LOGGER.error("TTransportException writing to internal frame buffer", e);
+              fb.close();
+            } catch (java.lang.Exception e) {
+              _LOGGER.error("Exception writing to internal frame buffer", e);
+              onError(e);
+            }
+          }
+          public void onError(java.lang.Exception e) {
+            byte msgType = org.apache.thrift.protocol.TMessageType.REPLY;
+            org.apache.thrift.TSerializable msg;
+            getInternalStats_result result = new getInternalStats_result();
+            if (e instanceof JMXError) {
+              result.jmxErr = (JMXError) e;
+              result.setJmxErrIsSet(true);
+              msg = result;
+            } else if (e instanceof org.apache.thrift.transport.TTransportException) {
+              _LOGGER.error("TTransportException inside handler", e);
+              fb.close();
+              return;
+            } else if (e instanceof org.apache.thrift.TApplicationException) {
+              _LOGGER.error("TApplicationException inside handler", e);
+              msgType = org.apache.thrift.protocol.TMessageType.EXCEPTION;
+              msg = (org.apache.thrift.TApplicationException)e;
+            } else {
+              _LOGGER.error("Exception inside handler", e);
+              msgType = org.apache.thrift.protocol.TMessageType.EXCEPTION;
+              msg = new org.apache.thrift.TApplicationException(org.apache.thrift.TApplicationException.INTERNAL_ERROR, e.getMessage());
+            }
+            try {
+              fcall.sendResponse(fb,msg,msgType,seqid);
+            } catch (java.lang.Exception ex) {
+              _LOGGER.error("Exception writing to internal frame buffer", ex);
+              fb.close();
+            }
+          }
+        };
+      }
+
+      protected boolean isOneway() {
+        return false;
+      }
+
+      public void start(I iface, getInternalStats_args args, org.apache.thrift.async.AsyncMethodCallback<java.util.List<InternalStat>> resultHandler) throws org.apache.thrift.TException {
+        iface.getInternalStats(resultHandler);
       }
     }
 
@@ -4263,13 +4417,13 @@ public class JMXService {
             case 0: // SUCCESS
               if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
                 {
-                  org.apache.thrift.protocol.TList _list0 = iprot.readListBegin();
-                  struct.success = new java.util.ArrayList<java.lang.String>(_list0.size);
-                  @org.apache.thrift.annotation.Nullable java.lang.String _elem1;
-                  for (int _i2 = 0; _i2 < _list0.size; ++_i2)
+                  org.apache.thrift.protocol.TList _list8 = iprot.readListBegin();
+                  struct.success = new java.util.ArrayList<java.lang.String>(_list8.size);
+                  @org.apache.thrift.annotation.Nullable java.lang.String _elem9;
+                  for (int _i10 = 0; _i10 < _list8.size; ++_i10)
                   {
-                    _elem1 = iprot.readString();
-                    struct.success.add(_elem1);
+                    _elem9 = iprot.readString();
+                    struct.success.add(_elem9);
                   }
                   iprot.readListEnd();
                 }
@@ -4315,9 +4469,9 @@ public class JMXService {
           oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.success.size()));
-            for (java.lang.String _iter3 : struct.success)
+            for (java.lang.String _iter11 : struct.success)
             {
-              oprot.writeString(_iter3);
+              oprot.writeString(_iter11);
             }
             oprot.writeListEnd();
           }
@@ -4364,9 +4518,9 @@ public class JMXService {
         if (struct.isSetSuccess()) {
           {
             oprot.writeI32(struct.success.size());
-            for (java.lang.String _iter4 : struct.success)
+            for (java.lang.String _iter12 : struct.success)
             {
-              oprot.writeString(_iter4);
+              oprot.writeString(_iter12);
             }
           }
         }
@@ -4384,13 +4538,13 @@ public class JMXService {
         java.util.BitSet incoming = iprot.readBitSet(3);
         if (incoming.get(0)) {
           {
-            org.apache.thrift.protocol.TList _list5 = iprot.readListBegin(org.apache.thrift.protocol.TType.STRING);
-            struct.success = new java.util.ArrayList<java.lang.String>(_list5.size);
-            @org.apache.thrift.annotation.Nullable java.lang.String _elem6;
-            for (int _i7 = 0; _i7 < _list5.size; ++_i7)
+            org.apache.thrift.protocol.TList _list13 = iprot.readListBegin(org.apache.thrift.protocol.TType.STRING);
+            struct.success = new java.util.ArrayList<java.lang.String>(_list13.size);
+            @org.apache.thrift.annotation.Nullable java.lang.String _elem14;
+            for (int _i15 = 0; _i15 < _list13.size; ++_i15)
             {
-              _elem6 = iprot.readString();
-              struct.success.add(_elem6);
+              _elem14 = iprot.readString();
+              struct.success.add(_elem14);
             }
           }
           struct.setSuccessIsSet(true);
@@ -5257,13 +5411,13 @@ public class JMXService {
             case 0: // SUCCESS
               if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
                 {
-                  org.apache.thrift.protocol.TList _list8 = iprot.readListBegin();
-                  struct.success = new java.util.ArrayList<java.lang.String>(_list8.size);
-                  @org.apache.thrift.annotation.Nullable java.lang.String _elem9;
-                  for (int _i10 = 0; _i10 < _list8.size; ++_i10)
+                  org.apache.thrift.protocol.TList _list16 = iprot.readListBegin();
+                  struct.success = new java.util.ArrayList<java.lang.String>(_list16.size);
+                  @org.apache.thrift.annotation.Nullable java.lang.String _elem17;
+                  for (int _i18 = 0; _i18 < _list16.size; ++_i18)
                   {
-                    _elem9 = iprot.readString();
-                    struct.success.add(_elem9);
+                    _elem17 = iprot.readString();
+                    struct.success.add(_elem17);
                   }
                   iprot.readListEnd();
                 }
@@ -5309,9 +5463,9 @@ public class JMXService {
           oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.success.size()));
-            for (java.lang.String _iter11 : struct.success)
+            for (java.lang.String _iter19 : struct.success)
             {
-              oprot.writeString(_iter11);
+              oprot.writeString(_iter19);
             }
             oprot.writeListEnd();
           }
@@ -5358,9 +5512,9 @@ public class JMXService {
         if (struct.isSetSuccess()) {
           {
             oprot.writeI32(struct.success.size());
-            for (java.lang.String _iter12 : struct.success)
+            for (java.lang.String _iter20 : struct.success)
             {
-              oprot.writeString(_iter12);
+              oprot.writeString(_iter20);
             }
           }
         }
@@ -5378,13 +5532,13 @@ public class JMXService {
         java.util.BitSet incoming = iprot.readBitSet(3);
         if (incoming.get(0)) {
           {
-            org.apache.thrift.protocol.TList _list13 = iprot.readListBegin(org.apache.thrift.protocol.TType.STRING);
-            struct.success = new java.util.ArrayList<java.lang.String>(_list13.size);
-            @org.apache.thrift.annotation.Nullable java.lang.String _elem14;
-            for (int _i15 = 0; _i15 < _list13.size; ++_i15)
+            org.apache.thrift.protocol.TList _list21 = iprot.readListBegin(org.apache.thrift.protocol.TType.STRING);
+            struct.success = new java.util.ArrayList<java.lang.String>(_list21.size);
+            @org.apache.thrift.annotation.Nullable java.lang.String _elem22;
+            for (int _i23 = 0; _i23 < _list21.size; ++_i23)
             {
-              _elem14 = iprot.readString();
-              struct.success.add(_elem14);
+              _elem22 = iprot.readString();
+              struct.success.add(_elem22);
             }
           }
           struct.setSuccessIsSet(true);
@@ -5812,13 +5966,13 @@ public class JMXService {
             case 2: // ATTRIBUTES
               if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
                 {
-                  org.apache.thrift.protocol.TList _list16 = iprot.readListBegin();
-                  struct.attributes = new java.util.ArrayList<java.lang.String>(_list16.size);
-                  @org.apache.thrift.annotation.Nullable java.lang.String _elem17;
-                  for (int _i18 = 0; _i18 < _list16.size; ++_i18)
+                  org.apache.thrift.protocol.TList _list24 = iprot.readListBegin();
+                  struct.attributes = new java.util.ArrayList<java.lang.String>(_list24.size);
+                  @org.apache.thrift.annotation.Nullable java.lang.String _elem25;
+                  for (int _i26 = 0; _i26 < _list24.size; ++_i26)
                   {
-                    _elem17 = iprot.readString();
-                    struct.attributes.add(_elem17);
+                    _elem25 = iprot.readString();
+                    struct.attributes.add(_elem25);
                   }
                   iprot.readListEnd();
                 }
@@ -5851,9 +6005,9 @@ public class JMXService {
           oprot.writeFieldBegin(ATTRIBUTES_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.attributes.size()));
-            for (java.lang.String _iter19 : struct.attributes)
+            for (java.lang.String _iter27 : struct.attributes)
             {
-              oprot.writeString(_iter19);
+              oprot.writeString(_iter27);
             }
             oprot.writeListEnd();
           }
@@ -5890,9 +6044,9 @@ public class JMXService {
         if (struct.isSetAttributes()) {
           {
             oprot.writeI32(struct.attributes.size());
-            for (java.lang.String _iter20 : struct.attributes)
+            for (java.lang.String _iter28 : struct.attributes)
             {
-              oprot.writeString(_iter20);
+              oprot.writeString(_iter28);
             }
           }
         }
@@ -5908,13 +6062,13 @@ public class JMXService {
         }
         if (incoming.get(1)) {
           {
-            org.apache.thrift.protocol.TList _list21 = iprot.readListBegin(org.apache.thrift.protocol.TType.STRING);
-            struct.attributes = new java.util.ArrayList<java.lang.String>(_list21.size);
-            @org.apache.thrift.annotation.Nullable java.lang.String _elem22;
-            for (int _i23 = 0; _i23 < _list21.size; ++_i23)
+            org.apache.thrift.protocol.TList _list29 = iprot.readListBegin(org.apache.thrift.protocol.TType.STRING);
+            struct.attributes = new java.util.ArrayList<java.lang.String>(_list29.size);
+            @org.apache.thrift.annotation.Nullable java.lang.String _elem30;
+            for (int _i31 = 0; _i31 < _list29.size; ++_i31)
             {
-              _elem22 = iprot.readString();
-              struct.attributes.add(_elem22);
+              _elem30 = iprot.readString();
+              struct.attributes.add(_elem30);
             }
           }
           struct.setAttributesIsSet(true);
@@ -6409,14 +6563,14 @@ public class JMXService {
             case 0: // SUCCESS
               if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
                 {
-                  org.apache.thrift.protocol.TList _list24 = iprot.readListBegin();
-                  struct.success = new java.util.ArrayList<AttributeResponse>(_list24.size);
-                  @org.apache.thrift.annotation.Nullable AttributeResponse _elem25;
-                  for (int _i26 = 0; _i26 < _list24.size; ++_i26)
+                  org.apache.thrift.protocol.TList _list32 = iprot.readListBegin();
+                  struct.success = new java.util.ArrayList<AttributeResponse>(_list32.size);
+                  @org.apache.thrift.annotation.Nullable AttributeResponse _elem33;
+                  for (int _i34 = 0; _i34 < _list32.size; ++_i34)
                   {
-                    _elem25 = new AttributeResponse();
-                    _elem25.read(iprot);
-                    struct.success.add(_elem25);
+                    _elem33 = new AttributeResponse();
+                    _elem33.read(iprot);
+                    struct.success.add(_elem33);
                   }
                   iprot.readListEnd();
                 }
@@ -6462,9 +6616,9 @@ public class JMXService {
           oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.success.size()));
-            for (AttributeResponse _iter27 : struct.success)
+            for (AttributeResponse _iter35 : struct.success)
             {
-              _iter27.write(oprot);
+              _iter35.write(oprot);
             }
             oprot.writeListEnd();
           }
@@ -6511,9 +6665,9 @@ public class JMXService {
         if (struct.isSetSuccess()) {
           {
             oprot.writeI32(struct.success.size());
-            for (AttributeResponse _iter28 : struct.success)
+            for (AttributeResponse _iter36 : struct.success)
             {
-              _iter28.write(oprot);
+              _iter36.write(oprot);
             }
           }
         }
@@ -6531,14 +6685,14 @@ public class JMXService {
         java.util.BitSet incoming = iprot.readBitSet(3);
         if (incoming.get(0)) {
           {
-            org.apache.thrift.protocol.TList _list29 = iprot.readListBegin(org.apache.thrift.protocol.TType.STRUCT);
-            struct.success = new java.util.ArrayList<AttributeResponse>(_list29.size);
-            @org.apache.thrift.annotation.Nullable AttributeResponse _elem30;
-            for (int _i31 = 0; _i31 < _list29.size; ++_i31)
+            org.apache.thrift.protocol.TList _list37 = iprot.readListBegin(org.apache.thrift.protocol.TType.STRUCT);
+            struct.success = new java.util.ArrayList<AttributeResponse>(_list37.size);
+            @org.apache.thrift.annotation.Nullable AttributeResponse _elem38;
+            for (int _i39 = 0; _i39 < _list37.size; ++_i39)
             {
-              _elem30 = new AttributeResponse();
-              _elem30.read(iprot);
-              struct.success.add(_elem30);
+              _elem38 = new AttributeResponse();
+              _elem38.read(iprot);
+              struct.success.add(_elem38);
             }
           }
           struct.setSuccessIsSet(true);
@@ -6966,13 +7120,13 @@ public class JMXService {
             case 2: // ATTRIBUTES
               if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
                 {
-                  org.apache.thrift.protocol.TList _list32 = iprot.readListBegin();
-                  struct.attributes = new java.util.ArrayList<java.lang.String>(_list32.size);
-                  @org.apache.thrift.annotation.Nullable java.lang.String _elem33;
-                  for (int _i34 = 0; _i34 < _list32.size; ++_i34)
+                  org.apache.thrift.protocol.TList _list40 = iprot.readListBegin();
+                  struct.attributes = new java.util.ArrayList<java.lang.String>(_list40.size);
+                  @org.apache.thrift.annotation.Nullable java.lang.String _elem41;
+                  for (int _i42 = 0; _i42 < _list40.size; ++_i42)
                   {
-                    _elem33 = iprot.readString();
-                    struct.attributes.add(_elem33);
+                    _elem41 = iprot.readString();
+                    struct.attributes.add(_elem41);
                   }
                   iprot.readListEnd();
                 }
@@ -7005,9 +7159,9 @@ public class JMXService {
           oprot.writeFieldBegin(ATTRIBUTES_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.attributes.size()));
-            for (java.lang.String _iter35 : struct.attributes)
+            for (java.lang.String _iter43 : struct.attributes)
             {
-              oprot.writeString(_iter35);
+              oprot.writeString(_iter43);
             }
             oprot.writeListEnd();
           }
@@ -7044,9 +7198,9 @@ public class JMXService {
         if (struct.isSetAttributes()) {
           {
             oprot.writeI32(struct.attributes.size());
-            for (java.lang.String _iter36 : struct.attributes)
+            for (java.lang.String _iter44 : struct.attributes)
             {
-              oprot.writeString(_iter36);
+              oprot.writeString(_iter44);
             }
           }
         }
@@ -7062,13 +7216,13 @@ public class JMXService {
         }
         if (incoming.get(1)) {
           {
-            org.apache.thrift.protocol.TList _list37 = iprot.readListBegin(org.apache.thrift.protocol.TType.STRING);
-            struct.attributes = new java.util.ArrayList<java.lang.String>(_list37.size);
-            @org.apache.thrift.annotation.Nullable java.lang.String _elem38;
-            for (int _i39 = 0; _i39 < _list37.size; ++_i39)
+            org.apache.thrift.protocol.TList _list45 = iprot.readListBegin(org.apache.thrift.protocol.TType.STRING);
+            struct.attributes = new java.util.ArrayList<java.lang.String>(_list45.size);
+            @org.apache.thrift.annotation.Nullable java.lang.String _elem46;
+            for (int _i47 = 0; _i47 < _list45.size; ++_i47)
             {
-              _elem38 = iprot.readString();
-              struct.attributes.add(_elem38);
+              _elem46 = iprot.readString();
+              struct.attributes.add(_elem46);
             }
           }
           struct.setAttributesIsSet(true);
@@ -7563,14 +7717,14 @@ public class JMXService {
             case 0: // SUCCESS
               if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
                 {
-                  org.apache.thrift.protocol.TList _list40 = iprot.readListBegin();
-                  struct.success = new java.util.ArrayList<AttributeResponse>(_list40.size);
-                  @org.apache.thrift.annotation.Nullable AttributeResponse _elem41;
-                  for (int _i42 = 0; _i42 < _list40.size; ++_i42)
+                  org.apache.thrift.protocol.TList _list48 = iprot.readListBegin();
+                  struct.success = new java.util.ArrayList<AttributeResponse>(_list48.size);
+                  @org.apache.thrift.annotation.Nullable AttributeResponse _elem49;
+                  for (int _i50 = 0; _i50 < _list48.size; ++_i50)
                   {
-                    _elem41 = new AttributeResponse();
-                    _elem41.read(iprot);
-                    struct.success.add(_elem41);
+                    _elem49 = new AttributeResponse();
+                    _elem49.read(iprot);
+                    struct.success.add(_elem49);
                   }
                   iprot.readListEnd();
                 }
@@ -7616,9 +7770,9 @@ public class JMXService {
           oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.success.size()));
-            for (AttributeResponse _iter43 : struct.success)
+            for (AttributeResponse _iter51 : struct.success)
             {
-              _iter43.write(oprot);
+              _iter51.write(oprot);
             }
             oprot.writeListEnd();
           }
@@ -7665,9 +7819,9 @@ public class JMXService {
         if (struct.isSetSuccess()) {
           {
             oprot.writeI32(struct.success.size());
-            for (AttributeResponse _iter44 : struct.success)
+            for (AttributeResponse _iter52 : struct.success)
             {
-              _iter44.write(oprot);
+              _iter52.write(oprot);
             }
           }
         }
@@ -7685,14 +7839,14 @@ public class JMXService {
         java.util.BitSet incoming = iprot.readBitSet(3);
         if (incoming.get(0)) {
           {
-            org.apache.thrift.protocol.TList _list45 = iprot.readListBegin(org.apache.thrift.protocol.TType.STRUCT);
-            struct.success = new java.util.ArrayList<AttributeResponse>(_list45.size);
-            @org.apache.thrift.annotation.Nullable AttributeResponse _elem46;
-            for (int _i47 = 0; _i47 < _list45.size; ++_i47)
+            org.apache.thrift.protocol.TList _list53 = iprot.readListBegin(org.apache.thrift.protocol.TType.STRUCT);
+            struct.success = new java.util.ArrayList<AttributeResponse>(_list53.size);
+            @org.apache.thrift.annotation.Nullable AttributeResponse _elem54;
+            for (int _i55 = 0; _i55 < _list53.size; ++_i55)
             {
-              _elem46 = new AttributeResponse();
-              _elem46.read(iprot);
-              struct.success.add(_elem46);
+              _elem54 = new AttributeResponse();
+              _elem54.read(iprot);
+              struct.success.add(_elem54);
             }
           }
           struct.setSuccessIsSet(true);
@@ -7703,6 +7857,785 @@ public class JMXService {
           struct.setConnErrIsSet(true);
         }
         if (incoming.get(2)) {
+          struct.jmxErr = new JMXError();
+          struct.jmxErr.read(iprot);
+          struct.setJmxErrIsSet(true);
+        }
+      }
+    }
+
+    private static <S extends org.apache.thrift.scheme.IScheme> S scheme(org.apache.thrift.protocol.TProtocol proto) {
+      return (org.apache.thrift.scheme.StandardScheme.class.equals(proto.getScheme()) ? STANDARD_SCHEME_FACTORY : TUPLE_SCHEME_FACTORY).getScheme();
+    }
+  }
+
+  public static class getInternalStats_args implements org.apache.thrift.TBase<getInternalStats_args, getInternalStats_args._Fields>, java.io.Serializable, Cloneable, Comparable<getInternalStats_args>   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("getInternalStats_args");
+
+
+    private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new getInternalStats_argsStandardSchemeFactory();
+    private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new getInternalStats_argsTupleSchemeFactory();
+
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+;
+
+      private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
+
+      static {
+        for (_Fields field : java.util.EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      @org.apache.thrift.annotation.Nullable
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new java.lang.IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      @org.apache.thrift.annotation.Nullable
+      public static _Fields findByName(java.lang.String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final java.lang.String _fieldName;
+
+      _Fields(short thriftId, java.lang.String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public java.lang.String getFieldName() {
+        return _fieldName;
+      }
+    }
+    public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(getInternalStats_args.class, metaDataMap);
+    }
+
+    public getInternalStats_args() {
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public getInternalStats_args(getInternalStats_args other) {
+    }
+
+    public getInternalStats_args deepCopy() {
+      return new getInternalStats_args(this);
+    }
+
+    @Override
+    public void clear() {
+    }
+
+    public void setFieldValue(_Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
+      switch (field) {
+      }
+    }
+
+    @org.apache.thrift.annotation.Nullable
+    public java.lang.Object getFieldValue(_Fields field) {
+      switch (field) {
+      }
+      throw new java.lang.IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new java.lang.IllegalArgumentException();
+      }
+
+      switch (field) {
+      }
+      throw new java.lang.IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(java.lang.Object that) {
+      if (that instanceof getInternalStats_args)
+        return this.equals((getInternalStats_args)that);
+      return false;
+    }
+
+    public boolean equals(getInternalStats_args that) {
+      if (that == null)
+        return false;
+      if (this == that)
+        return true;
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      int hashCode = 1;
+
+      return hashCode;
+    }
+
+    @Override
+    public int compareTo(getInternalStats_args other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+
+      return 0;
+    }
+
+    @org.apache.thrift.annotation.Nullable
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      scheme(iprot).read(iprot, this);
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      scheme(oprot).write(oprot, this);
+    }
+
+    @Override
+    public java.lang.String toString() {
+      java.lang.StringBuilder sb = new java.lang.StringBuilder("getInternalStats_args(");
+      boolean first = true;
+
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+      // check for sub-struct validity
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, java.lang.ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private static class getInternalStats_argsStandardSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+      public getInternalStats_argsStandardScheme getScheme() {
+        return new getInternalStats_argsStandardScheme();
+      }
+    }
+
+    private static class getInternalStats_argsStandardScheme extends org.apache.thrift.scheme.StandardScheme<getInternalStats_args> {
+
+      public void read(org.apache.thrift.protocol.TProtocol iprot, getInternalStats_args struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TField schemeField;
+        iprot.readStructBegin();
+        while (true)
+        {
+          schemeField = iprot.readFieldBegin();
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+            break;
+          }
+          switch (schemeField.id) {
+            default:
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          iprot.readFieldEnd();
+        }
+        iprot.readStructEnd();
+
+        // check for required fields of primitive type, which can't be checked in the validate method
+        struct.validate();
+      }
+
+      public void write(org.apache.thrift.protocol.TProtocol oprot, getInternalStats_args struct) throws org.apache.thrift.TException {
+        struct.validate();
+
+        oprot.writeStructBegin(STRUCT_DESC);
+        oprot.writeFieldStop();
+        oprot.writeStructEnd();
+      }
+
+    }
+
+    private static class getInternalStats_argsTupleSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+      public getInternalStats_argsTupleScheme getScheme() {
+        return new getInternalStats_argsTupleScheme();
+      }
+    }
+
+    private static class getInternalStats_argsTupleScheme extends org.apache.thrift.scheme.TupleScheme<getInternalStats_args> {
+
+      @Override
+      public void write(org.apache.thrift.protocol.TProtocol prot, getInternalStats_args struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TTupleProtocol oprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
+      }
+
+      @Override
+      public void read(org.apache.thrift.protocol.TProtocol prot, getInternalStats_args struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
+      }
+    }
+
+    private static <S extends org.apache.thrift.scheme.IScheme> S scheme(org.apache.thrift.protocol.TProtocol proto) {
+      return (org.apache.thrift.scheme.StandardScheme.class.equals(proto.getScheme()) ? STANDARD_SCHEME_FACTORY : TUPLE_SCHEME_FACTORY).getScheme();
+    }
+  }
+
+  public static class getInternalStats_result implements org.apache.thrift.TBase<getInternalStats_result, getInternalStats_result._Fields>, java.io.Serializable, Cloneable, Comparable<getInternalStats_result>   {
+    private static final org.apache.thrift.protocol.TStruct STRUCT_DESC = new org.apache.thrift.protocol.TStruct("getInternalStats_result");
+
+    private static final org.apache.thrift.protocol.TField SUCCESS_FIELD_DESC = new org.apache.thrift.protocol.TField("success", org.apache.thrift.protocol.TType.LIST, (short)0);
+    private static final org.apache.thrift.protocol.TField JMX_ERR_FIELD_DESC = new org.apache.thrift.protocol.TField("jmxErr", org.apache.thrift.protocol.TType.STRUCT, (short)1);
+
+    private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new getInternalStats_resultStandardSchemeFactory();
+    private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new getInternalStats_resultTupleSchemeFactory();
+
+    public @org.apache.thrift.annotation.Nullable java.util.List<InternalStat> success; // required
+    public @org.apache.thrift.annotation.Nullable JMXError jmxErr; // required
+
+    /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
+    public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+      SUCCESS((short)0, "success"),
+      JMX_ERR((short)1, "jmxErr");
+
+      private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
+
+      static {
+        for (_Fields field : java.util.EnumSet.allOf(_Fields.class)) {
+          byName.put(field.getFieldName(), field);
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, or null if its not found.
+       */
+      @org.apache.thrift.annotation.Nullable
+      public static _Fields findByThriftId(int fieldId) {
+        switch(fieldId) {
+          case 0: // SUCCESS
+            return SUCCESS;
+          case 1: // JMX_ERR
+            return JMX_ERR;
+          default:
+            return null;
+        }
+      }
+
+      /**
+       * Find the _Fields constant that matches fieldId, throwing an exception
+       * if it is not found.
+       */
+      public static _Fields findByThriftIdOrThrow(int fieldId) {
+        _Fields fields = findByThriftId(fieldId);
+        if (fields == null) throw new java.lang.IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+        return fields;
+      }
+
+      /**
+       * Find the _Fields constant that matches name, or null if its not found.
+       */
+      @org.apache.thrift.annotation.Nullable
+      public static _Fields findByName(java.lang.String name) {
+        return byName.get(name);
+      }
+
+      private final short _thriftId;
+      private final java.lang.String _fieldName;
+
+      _Fields(short thriftId, java.lang.String fieldName) {
+        _thriftId = thriftId;
+        _fieldName = fieldName;
+      }
+
+      public short getThriftFieldId() {
+        return _thriftId;
+      }
+
+      public java.lang.String getFieldName() {
+        return _fieldName;
+      }
+    }
+
+    // isset id assignments
+    public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+    static {
+      java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+      tmpMap.put(_Fields.SUCCESS, new org.apache.thrift.meta_data.FieldMetaData("success", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
+              new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, InternalStat.class))));
+      tmpMap.put(_Fields.JMX_ERR, new org.apache.thrift.meta_data.FieldMetaData("jmxErr", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+          new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, JMXError.class)));
+      metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
+      org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(getInternalStats_result.class, metaDataMap);
+    }
+
+    public getInternalStats_result() {
+    }
+
+    public getInternalStats_result(
+      java.util.List<InternalStat> success,
+      JMXError jmxErr)
+    {
+      this();
+      this.success = success;
+      this.jmxErr = jmxErr;
+    }
+
+    /**
+     * Performs a deep copy on <i>other</i>.
+     */
+    public getInternalStats_result(getInternalStats_result other) {
+      if (other.isSetSuccess()) {
+        java.util.List<InternalStat> __this__success = new java.util.ArrayList<InternalStat>(other.success.size());
+        for (InternalStat other_element : other.success) {
+          __this__success.add(new InternalStat(other_element));
+        }
+        this.success = __this__success;
+      }
+      if (other.isSetJmxErr()) {
+        this.jmxErr = new JMXError(other.jmxErr);
+      }
+    }
+
+    public getInternalStats_result deepCopy() {
+      return new getInternalStats_result(this);
+    }
+
+    @Override
+    public void clear() {
+      this.success = null;
+      this.jmxErr = null;
+    }
+
+    public int getSuccessSize() {
+      return (this.success == null) ? 0 : this.success.size();
+    }
+
+    @org.apache.thrift.annotation.Nullable
+    public java.util.Iterator<InternalStat> getSuccessIterator() {
+      return (this.success == null) ? null : this.success.iterator();
+    }
+
+    public void addToSuccess(InternalStat elem) {
+      if (this.success == null) {
+        this.success = new java.util.ArrayList<InternalStat>();
+      }
+      this.success.add(elem);
+    }
+
+    @org.apache.thrift.annotation.Nullable
+    public java.util.List<InternalStat> getSuccess() {
+      return this.success;
+    }
+
+    public getInternalStats_result setSuccess(@org.apache.thrift.annotation.Nullable java.util.List<InternalStat> success) {
+      this.success = success;
+      return this;
+    }
+
+    public void unsetSuccess() {
+      this.success = null;
+    }
+
+    /** Returns true if field success is set (has been assigned a value) and false otherwise */
+    public boolean isSetSuccess() {
+      return this.success != null;
+    }
+
+    public void setSuccessIsSet(boolean value) {
+      if (!value) {
+        this.success = null;
+      }
+    }
+
+    @org.apache.thrift.annotation.Nullable
+    public JMXError getJmxErr() {
+      return this.jmxErr;
+    }
+
+    public getInternalStats_result setJmxErr(@org.apache.thrift.annotation.Nullable JMXError jmxErr) {
+      this.jmxErr = jmxErr;
+      return this;
+    }
+
+    public void unsetJmxErr() {
+      this.jmxErr = null;
+    }
+
+    /** Returns true if field jmxErr is set (has been assigned a value) and false otherwise */
+    public boolean isSetJmxErr() {
+      return this.jmxErr != null;
+    }
+
+    public void setJmxErrIsSet(boolean value) {
+      if (!value) {
+        this.jmxErr = null;
+      }
+    }
+
+    public void setFieldValue(_Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
+      switch (field) {
+      case SUCCESS:
+        if (value == null) {
+          unsetSuccess();
+        } else {
+          setSuccess((java.util.List<InternalStat>)value);
+        }
+        break;
+
+      case JMX_ERR:
+        if (value == null) {
+          unsetJmxErr();
+        } else {
+          setJmxErr((JMXError)value);
+        }
+        break;
+
+      }
+    }
+
+    @org.apache.thrift.annotation.Nullable
+    public java.lang.Object getFieldValue(_Fields field) {
+      switch (field) {
+      case SUCCESS:
+        return getSuccess();
+
+      case JMX_ERR:
+        return getJmxErr();
+
+      }
+      throw new java.lang.IllegalStateException();
+    }
+
+    /** Returns true if field corresponding to fieldID is set (has been assigned a value) and false otherwise */
+    public boolean isSet(_Fields field) {
+      if (field == null) {
+        throw new java.lang.IllegalArgumentException();
+      }
+
+      switch (field) {
+      case SUCCESS:
+        return isSetSuccess();
+      case JMX_ERR:
+        return isSetJmxErr();
+      }
+      throw new java.lang.IllegalStateException();
+    }
+
+    @Override
+    public boolean equals(java.lang.Object that) {
+      if (that instanceof getInternalStats_result)
+        return this.equals((getInternalStats_result)that);
+      return false;
+    }
+
+    public boolean equals(getInternalStats_result that) {
+      if (that == null)
+        return false;
+      if (this == that)
+        return true;
+
+      boolean this_present_success = true && this.isSetSuccess();
+      boolean that_present_success = true && that.isSetSuccess();
+      if (this_present_success || that_present_success) {
+        if (!(this_present_success && that_present_success))
+          return false;
+        if (!this.success.equals(that.success))
+          return false;
+      }
+
+      boolean this_present_jmxErr = true && this.isSetJmxErr();
+      boolean that_present_jmxErr = true && that.isSetJmxErr();
+      if (this_present_jmxErr || that_present_jmxErr) {
+        if (!(this_present_jmxErr && that_present_jmxErr))
+          return false;
+        if (!this.jmxErr.equals(that.jmxErr))
+          return false;
+      }
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      int hashCode = 1;
+
+      hashCode = hashCode * 8191 + ((isSetSuccess()) ? 131071 : 524287);
+      if (isSetSuccess())
+        hashCode = hashCode * 8191 + success.hashCode();
+
+      hashCode = hashCode * 8191 + ((isSetJmxErr()) ? 131071 : 524287);
+      if (isSetJmxErr())
+        hashCode = hashCode * 8191 + jmxErr.hashCode();
+
+      return hashCode;
+    }
+
+    @Override
+    public int compareTo(getInternalStats_result other) {
+      if (!getClass().equals(other.getClass())) {
+        return getClass().getName().compareTo(other.getClass().getName());
+      }
+
+      int lastComparison = 0;
+
+      lastComparison = java.lang.Boolean.compare(isSetSuccess(), other.isSetSuccess());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetSuccess()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.success, other.success);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      lastComparison = java.lang.Boolean.compare(isSetJmxErr(), other.isSetJmxErr());
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+      if (isSetJmxErr()) {
+        lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.jmxErr, other.jmxErr);
+        if (lastComparison != 0) {
+          return lastComparison;
+        }
+      }
+      return 0;
+    }
+
+    @org.apache.thrift.annotation.Nullable
+    public _Fields fieldForId(int fieldId) {
+      return _Fields.findByThriftId(fieldId);
+    }
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot) throws org.apache.thrift.TException {
+      scheme(iprot).read(iprot, this);
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot) throws org.apache.thrift.TException {
+      scheme(oprot).write(oprot, this);
+      }
+
+    @Override
+    public java.lang.String toString() {
+      java.lang.StringBuilder sb = new java.lang.StringBuilder("getInternalStats_result(");
+      boolean first = true;
+
+      sb.append("success:");
+      if (this.success == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.success);
+      }
+      first = false;
+      if (!first) sb.append(", ");
+      sb.append("jmxErr:");
+      if (this.jmxErr == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.jmxErr);
+      }
+      first = false;
+      sb.append(")");
+      return sb.toString();
+    }
+
+    public void validate() throws org.apache.thrift.TException {
+      // check for required fields
+      // check for sub-struct validity
+    }
+
+    private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+      try {
+        write(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(out)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws java.io.IOException, java.lang.ClassNotFoundException {
+      try {
+        read(new org.apache.thrift.protocol.TCompactProtocol(new org.apache.thrift.transport.TIOStreamTransport(in)));
+      } catch (org.apache.thrift.TException te) {
+        throw new java.io.IOException(te);
+      }
+    }
+
+    private static class getInternalStats_resultStandardSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+      public getInternalStats_resultStandardScheme getScheme() {
+        return new getInternalStats_resultStandardScheme();
+      }
+    }
+
+    private static class getInternalStats_resultStandardScheme extends org.apache.thrift.scheme.StandardScheme<getInternalStats_result> {
+
+      public void read(org.apache.thrift.protocol.TProtocol iprot, getInternalStats_result struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TField schemeField;
+        iprot.readStructBegin();
+        while (true)
+        {
+          schemeField = iprot.readFieldBegin();
+          if (schemeField.type == org.apache.thrift.protocol.TType.STOP) { 
+            break;
+          }
+          switch (schemeField.id) {
+            case 0: // SUCCESS
+              if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
+                {
+                  org.apache.thrift.protocol.TList _list56 = iprot.readListBegin();
+                  struct.success = new java.util.ArrayList<InternalStat>(_list56.size);
+                  @org.apache.thrift.annotation.Nullable InternalStat _elem57;
+                  for (int _i58 = 0; _i58 < _list56.size; ++_i58)
+                  {
+                    _elem57 = new InternalStat();
+                    _elem57.read(iprot);
+                    struct.success.add(_elem57);
+                  }
+                  iprot.readListEnd();
+                }
+                struct.setSuccessIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            case 1: // JMX_ERR
+              if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+                struct.jmxErr = new JMXError();
+                struct.jmxErr.read(iprot);
+                struct.setJmxErrIsSet(true);
+              } else { 
+                org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+              }
+              break;
+            default:
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+          }
+          iprot.readFieldEnd();
+        }
+        iprot.readStructEnd();
+
+        // check for required fields of primitive type, which can't be checked in the validate method
+        struct.validate();
+      }
+
+      public void write(org.apache.thrift.protocol.TProtocol oprot, getInternalStats_result struct) throws org.apache.thrift.TException {
+        struct.validate();
+
+        oprot.writeStructBegin(STRUCT_DESC);
+        if (struct.success != null) {
+          oprot.writeFieldBegin(SUCCESS_FIELD_DESC);
+          {
+            oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.success.size()));
+            for (InternalStat _iter59 : struct.success)
+            {
+              _iter59.write(oprot);
+            }
+            oprot.writeListEnd();
+          }
+          oprot.writeFieldEnd();
+        }
+        if (struct.jmxErr != null) {
+          oprot.writeFieldBegin(JMX_ERR_FIELD_DESC);
+          struct.jmxErr.write(oprot);
+          oprot.writeFieldEnd();
+        }
+        oprot.writeFieldStop();
+        oprot.writeStructEnd();
+      }
+
+    }
+
+    private static class getInternalStats_resultTupleSchemeFactory implements org.apache.thrift.scheme.SchemeFactory {
+      public getInternalStats_resultTupleScheme getScheme() {
+        return new getInternalStats_resultTupleScheme();
+      }
+    }
+
+    private static class getInternalStats_resultTupleScheme extends org.apache.thrift.scheme.TupleScheme<getInternalStats_result> {
+
+      @Override
+      public void write(org.apache.thrift.protocol.TProtocol prot, getInternalStats_result struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TTupleProtocol oprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
+        java.util.BitSet optionals = new java.util.BitSet();
+        if (struct.isSetSuccess()) {
+          optionals.set(0);
+        }
+        if (struct.isSetJmxErr()) {
+          optionals.set(1);
+        }
+        oprot.writeBitSet(optionals, 2);
+        if (struct.isSetSuccess()) {
+          {
+            oprot.writeI32(struct.success.size());
+            for (InternalStat _iter60 : struct.success)
+            {
+              _iter60.write(oprot);
+            }
+          }
+        }
+        if (struct.isSetJmxErr()) {
+          struct.jmxErr.write(oprot);
+        }
+      }
+
+      @Override
+      public void read(org.apache.thrift.protocol.TProtocol prot, getInternalStats_result struct) throws org.apache.thrift.TException {
+        org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
+        java.util.BitSet incoming = iprot.readBitSet(2);
+        if (incoming.get(0)) {
+          {
+            org.apache.thrift.protocol.TList _list61 = iprot.readListBegin(org.apache.thrift.protocol.TType.STRUCT);
+            struct.success = new java.util.ArrayList<InternalStat>(_list61.size);
+            @org.apache.thrift.annotation.Nullable InternalStat _elem62;
+            for (int _i63 = 0; _i63 < _list61.size; ++_i63)
+            {
+              _elem62 = new InternalStat();
+              _elem62.read(iprot);
+              struct.success.add(_elem62);
+            }
+          }
+          struct.setSuccessIsSet(true);
+        }
+        if (incoming.get(1)) {
           struct.jmxErr = new JMXError();
           struct.jmxErr.read(iprot);
           struct.setJmxErrIsSet(true);

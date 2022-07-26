@@ -34,6 +34,9 @@ public class JMXFetcher {
     /* ExecutorService is required to run JMX requests with timeout. */
     private final ExecutorService executor;
 
+    /* JMXConnector is used to connect to JMX endpoint. */
+    private JMXConnector connector;
+
     /* MBeanServerConnection is the connection to JMX endpoint. */
     private MBeanServerConnection connection;
 
@@ -42,6 +45,9 @@ public class JMXFetcher {
 
     /* JMX configuration used to connect to JMX endpoint. */
     private JMXConfig jmxConfig;
+
+    /* InternalStats used for troubleshooting. */
+    private InternalStats internalStats;
 
     public JMXFetcher(ExecutorService executor) {
         this.executor = executor;
@@ -69,22 +75,91 @@ public class JMXFetcher {
      * @throws JMXConnectionError JMX connection related exception
      */
     public void connect(JMXConfig jmxConfig) throws JMXConnectionError {
+        if (jmxConfig == null) {
+            throw new JMXConnectionError("failed to connect to JMX server: configuration not provided");
+        }
+
         this.jmxConfig = jmxConfig;
+
+        if (jmxConfig.enableInternalStats) {
+            this.internalStats = new InternalStats(jmxConfig.maxInternalStatsSize);
+        }
 
         String connectionString = buildConnectionString(jmxConfig);
         Map<String, Object> connectionEnv = buildConnectionEnvConfig(jmxConfig);
 
+        InternalStat internalStat = null;
+        if (this.internalStats != null) {
+            internalStat = internalStats.record("connect");
+        }
+
         try {
             JMXServiceURL address = new JMXServiceURL(connectionString);
 
-            JMXConnector connector = JMXConnectorFactory.connect(address, connectionEnv);
+            this.connector = JMXConnectorFactory.connect(address, connectionEnv);
 
             this.connection = connector.getMBeanServerConnection();
+
+            if (internalStat != null) {
+                internalStat.setSuccessful(true);
+            }
         } catch (Exception e) {
             String message = String.format("can't connect to JMX server: '%s', error: '%s'",
                     connectionString,
                     getErrorMessage(e));
             throw new JMXConnectionError(message);
+        } finally {
+            if (internalStat != null) {
+                InternalStats.setElapsedMs(internalStat);
+            }
+        }
+    }
+
+    /**
+     * disconnect from the JMX endpoint.
+     *
+     * @param timeoutMs long timeout for the request in milliseconds
+     * @throws JMXConnectionError JMX connection related exception
+     */
+    public void disconnect(long timeoutMs) throws JMXError, JMXConnectionError {
+        withTimeout(executor.submit((Callable<Void>) () -> {
+            disconnect();
+            return null;
+        }), timeoutMs);
+    }
+
+    /**
+     * disconnect from the JMX endpoint.
+     *
+     * @throws JMXConnectionError JMX connection related exception
+     */
+    public void disconnect() throws JMXConnectionError {
+        if (this.connector == null) {
+            throw new JMXConnectionError()
+                    .setMessage("cannot disconnect, connection to JMX endpoint is not established");
+        }
+
+        InternalStat internalStat = null;
+        if (this.internalStats != null) {
+            internalStat = internalStats.record("disconnect");
+        }
+
+        // Move this to a different variable in case close operation timeouts.
+        JMXConnector oldConnector = this.connector;
+
+        // Mark the connector as null in case to allow reconnection.
+        this.connector = null;
+
+        try {
+            oldConnector.close();
+            if (internalStat != null) {
+                internalStat.setSuccessful(true);
+            }
+        } catch (Exception e) {
+        } finally {
+            if (internalStat != null) {
+                InternalStats.setElapsedMs(internalStat);
+            }
         }
     }
 
@@ -134,9 +209,26 @@ public class JMXFetcher {
             throw new JMXError()
                     .setMessage("can't query MBeans, provided objectName is Null");
         }
+
+        Set<ObjectInstance> result = null;
+
+        InternalStat internalStat = null;
+        if (this.internalStats != null) {
+            internalStat = internalStats.record("queryMBeans")
+                    .setMBean(objectName.toString());
+        }
+
         try {
-            return getConnection().queryMBeans(objectName, null);
+            result = getConnection().queryMBeans(objectName, null);
+
+            if (internalStat != null) {
+                internalStat.setSuccessful(true);
+            }
+
+            return result;
         } catch (ConnectException ce) {
+            disconnect();
+
             String message = String.format("can't connect to JMX server, error: '%s'", ce.getMessage());
             throw new JMXConnectionError(message);
         } catch (IOException ioe) {
@@ -144,6 +236,14 @@ public class JMXFetcher {
                     .setMessage("can't get beans for query: " + objectName)
                     .setCauseMessage(ioe.getMessage())
                     .setStacktrace(getStackTrace(ioe));
+        } finally {
+            if (internalStat != null) {
+                InternalStats.setElapsedMs(internalStat);
+
+                if (result != null) {
+                    internalStat.setResponseCount(result.size());
+                }
+            }
         }
     }
 
@@ -179,9 +279,21 @@ public class JMXFetcher {
 
         MBeanInfo info;
 
+        InternalStat internalStat = null;
+        if (this.internalStats != null) {
+            internalStat = internalStats.record("getMBeanInfo")
+                    .setMBean(objectName.toString());
+        }
+
         try {
             info = getConnection().getMBeanInfo(objectName);
+
+            if (internalStat != null) {
+                internalStat.setSuccessful(true);
+            }
         } catch (ConnectException ce) {
+            disconnect();
+
             String message = String.format("can't connect to JMX server, error: '%s'", ce.getMessage());
             throw new JMXConnectionError(message);
         } catch (InstanceNotFoundException | IntrospectionException | ReflectionException | IOException e) {
@@ -189,6 +301,10 @@ public class JMXFetcher {
                     .setMessage("can't find mBean: " + objectName)
                     .setCauseMessage(e.getMessage())
                     .setStacktrace(getStackTrace(e));
+        } finally {
+            if (internalStat != null) {
+                InternalStats.setElapsedMs(internalStat);
+            }
         }
 
         List<String> result = new ArrayList<>();
@@ -197,6 +313,10 @@ public class JMXFetcher {
         }
 
         for (MBeanAttributeInfo attrInfo : info.getAttributes()) {
+            if (internalStat != null) {
+                internalStat.setResponseCount(internalStat.responseCount + 1);
+            }
+
             if (attrInfo == null || !attrInfo.isReadable()) {
                 continue;
             }
@@ -251,102 +371,81 @@ public class JMXFetcher {
             attributes = getMBeanAttributeNames(objectName);
         }
 
+        InternalStat internalStat = null;
+        if (this.internalStats != null) {
+            internalStat = internalStats.record("getAttributes")
+                    .setMBean(objectName.toString())
+                    .setAttrs(attributes);
+        }
+
         List<Attribute> attrValues = new ArrayList<>();
+        AttributeList attributeList;
         try {
-            AttributeList attributeList = getConnection().getAttributes(objectName, attributes.toArray(new String[0]));
-            if (attributeList == null) {
-                return;
-            }
-            for (Object value : attributeList) {
-                if (value instanceof Attribute) {
-                    Attribute attr = (Attribute) value;
-                    attrValues.add(attr);
-                } else {
-                    throw new Exception("unexpected type for Attribute");
-                }
+            attributeList = getConnection().getAttributes(objectName, attributes.toArray(new String[0]));
+
+            if (internalStat != null) {
+                internalStat.setSuccessful(true);
             }
         } catch (ConnectException ce) {
+            disconnect();
+
             String message = String.format("can't connect to JMX server, error: '%s'", ce.getMessage());
             throw new JMXConnectionError(message);
         } catch (Exception e) {
-            // When running a call for multiple attributes it can fail only because one of them.
-            // In that case we try to make a separate call for each one.
-            for (String attribute : attributes) {
-                String formattedAttrName = formatAttributeName(objectName, attribute);
+            throw new JMXError()
+                    .setMessage("can't get attributes: " + attributes + " for bean: " + objectName + ": ")
+                    .setCauseMessage(e.getMessage())
+                    .setStacktrace(getStackTrace(e));
+        } finally {
+            if (internalStat != null) {
+                InternalStats.setElapsedMs(internalStat);
+            }
+        }
+
+        // Keep a track of requested attributes to report the ones that we fail to retrieve.
+        List<String> missingAttrs = new ArrayList<>(attributes);
+
+        try {
+            if (attributeList == null) {
+                return;
+            }
+
+            for (Object value : attributeList) {
+                if (internalStat != null) {
+                    internalStat.setResponseCount(internalStat.responseCount + 1);
+                }
+
+                if (value instanceof Attribute) {
+                    Attribute attr = (Attribute) value;
+                    attrValues.add(attr);
+
+                    missingAttrs.remove(attr.getName());
+                }
+            }
+
+            for (Attribute attrValue : attrValues) {
+                String formattedAttrName = formatAttributeName(objectName, attrValue.getName());
 
                 try {
-                    getMBeanAttribute(objectName, attribute, output);
+                    parseValue(formattedAttrName, attrValue.getValue(), output);
                 } catch (JMXError je) {
-                    String statusMessage = String.format("can't get attribute, error: '%s', cause: '%s', stacktrace: '%s'", je.message, je.causeMessage, je.stacktrace);
+                    String statusMessage = String.format("can't parse attribute, error: '%s', cause: '%s', stacktrace: '%s'", je.message, je.causeMessage, je.stacktrace);
                     output.add(new AttributeResponse()
                             .setName(formattedAttrName)
                             .setResponseType(ResponseType.ERROR)
                             .setStatusMsg(statusMessage));
                 }
             }
-        }
-
-        for (Attribute attrValue : attrValues) {
-            String formattedAttrName = formatAttributeName(objectName, attrValue.getName());
-
-            try {
-                parseValue(formattedAttrName, attrValue.getValue(), output);
-            } catch (JMXError je) {
-                String statusMessage = String.format("can't parse attribute, error: '%s', cause: '%s', stacktrace: '%s'", je.message, je.causeMessage, je.stacktrace);
+        } finally {
+            // Report requested attributes that we didn't retrieve.
+            for (String attr : missingAttrs) {
+                String formattedAttrName = formatAttributeName(objectName, attr);
                 output.add(new AttributeResponse()
                         .setName(formattedAttrName)
                         .setResponseType(ResponseType.ERROR)
-                        .setStatusMsg(statusMessage));
+                        .setStatusMsg("failed to retrieve attribute value from server"));
             }
         }
-    }
-
-    /**
-     * getMBeanAttribute fetches the attribute value for an mBeanName.
-     * CompositeData is handled as multiple values.
-     *
-     * @param objectName of which we want to retrieve the attribute values
-     * @param attribute  of which we want to retrieve the attribute values
-     * @param output     List<AttributeResponse> to add the fetched attribute values.
-     * @throws JMXError           JMX related Exception
-     * @throws JMXConnectionError JMX connection related exception
-     */
-    private void getMBeanAttribute(ObjectName objectName, String attribute, List<AttributeResponse> output) throws JMXConnectionError, JMXError {
-        if (objectName == null) {
-            throw new JMXError()
-                    .setMessage("can't get attribute value, provided objectName is Null");
-        }
-
-        if (attribute == null) {
-            throw new JMXError()
-                    .setMessage("can't get attribute value, provided attribute name is Null");
-        }
-
-        if (output == null) {
-            throw new JMXError()
-                    .setMessage("can't deserialize attribute value, provided output list is Null");
-        }
-
-        Object value;
-        try {
-            value = getConnection().getAttribute(objectName, attribute);
-            if (value instanceof Attribute) {
-                Attribute jmxAttr = (Attribute) value;
-                value = jmxAttr.getValue();
-            }
-        } catch (ConnectException ce) {
-            String message = String.format("can't connect to JMX server, error: '%s'", ce.getMessage());
-            throw new JMXConnectionError(message);
-        } catch (Exception e) {
-            throw new JMXError()
-                    .setMessage("can't get attribute: " + attribute + " for bean: " + objectName + ": ")
-                    .setCauseMessage(e.getMessage())
-                    .setStacktrace(getStackTrace(e));
-        }
-
-
-        String formattedAttrName = formatAttributeName(objectName, attribute);
-        parseValue(formattedAttrName, value, output);
     }
 
     /**
@@ -519,12 +618,34 @@ public class JMXFetcher {
     }
 
     /**
+     * collect the internal stats used for troubleshooting
+     *
+     * @return List<InternalStat> the collected nrjmx internal query stats.
+     */
+    public List<InternalStat> getInternalStats() throws JMXError {
+        if (internalStats == null) {
+            throw new JMXError()
+                    .setMessage("internal stats not activated");
+        }
+
+        return internalStats.getStats();
+    }
+
+    /**
      * getConnection returns the connection the the JMX endpoint.
      *
      * @return MBeanServerConnection the connection to the JMX endpoint
      * @throws JMXConnectionError JMX connection related Exception
      */
-    private MBeanServerConnection getConnection() throws JMXConnectionError {
+    private MBeanServerConnection getConnection() throws JMXConnectionError, JMXError {
+        if (jmxConfig == null) {
+            throw new JMXConnectionError("failed to get connection to JMX server: configuration not provided");
+        }
+
+        if (this.connector == null) {
+            connect(jmxConfig);
+        }
+
         if (this.connection == null) {
             throw new JMXConnectionError()
                     .setMessage("connection to JMX endpoint is not established");
