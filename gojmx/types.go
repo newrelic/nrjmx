@@ -82,7 +82,7 @@ func (j *JMXError) Error() string {
 
 // IsJMXError asserts if the error is JMXError.
 func IsJMXError(err error) (*JMXError, bool) {
-	if e, ok := err.(*JMXError); err != nil && ok {
+	if e, ok := err.(*JMXError); ok {
 		return e, ok
 	}
 	return nil, false
@@ -113,7 +113,7 @@ func newJMXConnectionError(message string, args ...interface{}) *JMXConnectionEr
 
 // IsJMXConnectionError tries to convert the error to exported JMXConnectionError.
 func IsJMXConnectionError(err error) (*JMXConnectionError, bool) {
-	if e, ok := err.(*JMXConnectionError); err != nil && ok {
+	if e, ok := err.(*JMXConnectionError); ok {
 		return e, ok
 	}
 	return nil, false
@@ -182,7 +182,7 @@ func newJMXClientError(message string, args ...interface{}) *JMXClientError {
 
 // IsJMXClientError checks if the err is JMXJMXClientError.
 func IsJMXClientError(err error) (*JMXClientError, bool) {
-	if e, ok := err.(*JMXClientError); err != nil && ok {
+	if e, ok := err.(*JMXClientError); ok {
 		return e, ok
 	}
 	return nil, false

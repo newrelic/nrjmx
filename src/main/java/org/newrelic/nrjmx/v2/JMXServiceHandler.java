@@ -52,7 +52,7 @@ public class JMXServiceHandler implements JMXService.Iface {
 
     @Override
     public List<String> queryMBeanNames(String mBeanNamePattern) throws TException {
-        return jmxFetcher.queryMBeanNames(mBeanNamePattern, requestTimeoutMs);
+       return jmxFetcher.queryMBeanNames(mBeanNamePattern, requestTimeoutMs);
     }
 
     @Override

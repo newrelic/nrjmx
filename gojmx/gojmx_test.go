@@ -27,7 +27,7 @@ var timeStamp = time.Date(2022, time.January, 1, 01, 23, 45, 0, time.Local).Unix
 
 func init() {
 	_ = os.Setenv("NR_JMX_TOOL", filepath.Join(testutils.PrjDir, "bin", "nrjmx"))
-	//_ = os.Setenv("NRIA_NRJMX_DEBUG", "true")
+	// _ = os.Setenv("NRIA_NRJMX_DEBUG", "true")
 }
 
 func Test_Query_Success_LargeAmountOfData(t *testing.T) {
@@ -516,7 +516,7 @@ func Test_Wrong_Connection(t *testing.T) {
 	client, err := NewClient(ctx).Open(config)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Connection refused to host: localhost;")
-	defer assertCloseClientError(t, client)
+	defer assertCloseClientNoError(t, client)
 
 	// AND query returns expected error
 	assert.Contains(t, err.Error(), "Connection refused to host: localhost;") // TODO: fix this, doesn't return the correct error
