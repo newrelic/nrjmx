@@ -75,6 +75,10 @@ public class JMXFetcher {
      * @throws JMXConnectionError JMX connection related exception
      */
     public void connect(JMXConfig jmxConfig) throws JMXConnectionError {
+        if (jmxConfig == null) {
+            throw new JMXConnectionError("failed to connect to JMX server: configuration not provided");
+        }
+
         this.jmxConfig = jmxConfig;
 
         if (jmxConfig.enableInternalStats) {
@@ -134,8 +138,15 @@ public class JMXFetcher {
             throw new JMXConnectionError()
                     .setMessage("cannot disconnect, connection to JMX endpoint is not established");
         }
+
+        // Move this to a different variable in case close operation timeouts.
+        JMXConnector oldConnector = this.connector;
+
+        // Mark the connector as null in case to allow reconnection.
+        this.connector = null;
+
         try {
-            connector.close();
+            oldConnector.close();
         } catch (Exception e) {
         }
     }
@@ -201,7 +212,11 @@ public class JMXFetcher {
             if (internalStat != null) {
                 internalStat.setSuccessful(true);
             }
+
+            return result;
         } catch (ConnectException ce) {
+            disconnect();
+
             String message = String.format("can't connect to JMX server, error: '%s'", ce.getMessage());
             throw new JMXConnectionError(message);
         } catch (IOException ioe) {
@@ -218,8 +233,6 @@ public class JMXFetcher {
                 }
             }
         }
-
-        return result;
     }
 
     /**
@@ -267,6 +280,8 @@ public class JMXFetcher {
                 internalStat.setSuccessful(true);
             }
         } catch (ConnectException ce) {
+            disconnect();
+
             String message = String.format("can't connect to JMX server, error: '%s'", ce.getMessage());
             throw new JMXConnectionError(message);
         } catch (InstanceNotFoundException | IntrospectionException | ReflectionException | IOException e) {
@@ -360,6 +375,8 @@ public class JMXFetcher {
                 internalStat.setSuccessful(true);
             }
         } catch (ConnectException ce) {
+            disconnect();
+
             String message = String.format("can't connect to JMX server, error: '%s'", ce.getMessage());
             throw new JMXConnectionError(message);
         } catch (Exception e) {
@@ -608,7 +625,15 @@ public class JMXFetcher {
      * @return MBeanServerConnection the connection to the JMX endpoint
      * @throws JMXConnectionError JMX connection related Exception
      */
-    private MBeanServerConnection getConnection() throws JMXConnectionError {
+    private MBeanServerConnection getConnection() throws JMXConnectionError, JMXError {
+        if (jmxConfig == null) {
+            throw new JMXConnectionError("failed to get connection to JMX server: configuration not provided");
+        }
+
+        if (this.connector == null) {
+                connect(jmxConfig);
+        }
+
         if (this.connection == null) {
             throw new JMXConnectionError()
                     .setMessage("connection to JMX endpoint is not established");
@@ -667,6 +692,11 @@ public class JMXFetcher {
             connectionEnv.put(JMXConnector.CREDENTIALS, new String[]{jmxConfig.username, jmxConfig.password});
         }
 
+        if (jmxConfig.requestTimeoutMs > 0) {
+            connectionEnv.put("attribute.remote.x.request.waiting.timeout", jmxConfig.requestTimeoutMs);
+            connectionEnv.put("sun.rmi.transport.tcp.responseTimeout", jmxConfig.requestTimeoutMs);
+        }
+
         if (!"".equals(jmxConfig.keyStore) && !"".equals(jmxConfig.trustStore)) {
             Properties p = System.getProperties();
             p.put("javax.net.ssl.keyStore", jmxConfig.keyStore);
@@ -722,5 +752,4 @@ public class JMXFetcher {
     private String formatAttributeName(ObjectName objectName, String attribute) {
         return String.format("%s,attr=%s", objectName, attribute);
     }
-
 }

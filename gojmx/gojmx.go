@@ -24,9 +24,6 @@ const (
 	unknownNRJMXVersion = "<unknown>"
 )
 
-// errPingTimeout returned if pingTimeout exceeded.
-var errPingTimeout = newJMXConnectionError("could not establish communication with nrjmx process: ping timeout")
-
 // Client to connect with a JMX endpoint.
 type Client struct {
 	// jmxService is the thrift implementation to communicate with nrjmx subprocess.
@@ -52,29 +49,42 @@ func (c *Client) Open(config *JMXConfig) (client *Client, err error) {
 		return c, err
 	}
 
-	defer func() {
-		if err != nil {
-			c.Close()
-		}
-	}()
-
 	c.jmxService, err = c.configureJMXServiceClient()
 	if err != nil {
+		c.nrJMXProcess.waitExit(nrJMXExitTimeout)
 		return c, err
 	}
 
 	c.version, err = c.ping(pingTimeout)
 	if err != nil {
+		c.nrJMXProcess.waitExit(nrJMXExitTimeout)
 		return c, err
 	}
 
 	return c, c.connect(config)
 }
 
+// IsClientRunning returns if the nrjmx client is running.
+func (c *Client) IsRunning() bool {
+	if c.nrJMXProcess == nil {
+		return false
+	}
+
+	return c.nrJMXProcess.state.IsRunning()
+}
+
+// checkNRJMXProccessError will check if the nrjmx subprocess returned any error.
+func (c *Client) checkNRJMXProccessError() error {
+	if c.nrJMXProcess == nil {
+		return errProcessNotRunning
+	}
+	return c.nrJMXProcess.error()
+}
+
 // QueryMBeanNames returns all the mbeans that match the glob pattern DOMAIN:BEAN.
 // e.g *:* or jboss.as:subsystem=remoting,configuration=endpoint
 func (c *Client) QueryMBeanNames(mBeanGlobPattern string) ([]string, error) {
-	if err := c.nrJMXProcess.error(); err != nil {
+	if err := c.checkNRJMXProccessError(); err != nil {
 		return nil, err
 	}
 	result, err := c.jmxService.QueryMBeanNames(c.ctx, mBeanGlobPattern)
@@ -84,7 +94,7 @@ func (c *Client) QueryMBeanNames(mBeanGlobPattern string) ([]string, error) {
 
 // GetMBeanAttributeNames returns all the available JMX attribute names for a given mBeanName.
 func (c *Client) GetMBeanAttributeNames(mBeanName string) ([]string, error) {
-	if err := c.nrJMXProcess.error(); err != nil {
+	if err := c.checkNRJMXProccessError(); err != nil {
 		return nil, err
 	}
 	result, err := c.jmxService.GetMBeanAttributeNames(c.ctx, mBeanName)
@@ -93,7 +103,7 @@ func (c *Client) GetMBeanAttributeNames(mBeanName string) ([]string, error) {
 
 // GetMBeanAttributes returns the JMX attribute values.
 func (c *Client) GetMBeanAttributes(mBeanName string, mBeanAttrName ...string) ([]*AttributeResponse, error) {
-	if err := c.nrJMXProcess.error(); err != nil {
+	if err := c.checkNRJMXProccessError(); err != nil {
 		return nil, err
 	}
 
@@ -103,7 +113,7 @@ func (c *Client) GetMBeanAttributes(mBeanName string, mBeanAttrName ...string) (
 
 // Close will stop the connection with the JMX endpoint.
 func (c *Client) Close() error {
-	if err := c.nrJMXProcess.error(); err != nil {
+	if err := c.checkNRJMXProccessError(); err != nil {
 		return err
 	}
 	c.jmxService.Disconnect(c.ctx)
@@ -124,7 +134,7 @@ func (c *Client) GetClientVersion() string {
 // 3. GetMBeanAttributes
 // If an error occur it checks if it's a collection error (it can recover) or a connection error (that blocks all the collection).
 func (c *Client) QueryMBeanAttributes(mBeanNamePattern string, mBeanAttrName ...string) ([]*AttributeResponse, error) {
-	if err := c.nrJMXProcess.error(); err != nil {
+	if err := c.checkNRJMXProccessError(); err != nil {
 		return nil, err
 	}
 
@@ -137,7 +147,7 @@ func (c *Client) QueryMBeanAttributes(mBeanNamePattern string, mBeanAttrName ...
 // Additionally you can set a maximum size for the collected stats using JMXConfig.MaxInternalStatsSize. (default: 100000)
 // Each time you retrieve GetInternalStats, the internal stats will be cleaned.
 func (c *Client) GetInternalStats() ([]*InternalStat, error) {
-	if err := c.nrJMXProcess.error(); err != nil {
+	if err := c.checkNRJMXProccessError(); err != nil {
 		return nil, err
 	}
 	result, err := c.jmxService.GetInternalStats(c.ctx)
@@ -148,7 +158,7 @@ func (c *Client) GetInternalStats() ([]*InternalStat, error) {
 // connect will pass the JMXConfig to nrjmx subprocess and establish the
 // connection with the JMX endpoint.
 func (c *Client) connect(config *JMXConfig) (err error) {
-	if err = c.nrJMXProcess.error(); err != nil {
+	if err := c.checkNRJMXProccessError(); err != nil {
 		return err
 	}
 	err = c.jmxService.Connect(c.ctx, config.convertToProtocol())
@@ -160,6 +170,7 @@ func (c *Client) connect(config *JMXConfig) (err error) {
 func (c *Client) ping(timeout time.Duration) (string, error) {
 	ctx, cancel := context.WithCancel(c.ctx)
 	defer cancel()
+
 	done := make(chan string, 1)
 	go func() {
 		for ctx.Err() == nil {
@@ -171,6 +182,7 @@ func (c *Client) ping(timeout time.Duration) (string, error) {
 			break
 		}
 	}()
+
 	select {
 	case <-time.After(timeout):
 		return "<nil>", errPingTimeout

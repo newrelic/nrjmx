@@ -31,7 +31,9 @@ public class JMXServiceHandler implements JMXService.Iface {
 
     @Override
     public void connect(JMXConfig config) throws TException {
-        this.requestTimeoutMs = config.requestTimeoutMs;
+        if (config != null) {
+            requestTimeoutMs = config.requestTimeoutMs;
+        }
         jmxFetcher.connect(config, requestTimeoutMs);
     }
 

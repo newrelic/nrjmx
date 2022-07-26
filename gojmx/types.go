@@ -153,3 +153,37 @@ func (is *InternalStat) String() string {
 func toInternalStatList(in []*nrprotocol.InternalStat) []*InternalStat {
 	return *(*[]*InternalStat)(unsafe.Pointer(&in))
 }
+
+// JMXClientError is returned when there is an nrjmx process error.
+// Those errors require opening a new client.
+type JMXClientError struct {
+	Message string
+}
+
+func (e *JMXClientError) String() string {
+	if e == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("nrjmx client error: %s", removeNewLines(e.Message))
+}
+
+func (e *JMXClientError) Error() string {
+	return e.String()
+}
+
+func newJMXClientError(message string, args ...interface{}) *JMXClientError {
+	if len(args) > 0 {
+		message = fmt.Sprintf(message, args...)
+	}
+	return &JMXClientError{
+		Message: message,
+	}
+}
+
+// IsJMXClientError checks if the err is JMXJMXClientError.
+func IsJMXClientError(err error) (*JMXClientError, bool) {
+	if e, ok := err.(*JMXClientError); ok {
+		return e, ok
+	}
+	return nil, false
+}

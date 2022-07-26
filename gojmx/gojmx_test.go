@@ -933,6 +933,54 @@ func TestGetInternalStats(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, len(internalStats) == 0)
 }
+
+func TestConnectionRecovers(t *testing.T) {
+	ctx := context.Background()
+
+	// GIVEN a JMX Server running inside a container
+	container, err := testutils.RunJMXServiceContainer(ctx)
+	require.NoError(t, err)
+
+	jmxHost, jmxPort, err := testutils.GetContainerMappedPort(ctx, container, testutils.TestServerJMXPort)
+	require.NoError(t, err)
+
+	// THEN JMX connection can be oppened
+	config := &JMXConfig{
+		Hostname:         jmxHost,
+		Port:             int32(jmxPort.Int()),
+		RequestTimeoutMs: testutils.DefaultTimeoutMs,
+	}
+
+	query := "java.lang:type=*"
+
+	client, err := NewClient(ctx).Open(config)
+	assert.NoError(t, err)
+	defer assertCloseClientNoError(t, client)
+
+	_, err = client.QueryMBeanNames(query)
+	assert.NoError(t, err)
+
+	assert.NoError(t, container.Terminate(ctx))
+
+	_, err = client.QueryMBeanNames(query)
+	err, ok := IsJMXConnectionError(err)
+
+	assert.True(t, ok)
+	assert.Error(t, err)
+
+	container, err = testutils.RunJMXServiceContainer(ctx)
+	assert.NoError(t, err)
+	defer container.Terminate(ctx)
+
+	assert.True(t, client.IsRunning())
+
+	assert.Eventually(t, func() bool {
+		_, err = client.QueryMBeanNames(query)
+		return err == nil
+	}, 5*time.Second, 50*time.Millisecond,
+		"didn't managed to recover connection")
+}
+
 func TestProcessExits(t *testing.T) {
 	ctx := context.Background()
 
