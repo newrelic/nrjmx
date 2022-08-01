@@ -39,37 +39,41 @@ public class InternalStats {
      * Records a new InternalStat and returns it for attaching more data if required.
      *
      * @param statType String name of the stat.
-     *
      * @return InternalStat new registered stat to add data to it.
      */
     public InternalStat record(String statType) {
-        if (stats.size() >= maxSize) {
-            stats.remove(0);
-        }
+        synchronized (stats) {
+            if (stats.size() >= maxSize) {
+                stats.remove(0);
+            }
 
-        InternalStat stat = new InternalStat()
-                .setStartTimestamp(System.currentTimeMillis())
-                .setMilliseconds((double)System.nanoTime() / 1000000.0)
-                .setStatType(statType);
-        stats.add(stat);
-        return stat;
+            InternalStat stat = new InternalStat()
+                    .setStartTimestamp(System.currentTimeMillis())
+                    .setMilliseconds((double) System.nanoTime() / 1000000.0)
+                    .setStatType(statType);
+            stats.add(stat);
+            return stat;
+        }
     }
 
     /**
      * Returns all the collected stats and clear them.
-     **
+     *
+     *
      * @return List<InternalStat> returns all collected internal stats.
      */
     public List<InternalStat> getStats() {
-        List<InternalStat> stats = this.stats;
-        this.stats = new ArrayList<>();
-        return stats;
+        synchronized (this.stats) {
+            List<InternalStat> stats = new ArrayList<>(this.stats);
+            this.stats = new ArrayList<>();
+            return stats;
+        }
     }
 
     /**
      * Calculate the elapsed ms with .3f precision since the stat was recorded and attach it to the stat.
      */
     public static void setElapsedMs(InternalStat internalStat) {
-        internalStat.setMilliseconds((double)System.nanoTime() / 1000000.0 - internalStat.milliseconds);
+        internalStat.setMilliseconds((double) System.nanoTime() / 1000000.0 - internalStat.milliseconds);
     }
 }

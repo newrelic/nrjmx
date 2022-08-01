@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
-import java.rmi.ConnectException;
 import java.text.DateFormat;
 import java.util.*;
 import java.util.concurrent.*;
@@ -134,6 +133,10 @@ public class JMXFetcher {
      * @throws JMXConnectionError JMX connection related exception
      */
     public void disconnect() throws JMXConnectionError {
+        if (Thread.interrupted()) {
+            return;
+        }
+
         if (this.connector == null) {
             throw new JMXConnectionError()
                     .setMessage("cannot disconnect, connection to JMX endpoint is not established");
@@ -226,16 +229,18 @@ public class JMXFetcher {
             }
 
             return result;
-        } catch (ConnectException ce) {
+        } catch (JMXConnectionError je) {
+            throw je;
+        } catch (IOException io) {
             disconnect();
 
-            String message = String.format("can't connect to JMX server, error: '%s'", ce.getMessage());
+            String message = String.format("problem occurred when talking to the JMX server while querying mBeans, error: '%s'", io.getMessage());
             throw new JMXConnectionError(message);
-        } catch (IOException ioe) {
+        } catch (Exception e) {
             throw new JMXError()
                     .setMessage("can't get beans for query: " + objectName)
-                    .setCauseMessage(ioe.getMessage())
-                    .setStacktrace(getStackTrace(ioe));
+                    .setCauseMessage(e.getMessage())
+                    .setStacktrace(getStackTrace(e));
         } finally {
             if (internalStat != null) {
                 InternalStats.setElapsedMs(internalStat);
@@ -291,12 +296,14 @@ public class JMXFetcher {
             if (internalStat != null) {
                 internalStat.setSuccessful(true);
             }
-        } catch (ConnectException ce) {
+        } catch (JMXConnectionError je) {
+            throw je;
+        } catch (IOException io) {
             disconnect();
 
-            String message = String.format("can't connect to JMX server, error: '%s'", ce.getMessage());
+            String message = String.format("problem occurred when talking to the JMX server while requesting mBean info, error: '%s'", io.getMessage());
             throw new JMXConnectionError(message);
-        } catch (InstanceNotFoundException | IntrospectionException | ReflectionException | IOException e) {
+        } catch (InstanceNotFoundException | IntrospectionException | ReflectionException e) {
             throw new JMXError()
                     .setMessage("can't find mBean: " + objectName)
                     .setCauseMessage(e.getMessage())
@@ -386,10 +393,12 @@ public class JMXFetcher {
             if (internalStat != null) {
                 internalStat.setSuccessful(true);
             }
-        } catch (ConnectException ce) {
+        } catch (JMXConnectionError je) {
+            throw je;
+        } catch (IOException io) {
             disconnect();
 
-            String message = String.format("can't connect to JMX server, error: '%s'", ce.getMessage());
+            String message = String.format("problem occurred when talking to the JMX server while requesting attributes, error: '%s'", io.getMessage());
             throw new JMXConnectionError(message);
         } catch (Exception e) {
             throw new JMXError()
@@ -525,6 +534,7 @@ public class JMXFetcher {
      * @throws JMXConnectionError JMX connection related exception
      */
     private <T> T withTimeout(Future<T> future, long timeoutMs) throws JMXError, JMXConnectionError {
+
         try {
             if (timeoutMs <= 0) {
                 return future.get();
@@ -551,6 +561,8 @@ public class JMXFetcher {
             throw new JMXError()
                     .setMessage("failed to execute operation, error: " + e.getMessage())
                     .setStacktrace(getStackTrace(e));
+        } finally {
+            future.cancel(true);
         }
     }
 
@@ -637,7 +649,7 @@ public class JMXFetcher {
      * @return MBeanServerConnection the connection to the JMX endpoint
      * @throws JMXConnectionError JMX connection related Exception
      */
-    private MBeanServerConnection getConnection() throws JMXConnectionError, JMXError {
+    private MBeanServerConnection getConnection() throws JMXConnectionError {
         if (jmxConfig == null) {
             throw new JMXConnectionError("failed to get connection to JMX server: configuration not provided");
         }
@@ -712,6 +724,7 @@ public class JMXFetcher {
             p.put("javax.net.ssl.trustStorePassword", jmxConfig.trustStorePassword);
             connectionEnv.put("com.sun.jndi.rmi.factory.socket", new SslRMIClientSocketFactory());
         }
+
         return connectionEnv;
     }
 
