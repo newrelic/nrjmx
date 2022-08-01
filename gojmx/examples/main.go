@@ -16,7 +16,7 @@ import (
 
 func init() {
 	// Uncomment this when you want use the nrjmx.jar build from the project bin directory.
-	_ = os.Setenv("NR_JMX_TOOL", filepath.Join("..", "bin", "nrjmx"))
+	_ = os.Setenv("NR_JMX_TOOL", filepath.Join("../../", "bin", "nrjmx"))
 
 	// Uncomment this when you want to run both: golang debugger and java debugger.
 	//_ = os.Setenv("NRIA_NRJMX_DEBUG", "true")
@@ -28,6 +28,9 @@ func main() {
 		Hostname:         "localhost",
 		Port:             7199,
 		RequestTimeoutMs: 10000,
+
+		// Enable internal gojmx stats for troubleshooting.
+		EnableInternalStats: true,
 	}
 
 	// Connect to JMX endpoint.
@@ -53,7 +56,7 @@ func main() {
 		}
 		for _, attr := range jmxAttrs {
 			if attr.ResponseType == gojmx.ResponseTypeErr {
-				fmt.Println(attr.StatusMsg)
+				fmt.Println(attr.Name, attr.StatusMsg)
 				continue
 			}
 			printAttr(attr)
@@ -67,10 +70,18 @@ func main() {
 	handleError(err)
 	for _, attr := range response {
 		if attr.ResponseType == gojmx.ResponseTypeErr {
-			fmt.Println(attr.StatusMsg)
+			fmt.Println(attr.Name, attr.StatusMsg)
 			continue
 		}
 		printAttr(attr)
+	}
+
+	// Collecting gojmx internal query stats. Use this only for troubleshooting.
+	internalStats, err := client.GetInternalStats()
+	handleError(err)
+
+	for _, internalStat := range internalStats {
+		fmt.Println(internalStat.String())
 	}
 }
 

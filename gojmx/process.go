@@ -7,11 +7,12 @@ package gojmx
 
 import (
 	"context"
-	"github.com/newrelic/nrjmx/gojmx/internal/nrjmx"
 	"io"
 	"os"
 	"os/exec"
 	"time"
+
+	"github.com/newrelic/nrjmx/gojmx/internal/nrjmx"
 )
 
 const (
@@ -20,8 +21,11 @@ const (
 )
 
 var (
-	errProcessAlreadyRunning = newJMXConnectionError("nrjmx subprocess is already running")
-	errProcessNotRunning     = newJMXConnectionError("nrjmx subprocess is not running")
+	errProcessAlreadyRunning = newJMXClientError("nrjmx subprocess is already running")
+	errProcessNotRunning     = newJMXClientError("nrjmx subprocess is not running")
+
+	// errPingTimeout returned if pingTimeout exceeded.
+	errPingTimeout = newJMXConnectionError("could not establish communication with nrjmx: subprocess response timeout")
 )
 
 // process will handle the nrjmx subprocess.
@@ -46,14 +50,12 @@ func newProcess(ctx context.Context) *process {
 }
 
 // start the nrjmx subprocess.
-func (p *process) start() (*process, error) {
+func (p *process) start() (proc *process, err error) {
 	if p.state.IsRunning() {
 		return p, errProcessAlreadyRunning
 	}
 
 	p.cmd = buildExecCommand(p.ctx)
-
-	var err error
 
 	defer func() {
 		if err != nil {
@@ -63,29 +65,31 @@ func (p *process) start() (*process, error) {
 
 	p.Stdout, err = p.cmd.StdoutPipe()
 	if err != nil {
-		return nil, newJMXConnectionError("failed to create stdout pipe to %q: %v", p.cmd.Path, err)
+		return nil, newJMXClientError("failed to create stdout pipe to %q: %v", p.cmd.Path, err)
 	}
 
 	p.Stdin, err = p.cmd.StdinPipe()
 	if err != nil {
-		return nil, newJMXConnectionError("failed to create stdin pipe to %q: %v", p.cmd.Path, err)
+		return nil, newJMXClientError("failed to create stdin pipe to %q: %v", p.cmd.Path, err)
 	}
 
 	stderrBuff := nrjmx.NewDefaultLimitedBuffer()
 	p.cmd.Stderr = stderrBuff
 
-	if err := p.cmd.Start(); err != nil {
-		return p, newJMXConnectionError("failed to start %q: %v", p.cmd.Path, err)
+	if err = p.cmd.Start(); err != nil {
+		return p, newJMXClientError("failed to start %q: %v", p.cmd.Path, err)
 	}
 	p.state.Start()
 
 	go func() {
 		err := p.cmd.Wait()
 		if err != nil {
-			err = newJMXConnectionError("nrjmx process exited with error: %v: stderr: %s",
+			err = newJMXClientError("nrjmx process exited with error: %v: stderr: %s",
 				err,
 				stderrBuff.String())
 		}
+
+		p.terminate()
 		p.state.Stop(err)
 	}()
 
@@ -119,7 +123,7 @@ func (p *process) waitExit(timeout time.Duration) error {
 		return err
 	case <-time.After(timeout):
 		err := p.terminate()
-		return newJMXConnectionError(
+		return newJMXClientError(
 			"timeout exceeded while waiting for nrjmx process to exit gracefully, attempting to terminate the process, error: %v",
 			err,
 		)
@@ -128,15 +132,17 @@ func (p *process) waitExit(timeout time.Duration) error {
 
 // terminate will stop the nrjmx process.
 func (p *process) terminate() (err error) {
-	if !p.state.IsRunning() {
-		return
+
+	if p.Stdout != nil {
+		if stdoutErr := p.Stdout.Close(); stdoutErr != nil {
+			err = newJMXClientError("failed to detach stdout from %q: %v", p.cmd.Path, stdoutErr)
+		}
 	}
 
-	if stdoutErr := p.Stdout.Close(); stdoutErr != nil {
-		err = newJMXConnectionError("failed to detach stdout from %q: %v", p.cmd.Path, stdoutErr)
-	}
-	if stdinErr := p.Stdin.Close(); stdinErr != nil {
-		err = newJMXConnectionError("failed to detach stdin from %q: %v", p.cmd.Path, stdinErr)
+	if p.Stdin != nil {
+		if stdinErr := p.Stdin.Close(); stdinErr != nil {
+			err = newJMXClientError("failed to detach stdin from %q: %v", p.cmd.Path, stdinErr)
+		}
 	}
 
 	p.cancel()
