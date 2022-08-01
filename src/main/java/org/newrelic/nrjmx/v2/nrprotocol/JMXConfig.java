@@ -25,6 +25,8 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
   private static final org.apache.thrift.protocol.TField USE_SSL_FIELD_DESC = new org.apache.thrift.protocol.TField("useSSL", org.apache.thrift.protocol.TType.BOOL, (short)13);
   private static final org.apache.thrift.protocol.TField REQUEST_TIMEOUT_MS_FIELD_DESC = new org.apache.thrift.protocol.TField("requestTimeoutMs", org.apache.thrift.protocol.TType.I64, (short)14);
   private static final org.apache.thrift.protocol.TField VERBOSE_FIELD_DESC = new org.apache.thrift.protocol.TField("verbose", org.apache.thrift.protocol.TType.BOOL, (short)15);
+  private static final org.apache.thrift.protocol.TField ENABLE_INTERNAL_STATS_FIELD_DESC = new org.apache.thrift.protocol.TField("enableInternalStats", org.apache.thrift.protocol.TType.BOOL, (short)16);
+  private static final org.apache.thrift.protocol.TField MAX_INTERNAL_STATS_SIZE_FIELD_DESC = new org.apache.thrift.protocol.TField("maxInternalStatsSize", org.apache.thrift.protocol.TType.I64, (short)17);
 
   private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new JMXConfigStandardSchemeFactory();
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new JMXConfigTupleSchemeFactory();
@@ -44,6 +46,8 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
   public boolean useSSL; // required
   public long requestTimeoutMs; // required
   public boolean verbose; // required
+  public boolean enableInternalStats; // required
+  public long maxInternalStatsSize; // required
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -61,7 +65,9 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
     IS_JBOSS_STANDALONE_MODE((short)12, "isJBossStandaloneMode"),
     USE_SSL((short)13, "useSSL"),
     REQUEST_TIMEOUT_MS((short)14, "requestTimeoutMs"),
-    VERBOSE((short)15, "verbose");
+    VERBOSE((short)15, "verbose"),
+    ENABLE_INTERNAL_STATS((short)16, "enableInternalStats"),
+    MAX_INTERNAL_STATS_SIZE((short)17, "maxInternalStatsSize");
 
     private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -107,6 +113,10 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
           return REQUEST_TIMEOUT_MS;
         case 15: // VERBOSE
           return VERBOSE;
+        case 16: // ENABLE_INTERNAL_STATS
+          return ENABLE_INTERNAL_STATS;
+        case 17: // MAX_INTERNAL_STATS_SIZE
+          return MAX_INTERNAL_STATS_SIZE;
         default:
           return null;
       }
@@ -154,6 +164,8 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
   private static final int __USESSL_ISSET_ID = 3;
   private static final int __REQUESTTIMEOUTMS_ISSET_ID = 4;
   private static final int __VERBOSE_ISSET_ID = 5;
+  private static final int __ENABLEINTERNALSTATS_ISSET_ID = 6;
+  private static final int __MAXINTERNALSTATSSIZE_ISSET_ID = 7;
   private byte __isset_bitfield = 0;
   private static final _Fields optionals[] = {_Fields.URI_PATH};
   public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
@@ -189,6 +201,10 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
     tmpMap.put(_Fields.VERBOSE, new org.apache.thrift.meta_data.FieldMetaData("verbose", org.apache.thrift.TFieldRequirementType.DEFAULT, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
+    tmpMap.put(_Fields.ENABLE_INTERNAL_STATS, new org.apache.thrift.meta_data.FieldMetaData("enableInternalStats", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
+    tmpMap.put(_Fields.MAX_INTERNAL_STATS_SIZE, new org.apache.thrift.meta_data.FieldMetaData("maxInternalStatsSize", org.apache.thrift.TFieldRequirementType.DEFAULT, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
     metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(JMXConfig.class, metaDataMap);
   }
@@ -210,7 +226,9 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
     boolean isJBossStandaloneMode,
     boolean useSSL,
     long requestTimeoutMs,
-    boolean verbose)
+    boolean verbose,
+    boolean enableInternalStats,
+    long maxInternalStatsSize)
   {
     this();
     this.connectionURL = connectionURL;
@@ -233,6 +251,10 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
     setRequestTimeoutMsIsSet(true);
     this.verbose = verbose;
     setVerboseIsSet(true);
+    this.enableInternalStats = enableInternalStats;
+    setEnableInternalStatsIsSet(true);
+    this.maxInternalStatsSize = maxInternalStatsSize;
+    setMaxInternalStatsSizeIsSet(true);
   }
 
   /**
@@ -273,6 +295,8 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
     this.useSSL = other.useSSL;
     this.requestTimeoutMs = other.requestTimeoutMs;
     this.verbose = other.verbose;
+    this.enableInternalStats = other.enableInternalStats;
+    this.maxInternalStatsSize = other.maxInternalStatsSize;
   }
 
   public JMXConfig deepCopy() {
@@ -302,6 +326,10 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
     this.requestTimeoutMs = 0;
     setVerboseIsSet(false);
     this.verbose = false;
+    setEnableInternalStatsIsSet(false);
+    this.enableInternalStats = false;
+    setMaxInternalStatsSizeIsSet(false);
+    this.maxInternalStatsSize = 0;
   }
 
   @org.apache.thrift.annotation.Nullable
@@ -667,6 +695,52 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
     __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __VERBOSE_ISSET_ID, value);
   }
 
+  public boolean isEnableInternalStats() {
+    return this.enableInternalStats;
+  }
+
+  public JMXConfig setEnableInternalStats(boolean enableInternalStats) {
+    this.enableInternalStats = enableInternalStats;
+    setEnableInternalStatsIsSet(true);
+    return this;
+  }
+
+  public void unsetEnableInternalStats() {
+    __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __ENABLEINTERNALSTATS_ISSET_ID);
+  }
+
+  /** Returns true if field enableInternalStats is set (has been assigned a value) and false otherwise */
+  public boolean isSetEnableInternalStats() {
+    return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __ENABLEINTERNALSTATS_ISSET_ID);
+  }
+
+  public void setEnableInternalStatsIsSet(boolean value) {
+    __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __ENABLEINTERNALSTATS_ISSET_ID, value);
+  }
+
+  public long getMaxInternalStatsSize() {
+    return this.maxInternalStatsSize;
+  }
+
+  public JMXConfig setMaxInternalStatsSize(long maxInternalStatsSize) {
+    this.maxInternalStatsSize = maxInternalStatsSize;
+    setMaxInternalStatsSizeIsSet(true);
+    return this;
+  }
+
+  public void unsetMaxInternalStatsSize() {
+    __isset_bitfield = org.apache.thrift.EncodingUtils.clearBit(__isset_bitfield, __MAXINTERNALSTATSSIZE_ISSET_ID);
+  }
+
+  /** Returns true if field maxInternalStatsSize is set (has been assigned a value) and false otherwise */
+  public boolean isSetMaxInternalStatsSize() {
+    return org.apache.thrift.EncodingUtils.testBit(__isset_bitfield, __MAXINTERNALSTATSSIZE_ISSET_ID);
+  }
+
+  public void setMaxInternalStatsSizeIsSet(boolean value) {
+    __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __MAXINTERNALSTATSSIZE_ISSET_ID, value);
+  }
+
   public void setFieldValue(_Fields field, @org.apache.thrift.annotation.Nullable java.lang.Object value) {
     switch (field) {
     case CONNECTION_URL:
@@ -789,6 +863,22 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
       }
       break;
 
+    case ENABLE_INTERNAL_STATS:
+      if (value == null) {
+        unsetEnableInternalStats();
+      } else {
+        setEnableInternalStats((java.lang.Boolean)value);
+      }
+      break;
+
+    case MAX_INTERNAL_STATS_SIZE:
+      if (value == null) {
+        unsetMaxInternalStatsSize();
+      } else {
+        setMaxInternalStatsSize((java.lang.Long)value);
+      }
+      break;
+
     }
   }
 
@@ -840,6 +930,12 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
     case VERBOSE:
       return isVerbose();
 
+    case ENABLE_INTERNAL_STATS:
+      return isEnableInternalStats();
+
+    case MAX_INTERNAL_STATS_SIZE:
+      return getMaxInternalStatsSize();
+
     }
     throw new java.lang.IllegalStateException();
   }
@@ -881,6 +977,10 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
       return isSetRequestTimeoutMs();
     case VERBOSE:
       return isSetVerbose();
+    case ENABLE_INTERNAL_STATS:
+      return isSetEnableInternalStats();
+    case MAX_INTERNAL_STATS_SIZE:
+      return isSetMaxInternalStatsSize();
     }
     throw new java.lang.IllegalStateException();
   }
@@ -1033,6 +1133,24 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
         return false;
     }
 
+    boolean this_present_enableInternalStats = true;
+    boolean that_present_enableInternalStats = true;
+    if (this_present_enableInternalStats || that_present_enableInternalStats) {
+      if (!(this_present_enableInternalStats && that_present_enableInternalStats))
+        return false;
+      if (this.enableInternalStats != that.enableInternalStats)
+        return false;
+    }
+
+    boolean this_present_maxInternalStatsSize = true;
+    boolean that_present_maxInternalStatsSize = true;
+    if (this_present_maxInternalStatsSize || that_present_maxInternalStatsSize) {
+      if (!(this_present_maxInternalStatsSize && that_present_maxInternalStatsSize))
+        return false;
+      if (this.maxInternalStatsSize != that.maxInternalStatsSize)
+        return false;
+    }
+
     return true;
   }
 
@@ -1087,6 +1205,10 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
     hashCode = hashCode * 8191 + org.apache.thrift.TBaseHelper.hashCode(requestTimeoutMs);
 
     hashCode = hashCode * 8191 + ((verbose) ? 131071 : 524287);
+
+    hashCode = hashCode * 8191 + ((enableInternalStats) ? 131071 : 524287);
+
+    hashCode = hashCode * 8191 + org.apache.thrift.TBaseHelper.hashCode(maxInternalStatsSize);
 
     return hashCode;
   }
@@ -1249,6 +1371,26 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
         return lastComparison;
       }
     }
+    lastComparison = java.lang.Boolean.compare(isSetEnableInternalStats(), other.isSetEnableInternalStats());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetEnableInternalStats()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.enableInternalStats, other.enableInternalStats);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = java.lang.Boolean.compare(isSetMaxInternalStatsSize(), other.isSetMaxInternalStatsSize());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetMaxInternalStatsSize()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.maxInternalStatsSize, other.maxInternalStatsSize);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
     return 0;
   }
 
@@ -1366,6 +1508,14 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
     if (!first) sb.append(", ");
     sb.append("verbose:");
     sb.append(this.verbose);
+    first = false;
+    if (!first) sb.append(", ");
+    sb.append("enableInternalStats:");
+    sb.append(this.enableInternalStats);
+    first = false;
+    if (!first) sb.append(", ");
+    sb.append("maxInternalStatsSize:");
+    sb.append(this.maxInternalStatsSize);
     first = false;
     sb.append(")");
     return sb.toString();
@@ -1532,6 +1682,22 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 16: // ENABLE_INTERNAL_STATS
+            if (schemeField.type == org.apache.thrift.protocol.TType.BOOL) {
+              struct.enableInternalStats = iprot.readBool();
+              struct.setEnableInternalStatsIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 17: // MAX_INTERNAL_STATS_SIZE
+            if (schemeField.type == org.apache.thrift.protocol.TType.I64) {
+              struct.maxInternalStatsSize = iprot.readI64();
+              struct.setMaxInternalStatsSizeIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -1612,6 +1778,12 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
       oprot.writeFieldBegin(VERBOSE_FIELD_DESC);
       oprot.writeBool(struct.verbose);
       oprot.writeFieldEnd();
+      oprot.writeFieldBegin(ENABLE_INTERNAL_STATS_FIELD_DESC);
+      oprot.writeBool(struct.enableInternalStats);
+      oprot.writeFieldEnd();
+      oprot.writeFieldBegin(MAX_INTERNAL_STATS_SIZE_FIELD_DESC);
+      oprot.writeI64(struct.maxInternalStatsSize);
+      oprot.writeFieldEnd();
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -1675,7 +1847,13 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
       if (struct.isSetVerbose()) {
         optionals.set(14);
       }
-      oprot.writeBitSet(optionals, 15);
+      if (struct.isSetEnableInternalStats()) {
+        optionals.set(15);
+      }
+      if (struct.isSetMaxInternalStatsSize()) {
+        optionals.set(16);
+      }
+      oprot.writeBitSet(optionals, 17);
       if (struct.isSetConnectionURL()) {
         oprot.writeString(struct.connectionURL);
       }
@@ -1721,12 +1899,18 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
       if (struct.isSetVerbose()) {
         oprot.writeBool(struct.verbose);
       }
+      if (struct.isSetEnableInternalStats()) {
+        oprot.writeBool(struct.enableInternalStats);
+      }
+      if (struct.isSetMaxInternalStatsSize()) {
+        oprot.writeI64(struct.maxInternalStatsSize);
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, JMXConfig struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-      java.util.BitSet incoming = iprot.readBitSet(15);
+      java.util.BitSet incoming = iprot.readBitSet(17);
       if (incoming.get(0)) {
         struct.connectionURL = iprot.readString();
         struct.setConnectionURLIsSet(true);
@@ -1786,6 +1970,14 @@ public class JMXConfig implements org.apache.thrift.TBase<JMXConfig, JMXConfig._
       if (incoming.get(14)) {
         struct.verbose = iprot.readBool();
         struct.setVerboseIsSet(true);
+      }
+      if (incoming.get(15)) {
+        struct.enableInternalStats = iprot.readBool();
+        struct.setEnableInternalStatsIsSet(true);
+      }
+      if (incoming.get(16)) {
+        struct.maxInternalStatsSize = iprot.readI64();
+        struct.setMaxInternalStatsSizeIsSet(true);
       }
     }
   }

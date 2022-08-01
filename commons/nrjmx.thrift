@@ -1,7 +1,7 @@
 namespace java org.newrelic.nrjmx.v2.nrprotocol
 
 struct JMXConfig {
-  1: string connectionURL
+  1: string connectionURL,
   2: string hostname,
   3: i32 port,
   4: optional string uriPath,
@@ -12,10 +12,12 @@ struct JMXConfig {
   9: string trustStore,
   10: string trustStorePassword,
   11: bool isRemote,
-  12: bool isJBossStandaloneMode
-  13: bool useSSL
-  14: i64 requestTimeoutMs
-  15: bool verbose
+  12: bool isJBossStandaloneMode,
+  13: bool useSSL,
+  14: i64 requestTimeoutMs,
+  15: bool verbose,
+  16: bool enableInternalStats,
+  17: i64 maxInternalStatsSize
 }
 
 enum ResponseType {
@@ -34,6 +36,16 @@ struct AttributeResponse {
   5: double doubleValue,
   6: i64 intValue,
   7: bool boolValue
+}
+
+struct InternalStat {
+    1: string statType,
+    2: string mBean,
+    3: list<string> attrs,
+    4: i64 responseCount,
+    5: double milliseconds,
+    6: i64 startTimestamp,
+    7: bool successful
 }
 
 exception JMXError {
@@ -59,5 +71,7 @@ service JMXService {
 
     list<AttributeResponse> getMBeanAttributes(1:string mBeanName, 2:list<string> attributes) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr),
 
-    list<AttributeResponse> queryMBeanAttributes(1:string mBeanNamePattern, 2:list<string> attributes) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr)
+    list<AttributeResponse> queryMBeanAttributes(1:string mBeanNamePattern, 2:list<string> attributes) throws (1:JMXConnectionError connErr, 2:JMXError jmxErr),
+
+    list<InternalStat> getInternalStats() throws (1:JMXError jmxErr)
 }

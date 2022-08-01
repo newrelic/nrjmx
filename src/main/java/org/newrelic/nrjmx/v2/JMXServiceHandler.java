@@ -31,7 +31,9 @@ public class JMXServiceHandler implements JMXService.Iface {
 
     @Override
     public void connect(JMXConfig config) throws TException {
-        this.requestTimeoutMs = config.requestTimeoutMs;
+        if (config != null) {
+            requestTimeoutMs = config.requestTimeoutMs;
+        }
         jmxFetcher.connect(config, requestTimeoutMs);
     }
 
@@ -40,12 +42,17 @@ public class JMXServiceHandler implements JMXService.Iface {
         if (server == null) {
             throw new TException("cannot disconnect, nrjmx handler null");
         }
-        server.stop();
+
+        try {
+            jmxFetcher.disconnect(requestTimeoutMs);
+        } finally {
+            server.stop();
+        }
     }
 
     @Override
     public List<String> queryMBeanNames(String mBeanNamePattern) throws TException {
-        return jmxFetcher.queryMBeanNames(mBeanNamePattern, requestTimeoutMs);
+       return jmxFetcher.queryMBeanNames(mBeanNamePattern, requestTimeoutMs);
     }
 
     @Override
@@ -61,6 +68,11 @@ public class JMXServiceHandler implements JMXService.Iface {
     @Override
     public List<AttributeResponse> queryMBeanAttributes(String mBeanNamePattern, List<String> attributes) throws TException {
         return jmxFetcher.queryMBeanAttributes(mBeanNamePattern, attributes, requestTimeoutMs);
+    }
+
+    @Override
+    public List<InternalStat> getInternalStats() throws TException {
+        return jmxFetcher.getInternalStats();
     }
 
     public void addServer(TServer server) {
