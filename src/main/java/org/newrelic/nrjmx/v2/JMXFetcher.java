@@ -136,7 +136,7 @@ public class JMXFetcher {
         if (Thread.interrupted()) {
             return;
         }
-        
+
         if (this.connector == null) {
             throw new JMXConnectionError()
                     .setMessage("cannot disconnect, connection to JMX endpoint is not established");
