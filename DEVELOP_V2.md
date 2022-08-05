@@ -44,7 +44,7 @@ the [example](https://github.com/newrelic/nrjmx/blob/master/gojmx/README.md).
 
 Requirements:
 
-- Go (v1.16+)
+- Go (v1.18+)
 - Java (v1.8+)
 - Maven (If running the Java project from IDE is required)
 - Docker (for tests and build)
