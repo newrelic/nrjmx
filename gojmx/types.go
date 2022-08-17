@@ -6,16 +6,22 @@
 package gojmx
 
 import (
+	"errors"
 	"fmt"
-	"github.com/newrelic/nrjmx/gojmx/internal/nrprotocol"
+	"math"
+	"strconv"
 	"strings"
 	"unsafe"
+
+	"github.com/newrelic/nrjmx/gojmx/internal/nrprotocol"
 )
 
 /*
  * We want to keep the generated thrift structures internal to avoid having a heavy API.
  * Here we place things that we want to export.
  */
+
+var ErrNonNumeric = errors.New("non-numeric value")
 
 // JMXConfig keeps the JMX connection settings.
 type JMXConfig nrprotocol.JMXConfig
@@ -54,6 +60,38 @@ func (j *AttributeResponse) GetValue() interface{} {
 	default:
 		panic(fmt.Sprintf("unkown value type: %v", j.ResponseType))
 	}
+}
+
+// GetValueAsFloat casts the value from AttributeResponse to float based on type.
+func (j *AttributeResponse) GetValueAsFloat() (float64, error) {
+	switch (*j).ResponseType {
+	case ResponseTypeBool:
+		if j.BoolValue {
+			return 1, nil
+		}
+		return 0, nil
+	case ResponseTypeString:
+		parsedValue, err := strconv.ParseFloat(fmt.Sprintf("%v", j.StringValue), 64)
+		if err != nil {
+			return 0, err
+		}
+		if isNaNOrInf(parsedValue) {
+			return 0, ErrNonNumeric
+		}
+		return parsedValue, nil
+	case ResponseTypeDouble:
+		return j.DoubleValue, nil
+	case ResponseTypeInt:
+		return float64(j.IntValue), nil
+	case ResponseTypeErr:
+		return 0, nil
+	default:
+		panic(fmt.Sprintf("unkown value type: %v", j.ResponseType))
+	}
+}
+
+func isNaNOrInf(f float64) bool {
+	return math.IsNaN(f) || math.IsInf(f, 0) || math.IsInf(f, -1)
 }
 
 // JMXError is reported when a JMX query fails.
