@@ -6,9 +6,7 @@
 package gojmx
 
 import (
-	"errors"
 	"fmt"
-	"math"
 	"strconv"
 	"strings"
 	"unsafe"
@@ -20,8 +18,6 @@ import (
  * We want to keep the generated thrift structures internal to avoid having a heavy API.
  * Here we place things that we want to export.
  */
-
-var ErrNonNumeric = errors.New("non-numeric value")
 
 // JMXConfig keeps the JMX connection settings.
 type JMXConfig nrprotocol.JMXConfig
@@ -75,9 +71,6 @@ func (j *AttributeResponse) GetValueAsFloat() (float64, error) {
 		if err != nil {
 			return 0, err
 		}
-		if isNaNOrInf(parsedValue) {
-			return 0, ErrNonNumeric
-		}
 		return parsedValue, nil
 	case ResponseTypeDouble:
 		return j.DoubleValue, nil
@@ -88,10 +81,6 @@ func (j *AttributeResponse) GetValueAsFloat() (float64, error) {
 	default:
 		panic(fmt.Sprintf("unkown value type: %v", j.ResponseType))
 	}
-}
-
-func isNaNOrInf(f float64) bool {
-	return math.IsNaN(f) || math.IsInf(f, 0) || math.IsInf(f, -1)
 }
 
 // JMXError is reported when a JMX query fails.
