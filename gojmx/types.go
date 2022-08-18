@@ -7,9 +7,11 @@ package gojmx
 
 import (
 	"fmt"
-	"github.com/newrelic/nrjmx/gojmx/internal/nrprotocol"
+	"strconv"
 	"strings"
 	"unsafe"
+
+	"github.com/newrelic/nrjmx/gojmx/internal/nrprotocol"
 )
 
 /*
@@ -51,6 +53,31 @@ func (j *AttributeResponse) GetValue() interface{} {
 		return j.IntValue
 	case ResponseTypeErr:
 		return "<nil>"
+	default:
+		panic(fmt.Sprintf("unkown value type: %v", j.ResponseType))
+	}
+}
+
+// GetValueAsFloat casts the value from AttributeResponse to float based on type.
+func (j *AttributeResponse) GetValueAsFloat() (float64, error) {
+	switch (*j).ResponseType {
+	case ResponseTypeBool:
+		if j.BoolValue {
+			return 1, nil
+		}
+		return 0, nil
+	case ResponseTypeString:
+		parsedValue, err := strconv.ParseFloat(fmt.Sprintf("%v", j.StringValue), 64)
+		if err != nil {
+			return 0, err
+		}
+		return parsedValue, nil
+	case ResponseTypeDouble:
+		return j.DoubleValue, nil
+	case ResponseTypeInt:
+		return float64(j.IntValue), nil
+	case ResponseTypeErr:
+		return 0, nil
 	default:
 		panic(fmt.Sprintf("unkown value type: %v", j.ResponseType))
 	}
