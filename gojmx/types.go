@@ -208,8 +208,6 @@ func (is InternalStatsList) String() string {
 		totalCalls,
 		totalSuccessful,
 	)
-
-	return ""
 }
 
 // JMXClientError is returned when there is an nrjmx process error.
