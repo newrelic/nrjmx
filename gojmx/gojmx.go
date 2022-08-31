@@ -146,7 +146,7 @@ func (c *Client) QueryMBeanAttributes(mBeanNamePattern string, mBeanAttrName ...
 // Internal statistics must be enabled using JMXConfig.EnableInternalStats flag.
 // Additionally you can set a maximum size for the collected stats using JMXConfig.MaxInternalStatsSize. (default: 100000)
 // Each time you retrieve GetInternalStats, the internal stats will be cleaned.
-func (c *Client) GetInternalStats() ([]*InternalStat, error) {
+func (c *Client) GetInternalStats() (InternalStats, error) {
 	if err := c.checkNRJMXProccessError(); err != nil {
 		return nil, err
 	}
