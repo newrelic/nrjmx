@@ -176,8 +176,38 @@ func (is *InternalStat) String() string {
 	)
 }
 
-func toInternalStatList(in []*nrprotocol.InternalStat) []*InternalStat {
+func toInternalStatsList(in []*nrprotocol.InternalStat) InternalStatsList {
 	return *(*[]*InternalStat)(unsafe.Pointer(&in))
+}
+
+type InternalStatsList []*InternalStat
+
+func (is InternalStatsList) String() string {
+	if is == nil {
+		return "<nil>"
+	}
+
+	var totalCalls = len(is)
+	var totalObjects, totalAttrs, totalSuccessful int
+
+	var totalTimeMs float64
+
+	for _, stat := range is {
+		if stat.Successful {
+			totalSuccessful++
+		}
+
+		totalObjects += int(stat.ResponseCount)
+		totalTimeMs += stat.Milliseconds
+		totalAttrs += len(stat.Attrs)
+	}
+	return fmt.Sprintf("TotalMs: '%.3f', TotalObjects: %d, TotalAttr: %d, TotalCalls: %d, TotalSuccessful: %d",
+		totalTimeMs,
+		totalObjects,
+		totalAttrs,
+		totalCalls,
+		totalSuccessful,
+	)
 }
 
 // JMXClientError is returned when there is an nrjmx process error.

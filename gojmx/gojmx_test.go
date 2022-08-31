@@ -905,33 +905,46 @@ func TestGetInternalStats(t *testing.T) {
 	internalStats, err := client.GetInternalStats()
 	assert.NoError(t, err)
 
-	totalCalls := 0
-	totalObjects := 0
-	totalTimeMs := 0
-	totalAttrs := 0
-	totalSucessful := 0
-
-	for _, stat := range internalStats {
-		totalCalls++
-		totalObjects += int(stat.ResponseCount)
-		totalTimeMs += int(stat.Milliseconds)
-		totalAttrs += len(stat.Attrs)
-
-		if stat.Successful {
-			totalSucessful++
-		}
-	}
-
-	assert.Equal(t, 3000, totalCalls)
-	assert.Equal(t, 18000, totalObjects)
-	assert.True(t, totalTimeMs > 0)
-	assert.Equal(t, 9000, totalAttrs)
-	assert.Equal(t, 3000, totalSucessful)
+	assert.Len(t, internalStats, 3000)
+	assert.Regexp(t, "StatType: 'getMBeanInfo', MBean: 'test:type=Cat,name=(.+?)', Attributes: '[]', TotalObjCount: 6, StartTimeMs: [0-9]+,  Duration: [0-9]+\\.[0-9]+ms, Successful: true", internalStats[0].String())
+	assert.Regexp(t, "TotalMs: '[0-9]+\\.[0-9]{3}', TotalObjects: 18000, TotalAttr: 9000, TotalCalls: 3000, TotalSuccessful: 3000", internalStats.String())
 
 	// AND internal stats get cleaned
 	internalStats, err = client.GetInternalStats()
 	assert.NoError(t, err)
-	assert.True(t, len(internalStats) == 0)
+	assert.Equal(t, "TotalMs: '0.000', TotalObjects: 0, TotalAttr: 0, TotalCalls: 0, TotalSuccessful: 0", internalStats.String())
+}
+
+func TestGetEmptyInternalStats(t *testing.T) {
+	ctx := context.Background()
+
+	// GIVEN a JMX Server running inside a container
+	container, err := testutils.RunJMXServiceContainer(ctx)
+	require.NoError(t, err)
+	defer container.Terminate(ctx)
+
+	jmxHost, jmxPort, err := testutils.GetContainerMappedPort(ctx, container, testutils.TestServerJMXPort)
+	require.NoError(t, err)
+
+	// THEN JMX connection can be oppened
+	config := &JMXConfig{
+		Hostname:            jmxHost,
+		Port:                int32(jmxPort.Int()),
+		EnableInternalStats: false,
+	}
+
+	client, err := NewClient(ctx).Open(config)
+	assert.NoError(t, err)
+	defer assertCloseClientNoError(t, client)
+
+	_, err = client.QueryMBeanAttributes("test:type=Cat,*")
+	assert.NoError(t, err)
+
+	// AND query doesn't generate any internal stats.
+	internalStats, err := client.GetInternalStats()
+
+	assert.Error(t, err)
+	assert.Equal(t, "<nil>", internalStats.String())
 }
 
 func TestConnectionRecovers(t *testing.T) {
