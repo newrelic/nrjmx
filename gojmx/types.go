@@ -176,13 +176,13 @@ func (is *InternalStat) String() string {
 	)
 }
 
-func toInternalStatList(in []*nrprotocol.InternalStat) InternalStats {
+func toInternalStatsList(in []*nrprotocol.InternalStat) InternalStatsList {
 	return *(*[]*InternalStat)(unsafe.Pointer(&in))
 }
 
-type InternalStats []*InternalStat
+type InternalStatsList []*InternalStat
 
-func (is InternalStats) String() string {
+func (is InternalStatsList) String() string {
 	if is == nil {
 		return "<nil>"
 	}
