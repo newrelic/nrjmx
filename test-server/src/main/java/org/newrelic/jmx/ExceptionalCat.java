@@ -1,25 +1,48 @@
 package org.newrelic.jmx;
 
+import javax.management.MBeanRegistration;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
-import java.io.IOException;
-import java.io.NotSerializableException;
 
-public class ExceptionalCat extends Cat {
-    private String mBeanName;
-    private String exception;
+public class ExceptionalCat implements ExceptionalCatMBean, MBeanRegistration {
 
-    public ExceptionalCat(String mBeanName, String name, Double doubleValue, Float floatValue, Boolean boolValue, Number numberValue, Integer timeout, long dateValue) {
-        super(name, doubleValue, floatValue, boolValue, numberValue, timeout, dateValue);
-        this.mBeanName = mBeanName;
+    private String name;
+
+    private Double doubleValue;
+
+    /* Dummy class to mimic NotSerializableException. */
+    public static class NotSerializable {
+    }
+
+    public ExceptionalCat(String name, Double doubleValue) {
+        this.name = name;
+        this.doubleValue = doubleValue;
+    }
+
+    @Override
+    public NotSerializable getNotSerializable() {
+        return new NotSerializable();
+    }
+
+    @Override
+    public Double getDoubleValue() {
+        return doubleValue;
     }
 
     @Override
     public ObjectName preRegister(MBeanServer server, ObjectName name) throws Exception {
-        return new ObjectName(this.mBeanName);
+        return new ObjectName("test:type=ExceptionalCat,name=" + this.name);
     }
 
-    public String getException() throws NotSerializableException {
-        throw new NotSerializableException();
+    @Override
+    public void postRegister(Boolean registrationDone) {
+    }
+
+    @Override
+    public void preDeregister() throws Exception {
+    }
+
+    @Override
+    public void postDeregister() {
     }
 }
