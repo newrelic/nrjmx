@@ -105,7 +105,7 @@ You can easily spawn the container by running the following commands:
 
 ```bash
 make go-test-utils
-docker run -d -p 7199:7199 -p 4567:4567 test-server
+docker rm -f nrjmx-test-server && docker run -d -p 7199:7199 -p 4567:4567 --name="nrjmx-test-server" test-server
 ```
 
 If you need to configure SSL you can check the gojmx_test.go examples or

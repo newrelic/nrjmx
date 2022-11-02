@@ -57,6 +57,14 @@ public class Service {
             return "ok!\n";
         });
 
+        // Registers a cat with an error
+        post("/exceptional_cat", (req, res) -> {
+            ExceptionalCat cat = gson.fromJson(req.body(), ExceptionalCat.class);
+            log.info("registering {}", cat);
+            server.registerMBean(cat, null);
+            return "ok!\n";
+        });
+
         final ObjectName queryObject = new ObjectName("*:type=Cat,*");
 
         // Removes all registered MBean cats
