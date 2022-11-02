@@ -34,13 +34,14 @@ public class Service {
         // Registers a cat as an MBean
         post("/cat", (req, res) -> {
             Cat cat = gson.fromJson(req.body(), Cat.class);
-            log.info("registering {}", cat);
+            log.info("registering Cat {}", cat);
             server.registerMBean(cat, null);
             return "ok!\n";
         });
 
         post("/cat_batch", (req, res) -> {
 
+            log.info("registering Batch of cats");
             ArrayList<Cat> cats = gson.fromJson(req.body(), new TypeToken<ArrayList<Cat>>() {
             }.getType());
             for (Cat cat : cats) {
@@ -52,7 +53,7 @@ public class Service {
 
         post("/custom_cat", (req, res) -> {
             CustomCat cat = gson.fromJson(req.body(), CustomCat.class);
-            log.info("registering {}", cat);
+            log.info("registering CustomCat {}", cat);
             server.registerMBean(cat, null);
             return "ok!\n";
         });
@@ -60,7 +61,7 @@ public class Service {
         // Registers a cat with an error
         post("/exceptional_cat", (req, res) -> {
             ExceptionalCat cat = gson.fromJson(req.body(), ExceptionalCat.class);
-            log.info("registering {}", cat);
+            log.info("registering ExceptionalCat {}", cat);
             server.registerMBean(cat, null);
             return "ok!\n";
         });

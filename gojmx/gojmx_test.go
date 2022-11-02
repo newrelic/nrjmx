@@ -194,6 +194,60 @@ func Test_Query_Success(t *testing.T) {
 	assert.ElementsMatch(t, expected, actual)
 }
 
+func Test_Query_Exception_Success(t *testing.T) {
+	ctx := context.Background()
+
+	// GIVEN a JMX Server running inside a container
+	container, err := testutils.RunJMXServiceContainer(ctx)
+	require.NoError(t, err)
+	defer container.Terminate(ctx)
+
+	// Populate the JMX Server with mbeans
+	resp, err := testutils.AddMBeansWithException(ctx, container, map[string]interface{}{
+		"name":        "tomas",
+		"doubleValue": 1.2,
+	})
+
+	assert.NoError(t, err)
+	assert.Equal(t, "ok!\n", string(resp))
+
+	defer testutils.CleanMBeans(ctx, container)
+
+	jmxHost, jmxPort, err := testutils.GetContainerMappedPort(ctx, container, testutils.TestServerJMXPort)
+	require.NoError(t, err)
+
+	// THEN JMX connection can be opened
+	config := &JMXConfig{
+		Hostname:         jmxHost,
+		Port:             int32(jmxPort.Int()),
+		RequestTimeoutMs: testutils.DefaultTimeoutMs,
+	}
+
+	client, err := NewClient(ctx).Open(config)
+	assert.NoError(t, err)
+	defer assertCloseClientNoError(t, client)
+
+	actualMBeans, err := client.QueryMBeanAttributes("test:type=ExceptionalCat,*")
+	require.NoError(t, err)
+
+	// AND Query returns expected data
+	expected := []*AttributeResponse{
+		{
+			Name: "test:type=ExceptionalCat,name=tomas,attr=NotSerializable",
+
+			ResponseType: ResponseTypeErr,
+		},
+		{
+			Name: "test:type=Cat,name=tomas,attr=DoubleValue",
+
+			ResponseType: ResponseTypeDouble,
+			DoubleValue:  1.2,
+		},
+	}
+
+	assert.ElementsMatch(t, expected, actualMBeans)
+}
+
 func Test_QueryMBean_Success(t *testing.T) {
 	ctx := context.Background()
 
