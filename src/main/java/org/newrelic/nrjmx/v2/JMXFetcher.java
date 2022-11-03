@@ -48,6 +48,8 @@ public class JMXFetcher {
     /* InternalStats used for troubleshooting. */
     private InternalStats internalStats;
 
+    private JMXRequestHandler jmxRequestHandler = new JMXRequestHandler();
+
     public JMXFetcher(ExecutorService executor) {
         this.executor = executor;
     }
@@ -222,7 +224,10 @@ public class JMXFetcher {
         }
 
         try {
-            result = getConnection().queryMBeans(objectName, null);
+            //result = getConnection().queryMBeans(objectName, null);
+
+            result = jmxRequestHandler.exec(() -> getConnection().queryMBeans(objectName, null),() -> {disconnect(); return null;});
+
 
             if (internalStat != null) {
                 internalStat.setSuccessful(true);
@@ -291,7 +296,10 @@ public class JMXFetcher {
         }
 
         try {
-            info = getConnection().getMBeanInfo(objectName);
+            //info = getConnection().getMBeanInfo(objectName);
+
+            info = jmxRequestHandler.exec(() -> getConnection().getMBeanInfo(objectName),() -> {disconnect(); return null;});
+
 
             if (internalStat != null) {
                 internalStat.setSuccessful(true);
@@ -308,6 +316,8 @@ public class JMXFetcher {
                     .setMessage("can't find mBean: " + objectName)
                     .setCauseMessage(e.getMessage())
                     .setStacktrace(getStackTrace(e));
+        } catch (Exception e ){
+            throw new JMXConnectionError();
         } finally {
             if (internalStat != null) {
                 InternalStats.setElapsedMs(internalStat);
@@ -388,7 +398,10 @@ public class JMXFetcher {
         List<Attribute> attrValues = new ArrayList<>();
         AttributeList attributeList;
         try {
-            attributeList = getConnection().getAttributes(objectName, attributes.toArray(new String[0]));
+
+            List<String> finalAttributes = attributes;
+
+            attributeList = jmxRequestHandler.exec(() -> getConnection().getAttributes(objectName, finalAttributes.toArray(new String[0])),() -> {disconnect(); return null;});
 
             if (internalStat != null) {
                 internalStat.setSuccessful(true);
