@@ -1,20 +1,24 @@
 package org.newrelic.nrjmx.v2;
 
+import java.rmi.ConnectException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 public class JMXRequestHandler {
 
-    private long lastOkTimestamp = System.currentTimeMillis();
+    private static Set<String> knownConnectionExceptions = new HashSet<>(Arrays.asList(
+            "org.jboss.remoting3.NotOpenException"
+    ));
 
-    public <T> T exec(Callable<T> task, Callable<Void> onError) throws Exception {
+    public <T> T exec(Callable<T> task) throws Exception {
 
         try {
-            T result = task.call();
-            lastOkTimestamp = System.currentTimeMillis();
-            return result;
+            return task.call();
         } catch (Exception e) {
-            if (System.currentTimeMillis() - lastOkTimestamp > 5 * 60 * 1000) {
-                onError.call();
+            if (knownConnectionExceptions.contains(e.getClass().getName())) {
+                throw new ConnectException(e.getMessage());
             }
             throw e;
         }
