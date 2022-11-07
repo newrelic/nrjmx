@@ -13,11 +13,14 @@ public class JMXRequestHandler {
     ));
 
     public <T> T exec(Callable<T> task) throws Exception {
+        return exec(task, knownConnectionExceptions);
+    }
 
+    public <T> T exec(Callable<T> task, Set<String> exceptionsList) throws Exception {
         try {
             return task.call();
         } catch (Exception e) {
-            if (knownConnectionExceptions.contains(e.getClass().getName())) {
+            if (exceptionsList.contains(e.getClass().getName())) {
                 throw new ConnectException(e.getMessage());
             }
             throw e;
