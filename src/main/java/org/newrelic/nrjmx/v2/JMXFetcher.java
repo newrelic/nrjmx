@@ -237,10 +237,10 @@ public class JMXFetcher {
             return result;
         } catch (JMXConnectionError je) {
             throw je;
-        } catch (IOException io) {
+        } catch (ConnectException ce) {
             disconnect();
 
-            String message = String.format("problem occurred when talking to the JMX server while querying mBeans, error: '%s'", io.getMessage());
+            String message = String.format("problem occurred when talking to the JMX server while querying mBeans, error: '%s'", ce.getMessage());
             throw new JMXConnectionError(message);
         } catch (Exception e) {
             throw new JMXError()
@@ -306,18 +306,16 @@ public class JMXFetcher {
             }
         } catch (JMXConnectionError je) {
             throw je;
-        } catch (IOException io) {
+        } catch (ConnectException ce) {
             disconnect();
 
-            String message = String.format("problem occurred when talking to the JMX server while requesting mBean info, error: '%s'", io.getMessage());
+            String message = String.format("problem occurred when talking to the JMX server while requesting mBean info, error: '%s'", ce.getMessage());
             throw new JMXConnectionError(message);
-        } catch (InstanceNotFoundException | IntrospectionException | ReflectionException e) {
+        } catch (Exception e) {
             throw new JMXError()
                     .setMessage("can't find mBean: " + objectName)
                     .setCauseMessage(e.getMessage())
                     .setStacktrace(getStackTrace(e));
-        } catch (Exception e) {
-            throw new JMXConnectionError();
         } finally {
             if (internalStat != null) {
                 InternalStats.setElapsedMs(internalStat);
