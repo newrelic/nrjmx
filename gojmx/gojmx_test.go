@@ -27,7 +27,7 @@ var timeStamp = time.Date(2022, time.January, 1, 01, 23, 45, 0, time.Local).Unix
 
 func init() {
 	_ = os.Setenv("NR_JMX_TOOL", filepath.Join(testutils.PrjDir, "bin", "nrjmx"))
-	// _ = os.Setenv("NRIA_NRJMX_DEBUG", "true")
+	//_ = os.Setenv("NRIA_NRJMX_DEBUG", "true")
 }
 
 func Test_Query_Success_LargeAmountOfData(t *testing.T) {
@@ -233,15 +233,15 @@ func Test_Query_Exception_Success(t *testing.T) {
 	// AND Query returns expected data
 	expected := []*AttributeResponse{
 		{
-			Name: "test:type=ExceptionalCat,name=tomas,attr=NotSerializable",
-
-			ResponseType: ResponseTypeErr,
-		},
-		{
-			Name: "test:type=Cat,name=tomas,attr=DoubleValue",
+			Name: "test:type=ExceptionalCat,name=tomas,attr=DoubleValue",
 
 			ResponseType: ResponseTypeDouble,
 			DoubleValue:  1.2,
+		},
+		{
+			Name:         "test:type=ExceptionalCat,name=tomas,attr=NotSerializable",
+			StatusMsg:    "can't get attribute, error: 'can't get attribute: NotSerializable for bean: test:type=ExceptionalCat,name=tomas: ', cause: 'error unmarshalling return; nested exception is: \n\tjava.io.WriteAbortedException: writing aborted; java.io.NotSerializableException: org.newrelic.jmx.ExceptionalCat$NotSerializable', stacktrace: ''",
+			ResponseType: ResponseTypeErr,
 		},
 	}
 

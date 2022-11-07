@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
+import java.rmi.ConnectException;
 import java.text.DateFormat;
 import java.util.*;
 import java.util.concurrent.*;
@@ -409,16 +410,28 @@ public class JMXFetcher {
             }
         } catch (JMXConnectionError je) {
             throw je;
-        } catch (IOException io) {
+        } catch (ConnectException ce) {
             disconnect();
 
-            String message = String.format("problem occurred when talking to the JMX server while requesting attributes, error: '%s'", io.getMessage());
+            String message = String.format("problem occurred when talking to the JMX server while requesting attributes, error: '%s'", ce.getMessage());
             throw new JMXConnectionError(message);
         } catch (Exception e) {
-            throw new JMXError()
-                    .setMessage("can't get attributes: " + attributes + " for bean: " + objectName + ": ")
-                    .setCauseMessage(e.getMessage())
-                    .setStacktrace(getStackTrace(e));
+            // When running a call for multiple attributes it can fail only because one of them.
+            // In that case we try to make a separate call for each one.
+            for (String attribute : attributes) {
+                String formattedAttrName = formatAttributeName(objectName, attribute);
+
+                try {
+                    getMBeanAttribute(objectName, attribute, output);
+                } catch (JMXError je) {
+                    String statusMessage = String.format("can't get attribute, error: '%s', cause: '%s', stacktrace: '%s'", je.message, je.causeMessage, je.stacktrace);
+                    output.add(new AttributeResponse()
+                            .setName(formattedAttrName)
+                            .setResponseType(ResponseType.ERROR)
+                            .setStatusMsg(statusMessage));
+                }
+            }
+            return;
         } finally {
             if (internalStat != null) {
                 InternalStats.setElapsedMs(internalStat);
@@ -469,6 +482,58 @@ public class JMXFetcher {
                         .setStatusMsg("failed to retrieve attribute value from server"));
             }
         }
+    }
+
+    /**
+     * getMBeanAttribute fetches the attribute value for an mBeanName.
+     * CompositeData is handled as multiple values.
+     *
+     * @param objectName of which we want to retrieve the attribute values
+     * @param attribute  of which we want to retrieve the attribute values
+     * @param output     List<AttributeResponse> to add the fetched attribute values.
+     * @throws JMXError           JMX related Exception
+     * @throws JMXConnectionError JMX connection related exception
+     */
+    private void getMBeanAttribute(ObjectName objectName, String attribute, List<AttributeResponse> output) throws JMXConnectionError, JMXError {
+        if (objectName == null) {
+            throw new JMXError()
+                    .setMessage("can't get attribute value, provided objectName is Null");
+        }
+
+        if (attribute == null) {
+            throw new JMXError()
+                    .setMessage("can't get attribute value, provided attribute name is Null");
+        }
+
+        if (output == null) {
+            throw new JMXError()
+                    .setMessage("can't deserialize attribute value, provided output list is Null");
+        }
+
+        Object value;
+        try {
+            value = jmxRequestHandler.exec(() ->
+                    getConnection().getAttribute(objectName, attribute)
+            );
+            if (value instanceof Attribute) {
+                Attribute jmxAttr = (Attribute) value;
+                value = jmxAttr.getValue();
+            }
+        } catch (ConnectException ce) {
+            disconnect();
+
+            String message = String.format("can't connect to JMX server, error: '%s'", ce.getMessage());
+            throw new JMXConnectionError(message);
+        } catch (Exception e) {
+            throw new JMXError()
+                    .setMessage("can't get attribute: " + attribute + " for bean: " + objectName + ": ")
+                    .setCauseMessage(e.getMessage())
+                    .setStacktrace(getStackTrace(e));
+        }
+
+
+        String formattedAttrName = formatAttributeName(objectName, attribute);
+        parseValue(formattedAttrName, value, output);
     }
 
     /**
