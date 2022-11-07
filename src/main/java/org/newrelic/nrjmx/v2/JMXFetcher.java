@@ -224,9 +224,9 @@ public class JMXFetcher {
         }
 
         try {
-            //result = getConnection().queryMBeans(objectName, null);
-
-            result = jmxRequestHandler.exec(() -> getConnection().queryMBeans(objectName, null),() -> {disconnect(); return null;});
+            result = jmxRequestHandler.exec(() ->
+                    getConnection().queryMBeans(objectName, null)
+            );
 
 
             if (internalStat != null) {
@@ -296,10 +296,9 @@ public class JMXFetcher {
         }
 
         try {
-            //info = getConnection().getMBeanInfo(objectName);
-
-            info = jmxRequestHandler.exec(() -> getConnection().getMBeanInfo(objectName),() -> {disconnect(); return null;});
-
+            info = jmxRequestHandler.exec(() ->
+                    getConnection().getMBeanInfo(objectName)
+            );
 
             if (internalStat != null) {
                 internalStat.setSuccessful(true);
@@ -316,7 +315,7 @@ public class JMXFetcher {
                     .setMessage("can't find mBean: " + objectName)
                     .setCauseMessage(e.getMessage())
                     .setStacktrace(getStackTrace(e));
-        } catch (Exception e ){
+        } catch (Exception e) {
             throw new JMXConnectionError();
         } finally {
             if (internalStat != null) {
@@ -401,7 +400,9 @@ public class JMXFetcher {
 
             List<String> finalAttributes = attributes;
 
-            attributeList = jmxRequestHandler.exec(() -> getConnection().getAttributes(objectName, finalAttributes.toArray(new String[0])),() -> {disconnect(); return null;});
+            attributeList = jmxRequestHandler.exec(() ->
+                    getConnection().getAttributes(objectName, finalAttributes.toArray(new String[0]))
+            );
 
             if (internalStat != null) {
                 internalStat.setSuccessful(true);
