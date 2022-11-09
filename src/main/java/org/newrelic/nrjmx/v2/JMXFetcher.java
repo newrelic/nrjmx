@@ -820,11 +820,18 @@ public class JMXFetcher {
         }
     }
 
+    private String removeNewLines(String msg) {
+        if (msg == null) {
+            return msg;
+        }
+        return msg.replace("\n", "").replace("\r", "");
+    }
+
     private String getStackTrace(Throwable throwable) {
         if (throwable == null || jmxConfig == null || !jmxConfig.verbose) {
             return "";
         }
-        return ExceptionUtils.getStackTrace(throwable);
+        return removeNewLines(ExceptionUtils.getStackTrace(throwable));
     }
 
     private String getErrorMessage(Throwable throwable) {
