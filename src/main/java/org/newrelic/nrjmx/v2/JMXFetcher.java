@@ -135,14 +135,9 @@ public class JMXFetcher {
      *
      * @throws JMXConnectionError JMX connection related exception
      */
-    public void disconnect() throws JMXConnectionError {
-        if (Thread.interrupted()) {
-            return;
-        }
-
+    public void disconnect() {
         if (this.connector == null) {
-            throw new JMXConnectionError()
-                    .setMessage("cannot disconnect, connection to JMX endpoint is not established");
+            return;
         }
 
         InternalStat internalStat = null;
@@ -238,8 +233,6 @@ public class JMXFetcher {
         } catch (JMXConnectionError je) {
             throw je;
         } catch (ConnectException ce) {
-            disconnect();
-
             String message = String.format("problem occurred when talking to the JMX server while querying mBeans, error: '%s'", ce.getMessage());
             throw new JMXConnectionError(message);
         } catch (Exception e) {
@@ -307,8 +300,6 @@ public class JMXFetcher {
         } catch (JMXConnectionError je) {
             throw je;
         } catch (ConnectException ce) {
-            disconnect();
-
             String message = String.format("problem occurred when talking to the JMX server while requesting mBean info, error: '%s'", ce.getMessage());
             throw new JMXConnectionError(message);
         } catch (Exception e) {
@@ -409,8 +400,6 @@ public class JMXFetcher {
         } catch (JMXConnectionError je) {
             throw je;
         } catch (ConnectException ce) {
-            disconnect();
-
             String message = String.format("problem occurred when talking to the JMX server while requesting attributes, error: '%s'", ce.getMessage());
             throw new JMXConnectionError(message);
         } catch (Exception e) {
@@ -518,8 +507,6 @@ public class JMXFetcher {
                 value = jmxAttr.getValue();
             }
         } catch (ConnectException ce) {
-            disconnect();
-
             String message = String.format("can't connect to JMX server, error: '%s'", ce.getMessage());
             throw new JMXConnectionError(message);
         } catch (Exception e) {
@@ -721,6 +708,23 @@ public class JMXFetcher {
     }
 
     /**
+     * isConnectionAlive check if the connection is still open.
+     * This method might not work for custom connector implementations.
+     * @return boolean
+     */
+    private boolean isConnectionAlive() {
+        if (connector == null) {
+            return false;
+        }
+        try {
+            connector.getConnectionId();
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * getConnection returns the connection the the JMX endpoint.
      *
      * @return MBeanServerConnection the connection to the JMX endpoint
@@ -731,7 +735,8 @@ public class JMXFetcher {
             throw new JMXConnectionError("failed to get connection to JMX server: configuration not provided");
         }
 
-        if (this.connector == null) {
+        if (!isConnectionAlive()) {
+            disconnect();
             connect(jmxConfig);
         }
 
