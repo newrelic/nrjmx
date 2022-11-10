@@ -23,20 +23,21 @@ import (
 )
 
 const (
-	TestServerPort                     = "4567"
-	TestServerJMXPort                  = "7199"
-	JbossJMXPort                       = "9990"
-	JbossJMXUsername                   = "admin1234"
-	JbossJMXPassword                   = "Password1!"
-	TestServerAddDataEndpoint          = "/cat"
-	TestServerAddDataBatchEndpoint     = "/cat_batch"
-	TestServerAddCompositeDataEndpoint = "/composite_data_cat"
-	TestServerCleanDataEndpoint        = "/clear"
-	KeystorePassword                   = "password"
-	TruststorePassword                 = "password"
-	JmxUsername                        = "testuser"
-	JmxPassword                        = "testpassword"
-	DefaultTimeoutMs                   = 10000
+	TestServerPort                         = "4567"
+	TestServerJMXPort                      = "7199"
+	JbossJMXPort                           = "9990"
+	JbossJMXUsername                       = "admin1234"
+	JbossJMXPassword                       = "Password1!"
+	TestServerAddDataEndpoint              = "/cat"
+	TestServerAddDataWithExceptionEndpoint = "/exceptional_cat"
+	TestServerAddDataBatchEndpoint         = "/cat_batch"
+	TestServerAddCompositeDataEndpoint     = "/composite_data_cat"
+	TestServerCleanDataEndpoint            = "/clear"
+	KeystorePassword                       = "password"
+	TruststorePassword                     = "password"
+	JmxUsername                            = "testuser"
+	JmxPassword                            = "testpassword"
+	DefaultTimeoutMs                       = 10000
 )
 
 var (
@@ -181,6 +182,11 @@ func AddMBeansBatch(ctx context.Context, container testcontainers.Container, bod
 // AddMBeans will add new MBeans to the test-server.
 func AddMBeans(ctx context.Context, container testcontainers.Container, body map[string]interface{}) ([]byte, error) {
 	return addMBeans(ctx, container, body, TestServerAddDataEndpoint)
+}
+
+// AddMBeans will add new MBeans to the test-server.
+func AddMBeansWithException(ctx context.Context, container testcontainers.Container, body map[string]interface{}) ([]byte, error) {
+	return addMBeans(ctx, container, body, TestServerAddDataWithExceptionEndpoint)
 }
 
 // AddMBeans will add new MBeans to the test-server.
