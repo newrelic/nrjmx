@@ -49,37 +49,16 @@ public class JMXFetcher {
     /* InternalStats used for troubleshooting. */
     private InternalStats internalStats;
 
-    /* jmxRequestHandler is used to wrap all request to the JMX endpoint for exception handling purposes. */
-    private JMXRequestHandler jmxRequestHandler;
+    /* knownConnectionExceptions is used to detect when a disconnect should happen.
+     * This is needed because of different implementations on various JMX connectors (e.g. JBoss)
+     * that doesn't trow rmi.ConnectException.
+     */
+    private Set<String> knownConnectionExceptions = new HashSet<>(Arrays.asList(
+            "org.jboss.remoting3.NotOpenException"
+    ));
 
     public JMXFetcher(ExecutorService executor) {
         this.executor = executor;
-
-        this.jmxRequestHandler = new JMXRequestHandler(getExceptionHandler());
-    }
-
-    /**
-     * getExceptionHandler returns an implementation for JMXRequestHandler.OnExceptionHandler
-     * which will call disconnect whenever a connection error is discovered.
-     * @return
-     */
-    private JMXRequestHandler.OnExceptionHandler getExceptionHandler() {
-        Set<String> knownConnectionExceptions = new HashSet<>(Arrays.asList(
-                "org.jboss.remoting3.NotOpenException"
-        ));
-        return e -> {
-            if (e instanceof ConnectException) {
-                disconnect();
-                throw e;
-            }
-
-            boolean isConnErr = knownConnectionExceptions.contains(e.getClass().getName());
-            if (isConnErr || !isConnectionAlive()) {
-                disconnect();
-                throw new ConnectException(e.getMessage());
-            }
-            throw e;
-        };
     }
 
     /**
@@ -252,7 +231,7 @@ public class JMXFetcher {
         }
 
         try {
-            result = jmxRequestHandler.exec(() ->
+            result = withConnectionExceptionHandler(() ->
                     getConnection().queryMBeans(objectName, null)
             );
 
@@ -321,7 +300,7 @@ public class JMXFetcher {
         }
 
         try {
-            info = jmxRequestHandler.exec(() ->
+            info = withConnectionExceptionHandler(() ->
                     getConnection().getMBeanInfo(objectName)
             );
 
@@ -421,7 +400,7 @@ public class JMXFetcher {
 
             List<String> finalAttributes = attributes;
 
-            attributeList = jmxRequestHandler.exec(() ->
+            attributeList = withConnectionExceptionHandler(() ->
                     getConnection().getAttributes(objectName, finalAttributes.toArray(new String[0]))
             );
 
@@ -530,7 +509,7 @@ public class JMXFetcher {
 
         Object value;
         try {
-            value = jmxRequestHandler.exec(() ->
+            value = withConnectionExceptionHandler(() ->
                     getConnection().getAttribute(objectName, attribute)
             );
             if (value instanceof Attribute) {
@@ -658,6 +637,33 @@ public class JMXFetcher {
                     .setStacktrace(getStackTrace(e));
         } finally {
             future.cancel(true);
+        }
+    }
+
+    /**
+     * withConnectionExceptionHandler is needed while performing JMX requests
+     * to detect if there is a connection exception that require a disconnect.
+     *
+     * @param task
+     * @param <T>
+     * @return
+     * @throws Exception
+     */
+    private <T> T withConnectionExceptionHandler(Callable<T> task) throws Exception {
+        try {
+            return task.call();
+        } catch (Exception e) {
+            if (e instanceof ConnectException) {
+                disconnect();
+                throw e;
+            }
+
+            boolean isConnErr = knownConnectionExceptions.contains(e.getClass().getName());
+            if (isConnErr || !isConnectionAlive()) {
+                disconnect();
+                throw new ConnectException(e.getMessage());
+            }
+            throw e;
         }
     }
 
