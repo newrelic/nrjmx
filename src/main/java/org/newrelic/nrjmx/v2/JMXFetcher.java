@@ -49,7 +49,13 @@ public class JMXFetcher {
     /* InternalStats used for troubleshooting. */
     private InternalStats internalStats;
 
-    private JMXRequestHandler jmxRequestHandler = new JMXRequestHandler();
+    /* knownConnectionExceptions is used to detect when a disconnect should happen.
+     * This is needed because of different implementations on various JMX connectors (e.g. JBoss)
+     * that doesn't trow rmi.ConnectException.
+     */
+    private Set<String> knownConnectionExceptions = new HashSet<>(Arrays.asList(
+            "org.jboss.remoting3.NotOpenException"
+    ));
 
     public JMXFetcher(ExecutorService executor) {
         this.executor = executor;
@@ -225,10 +231,9 @@ public class JMXFetcher {
         }
 
         try {
-            result = jmxRequestHandler.exec(() ->
+            result = withConnectionExceptionHandler(() ->
                     getConnection().queryMBeans(objectName, null)
             );
-
 
             if (internalStat != null) {
                 internalStat.setSuccessful(true);
@@ -238,8 +243,6 @@ public class JMXFetcher {
         } catch (JMXConnectionError je) {
             throw je;
         } catch (ConnectException ce) {
-            disconnect();
-
             String message = String.format("problem occurred when talking to the JMX server while querying mBeans, error: '%s'", ce.getMessage());
             throw new JMXConnectionError(message);
         } catch (Exception e) {
@@ -297,7 +300,7 @@ public class JMXFetcher {
         }
 
         try {
-            info = jmxRequestHandler.exec(() ->
+            info = withConnectionExceptionHandler(() ->
                     getConnection().getMBeanInfo(objectName)
             );
 
@@ -307,8 +310,6 @@ public class JMXFetcher {
         } catch (JMXConnectionError je) {
             throw je;
         } catch (ConnectException ce) {
-            disconnect();
-
             String message = String.format("problem occurred when talking to the JMX server while requesting mBean info, error: '%s'", ce.getMessage());
             throw new JMXConnectionError(message);
         } catch (Exception e) {
@@ -399,7 +400,7 @@ public class JMXFetcher {
 
             List<String> finalAttributes = attributes;
 
-            attributeList = jmxRequestHandler.exec(() ->
+            attributeList = withConnectionExceptionHandler(() ->
                     getConnection().getAttributes(objectName, finalAttributes.toArray(new String[0]))
             );
 
@@ -409,8 +410,6 @@ public class JMXFetcher {
         } catch (JMXConnectionError je) {
             throw je;
         } catch (ConnectException ce) {
-            disconnect();
-
             String message = String.format("problem occurred when talking to the JMX server while requesting attributes, error: '%s'", ce.getMessage());
             throw new JMXConnectionError(message);
         } catch (Exception e) {
@@ -510,7 +509,7 @@ public class JMXFetcher {
 
         Object value;
         try {
-            value = jmxRequestHandler.exec(() ->
+            value = withConnectionExceptionHandler(() ->
                     getConnection().getAttribute(objectName, attribute)
             );
             if (value instanceof Attribute) {
@@ -518,8 +517,6 @@ public class JMXFetcher {
                 value = jmxAttr.getValue();
             }
         } catch (ConnectException ce) {
-            disconnect();
-
             String message = String.format("can't connect to JMX server, error: '%s'", ce.getMessage());
             throw new JMXConnectionError(message);
         } catch (Exception e) {
@@ -644,6 +641,33 @@ public class JMXFetcher {
     }
 
     /**
+     * withConnectionExceptionHandler is needed while performing JMX requests
+     * to detect if there is a connection exception that require a disconnect.
+     *
+     * @param task
+     * @param <T>
+     * @return
+     * @throws Exception
+     */
+    private <T> T withConnectionExceptionHandler(Callable<T> task) throws Exception {
+        try {
+            return task.call();
+        } catch (Exception e) {
+            if (e instanceof ConnectException) {
+                disconnect();
+                throw e;
+            }
+
+            boolean isConnErr = knownConnectionExceptions.contains(e.getClass().getName());
+            if (isConnErr || !isConnectionAlive()) {
+                disconnect();
+                throw new ConnectException(e.getMessage());
+            }
+            throw e;
+        }
+    }
+
+    /**
      * parseValue converts the received value from JMX into an JMXAttribute object.
      *
      * @param mBeanAttributeName of the value
@@ -718,6 +742,24 @@ public class JMXFetcher {
         }
 
         return internalStats.getStats();
+    }
+
+    /**
+     * isConnectionAlive check if the connection is still open.
+     * This method might not work for custom connector implementations.
+     *
+     * @return boolean
+     */
+    private boolean isConnectionAlive() {
+        if (connector == null) {
+            return false;
+        }
+        try {
+            connector.getConnectionId();
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
     }
 
     /**
