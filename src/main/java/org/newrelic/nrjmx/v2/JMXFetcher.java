@@ -49,10 +49,37 @@ public class JMXFetcher {
     /* InternalStats used for troubleshooting. */
     private InternalStats internalStats;
 
-    private JMXRequestHandler jmxRequestHandler = new JMXRequestHandler();
+    /* jmxRequestHandler is used to wrap all request to the JMX endpoint for exception handling purposes. */
+    private JMXRequestHandler jmxRequestHandler;
 
     public JMXFetcher(ExecutorService executor) {
         this.executor = executor;
+
+        this.jmxRequestHandler = new JMXRequestHandler(getExceptionHandler());
+    }
+
+    /**
+     * getExceptionHandler returns an implementation for JMXRequestHandler.OnExceptionHandler
+     * which will call disconnect whenever a connection error is discovered.
+     * @return
+     */
+    private JMXRequestHandler.OnExceptionHandler getExceptionHandler() {
+        Set<String> knownConnectionExceptions = new HashSet<>(Arrays.asList(
+                "org.jboss.remoting3.NotOpenException"
+        ));
+        return e -> {
+            if (e instanceof ConnectException) {
+                disconnect();
+                throw e;
+            }
+
+            boolean isConnErr = knownConnectionExceptions.contains(e.getClass().getName());
+            if (isConnErr || !isConnectionAlive()) {
+                disconnect();
+                throw new ConnectException(e.getMessage());
+            }
+            throw e;
+        };
     }
 
     /**
@@ -135,9 +162,14 @@ public class JMXFetcher {
      *
      * @throws JMXConnectionError JMX connection related exception
      */
-    public void disconnect() {
-        if (this.connector == null) {
+    public void disconnect() throws JMXConnectionError {
+        if (Thread.interrupted()) {
             return;
+        }
+
+        if (this.connector == null) {
+            throw new JMXConnectionError()
+                    .setMessage("cannot disconnect, connection to JMX endpoint is not established");
         }
 
         InternalStat internalStat = null;
@@ -223,7 +255,6 @@ public class JMXFetcher {
             result = jmxRequestHandler.exec(() ->
                     getConnection().queryMBeans(objectName, null)
             );
-
 
             if (internalStat != null) {
                 internalStat.setSuccessful(true);
@@ -710,6 +741,7 @@ public class JMXFetcher {
     /**
      * isConnectionAlive check if the connection is still open.
      * This method might not work for custom connector implementations.
+     *
      * @return boolean
      */
     private boolean isConnectionAlive() {
@@ -735,8 +767,7 @@ public class JMXFetcher {
             throw new JMXConnectionError("failed to get connection to JMX server: configuration not provided");
         }
 
-        if (!isConnectionAlive()) {
-            disconnect();
+        if (this.connector == null) {
             connect(jmxConfig);
         }
 
