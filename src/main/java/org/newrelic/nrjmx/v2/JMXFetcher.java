@@ -231,8 +231,10 @@ public class JMXFetcher {
         }
 
         try {
+            MBeanServerConnection conn = getConnection();
+
             result = withConnectionExceptionHandler(() ->
-                    getConnection().queryMBeans(objectName, null)
+                    conn.queryMBeans(objectName, null)
             );
 
             if (internalStat != null) {
@@ -300,8 +302,10 @@ public class JMXFetcher {
         }
 
         try {
+            MBeanServerConnection conn = getConnection();
+
             info = withConnectionExceptionHandler(() ->
-                    getConnection().getMBeanInfo(objectName)
+                    conn.getMBeanInfo(objectName)
             );
 
             if (internalStat != null) {
@@ -397,11 +401,12 @@ public class JMXFetcher {
         List<Attribute> attrValues = new ArrayList<>();
         AttributeList attributeList;
         try {
+            MBeanServerConnection conn = getConnection();
 
             List<String> finalAttributes = attributes;
 
             attributeList = withConnectionExceptionHandler(() ->
-                    getConnection().getAttributes(objectName, finalAttributes.toArray(new String[0]))
+                    conn.getAttributes(objectName, finalAttributes.toArray(new String[0]))
             );
 
             if (internalStat != null) {
@@ -509,13 +514,17 @@ public class JMXFetcher {
 
         Object value;
         try {
+            MBeanServerConnection conn = getConnection();
+
             value = withConnectionExceptionHandler(() ->
-                    getConnection().getAttribute(objectName, attribute)
+                    conn.getAttribute(objectName, attribute)
             );
             if (value instanceof Attribute) {
                 Attribute jmxAttr = (Attribute) value;
                 value = jmxAttr.getValue();
             }
+        } catch (JMXConnectionError je) {
+            throw je;
         } catch (ConnectException ce) {
             String message = String.format("can't connect to JMX server, error: '%s'", ce.getMessage());
             throw new JMXConnectionError(message);
@@ -652,6 +661,16 @@ public class JMXFetcher {
     private <T> T withConnectionExceptionHandler(Callable<T> task) throws Exception {
         try {
             return task.call();
+        } catch (
+            // Not connection errors.
+                MBeanException
+                | AttributeNotFoundException
+                | InstanceNotFoundException
+                | ReflectionException
+                | RuntimeOperationsException
+                | IllegalArgumentException
+                | IntrospectionException e) {
+            throw e;
         } catch (Exception e) {
             if (e instanceof ConnectException) {
                 disconnect();
