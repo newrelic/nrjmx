@@ -71,7 +71,7 @@ ci/snyk-test-java:
 			-v $(CURDIR):/src/nrjmx \
 			-w /src/nrjmx \
 			-e SNYK_TOKEN \
-			snyk/snyk:java snyk test --severity-threshold=high
+			snyk/snyk:maven-3-jdk-11 snyk test --severity-threshold=high
 
 .PHONY: ci/snyk-test-go
 ci/snyk-test-go:
