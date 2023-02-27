@@ -1,0 +1,34 @@
+---
+name: Security Testing
+
+env:
+  SNYK_TOKEN: ${{ secrets.CAOS_SNYK_TOKEN }}
+  DOCKER_HUB_ID: ${{ secrets.OHAI_DOCKER_HUB_ID }}
+  DOCKER_HUB_PASSWORD: ${{ secrets.OHAI_DOCKER_HUB_PASSWORD }}
+
+on:
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '**'
+    paths-ignore:
+      - README.md
+
+jobs:
+  scan-deps:
+    name: Run security checks Snyk
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ env.DOCKER_HUB_ID }}
+          password: ${{ env.DOCKER_HUB_PASSWORD }}
+      - name: Scan java code for vulnerabilities with Snyk
+        run: make ci/snyk-test-java
+
+      - name: Scan go code for vulnerabilities with Snyk
+        run: make ci/snyk-test-go
+

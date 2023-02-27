@@ -63,3 +63,22 @@ ci/docker/publish: code-gen-utils
 	@printf 'Publishing docker image\n'
 	@($(DOCKER_BIN) push ohaiops/nrjmx-code-generator:$(THRIFT_VERSION))
 	@($(DOCKER_BIN) push ohaiops/nrjmx-code-generator:latest)
+
+.PHONY: ci/snyk-test-java
+ci/snyk-test-java:
+	@docker run --rm -t \
+			--name "nrjmx-snyk-test-java" \
+			-v $(CURDIR):/src/nrjmx \
+			-w /src/nrjmx \
+			-e SNYK_TOKEN \
+			snyk/snyk:java snyk test --severity-threshold=high
+
+.PHONY: ci/snyk-test-go
+ci/snyk-test-go:
+	@docker run --rm -t \
+			--name "nrjmx-snyk-test-go" \
+			-v $(CURDIR):/src/nrjmx \
+			-w /src/nrjmx/gojmx \
+			-e SNYK_TOKEN \
+			-e GOFLAGS="-buildvcs=false" \
+			snyk/snyk:golang snyk test --severity-threshold=high
