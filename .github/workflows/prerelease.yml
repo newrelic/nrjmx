@@ -22,7 +22,6 @@ env:
   AWS_S3_BUCKET_NAME: "nr-downloads-ohai-staging"
   AWS_S3_LOCK_BUCKET_NAME: "onhost-ci-lock-staging"
   AWS_REGION: "us-east-1"
-  GO_VERSION: '1.16.10'
 
 jobs:
   unit-test-linux:
@@ -46,9 +45,9 @@ jobs:
 
     steps:
       - name: Install Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
-          go-version: ${{env.GO_VERSION}}
+          go-version-file: 'go.mod'
       - uses: actions/checkout@v2
       - name: Login to DockerHub
         uses: docker/login-action@v1
@@ -65,9 +64,9 @@ jobs:
 
     steps:
       - name: Install Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
-          go-version: ${{env.GO_VERSION}}
+          go-version-file: 'go.mod'
       - uses: actions/checkout@v2
       - name: Login to DockerHub
         uses: docker/login-action@v1
