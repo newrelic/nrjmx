@@ -65,7 +65,7 @@ func main() {
 
 	// Or use QueryMBean call which wraps all the necessary requests to get the values for an MBeanNamePattern.
 	// Optionally you can provide atributes to QueryMBeanAttributes in tha same way you provide for GetMBeanAttributes,
-	// e.g.: response, err := client.QueryMBeanAttributes("java.lang:type=*", mBeanAttrNames...)
+	// e.g.: response, err := client.QueryMBeanAttributes("java.lang:type=*", mBeanAttrNames...).
 	response, err := client.QueryMBeanAttributes("java.lang:type=*")
 	handleError(err)
 	for _, attr := range response {
