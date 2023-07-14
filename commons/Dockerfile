@@ -1,6 +1,6 @@
 FROM ubuntu:20.04 as builder
 
-ARG THRIFT_VERSION='0.16.0'
+ARG THRIFT_VERSION='0.17.0'
 
 ENV TZ=Etc/UCT
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone

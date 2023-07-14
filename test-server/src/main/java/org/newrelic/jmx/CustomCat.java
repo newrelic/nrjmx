@@ -1,6 +1,5 @@
 package org.newrelic.jmx;
 
-import javax.management.MBeanRegistration;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 

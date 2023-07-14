@@ -1,9 +1,9 @@
 module github.com/newrelic/nrjmx/gojmx
 
-go 1.18
+go 1.20
 
 require (
-	github.com/apache/thrift v0.16.0
+	github.com/apache/thrift v0.17.0
 	github.com/docker/go-connections v0.4.0
 	github.com/shirou/gopsutil/v3 v3.21.11
 	github.com/stretchr/testify v1.7.0

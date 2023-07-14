@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
+import java.rmi.ConnectException;
 import java.text.DateFormat;
 import java.util.*;
 import java.util.concurrent.*;
@@ -47,6 +48,14 @@ public class JMXFetcher {
 
     /* InternalStats used for troubleshooting. */
     private InternalStats internalStats;
+
+    /* knownConnectionExceptions is used to detect when a disconnect should happen.
+     * This is needed because of different implementations on various JMX connectors (e.g. JBoss)
+     * that doesn't trow rmi.ConnectException.
+     */
+    private Set<String> knownConnectionExceptions = new HashSet<>(Arrays.asList(
+            "org.jboss.remoting3.NotOpenException"
+    ));
 
     public JMXFetcher(ExecutorService executor) {
         this.executor = executor;
@@ -222,7 +231,11 @@ public class JMXFetcher {
         }
 
         try {
-            result = getConnection().queryMBeans(objectName, null);
+            MBeanServerConnection conn = getConnection();
+
+            result = withConnectionExceptionHandler(() ->
+                    conn.queryMBeans(objectName, null)
+            );
 
             if (internalStat != null) {
                 internalStat.setSuccessful(true);
@@ -231,10 +244,8 @@ public class JMXFetcher {
             return result;
         } catch (JMXConnectionError je) {
             throw je;
-        } catch (IOException io) {
-            disconnect();
-
-            String message = String.format("problem occurred when talking to the JMX server while querying mBeans, error: '%s'", io.getMessage());
+        } catch (ConnectException ce) {
+            String message = String.format("problem occurred when talking to the JMX server while querying mBeans, error: '%s'", ce.getMessage());
             throw new JMXConnectionError(message);
         } catch (Exception e) {
             throw new JMXError()
@@ -291,19 +302,21 @@ public class JMXFetcher {
         }
 
         try {
-            info = getConnection().getMBeanInfo(objectName);
+            MBeanServerConnection conn = getConnection();
+
+            info = withConnectionExceptionHandler(() ->
+                    conn.getMBeanInfo(objectName)
+            );
 
             if (internalStat != null) {
                 internalStat.setSuccessful(true);
             }
         } catch (JMXConnectionError je) {
             throw je;
-        } catch (IOException io) {
-            disconnect();
-
-            String message = String.format("problem occurred when talking to the JMX server while requesting mBean info, error: '%s'", io.getMessage());
+        } catch (ConnectException ce) {
+            String message = String.format("problem occurred when talking to the JMX server while requesting mBean info, error: '%s'", ce.getMessage());
             throw new JMXConnectionError(message);
-        } catch (InstanceNotFoundException | IntrospectionException | ReflectionException e) {
+        } catch (Exception e) {
             throw new JMXError()
                     .setMessage("can't find mBean: " + objectName)
                     .setCauseMessage(e.getMessage())
@@ -388,23 +401,39 @@ public class JMXFetcher {
         List<Attribute> attrValues = new ArrayList<>();
         AttributeList attributeList;
         try {
-            attributeList = getConnection().getAttributes(objectName, attributes.toArray(new String[0]));
+            MBeanServerConnection conn = getConnection();
+
+            List<String> finalAttributes = attributes;
+
+            attributeList = withConnectionExceptionHandler(() ->
+                    conn.getAttributes(objectName, finalAttributes.toArray(new String[0]))
+            );
 
             if (internalStat != null) {
                 internalStat.setSuccessful(true);
             }
         } catch (JMXConnectionError je) {
             throw je;
-        } catch (IOException io) {
-            disconnect();
-
-            String message = String.format("problem occurred when talking to the JMX server while requesting attributes, error: '%s'", io.getMessage());
+        } catch (ConnectException ce) {
+            String message = String.format("problem occurred when talking to the JMX server while requesting attributes, error: '%s'", ce.getMessage());
             throw new JMXConnectionError(message);
         } catch (Exception e) {
-            throw new JMXError()
-                    .setMessage("can't get attributes: " + attributes + " for bean: " + objectName + ": ")
-                    .setCauseMessage(e.getMessage())
-                    .setStacktrace(getStackTrace(e));
+            // When running a call for multiple attributes it can fail only because one of them.
+            // In that case we try to make a separate call for each one.
+            for (String attribute : attributes) {
+                String formattedAttrName = formatAttributeName(objectName, attribute);
+
+                try {
+                    getMBeanAttribute(objectName, attribute, output);
+                } catch (JMXError je) {
+                    String statusMessage = String.format("can't get attribute, error: '%s', cause: '%s', stacktrace: '%s'", je.message, je.causeMessage, je.stacktrace);
+                    output.add(new AttributeResponse()
+                            .setName(formattedAttrName)
+                            .setResponseType(ResponseType.ERROR)
+                            .setStatusMsg(statusMessage));
+                }
+            }
+            return;
         } finally {
             if (internalStat != null) {
                 InternalStats.setElapsedMs(internalStat);
@@ -455,6 +484,60 @@ public class JMXFetcher {
                         .setStatusMsg("failed to retrieve attribute value from server"));
             }
         }
+    }
+
+    /**
+     * getMBeanAttribute fetches the attribute value for an mBeanName.
+     * CompositeData is handled as multiple values.
+     *
+     * @param objectName of which we want to retrieve the attribute values
+     * @param attribute  of which we want to retrieve the attribute values
+     * @param output     List<AttributeResponse> to add the fetched attribute values.
+     * @throws JMXError           JMX related Exception
+     * @throws JMXConnectionError JMX connection related exception
+     */
+    private void getMBeanAttribute(ObjectName objectName, String attribute, List<AttributeResponse> output) throws JMXConnectionError, JMXError {
+        if (objectName == null) {
+            throw new JMXError()
+                    .setMessage("can't get attribute value, provided objectName is Null");
+        }
+
+        if (attribute == null) {
+            throw new JMXError()
+                    .setMessage("can't get attribute value, provided attribute name is Null");
+        }
+
+        if (output == null) {
+            throw new JMXError()
+                    .setMessage("can't deserialize attribute value, provided output list is Null");
+        }
+
+        Object value;
+        try {
+            MBeanServerConnection conn = getConnection();
+
+            value = withConnectionExceptionHandler(() ->
+                    conn.getAttribute(objectName, attribute)
+            );
+            if (value instanceof Attribute) {
+                Attribute jmxAttr = (Attribute) value;
+                value = jmxAttr.getValue();
+            }
+        } catch (JMXConnectionError je) {
+            throw je;
+        } catch (ConnectException ce) {
+            String message = String.format("can't connect to JMX server, error: '%s'", ce.getMessage());
+            throw new JMXConnectionError(message);
+        } catch (Exception e) {
+            throw new JMXError()
+                    .setMessage("can't get attribute: " + attribute + " for bean: " + objectName + ": ")
+                    .setCauseMessage(e.getMessage())
+                    .setStacktrace(getStackTrace(e));
+        }
+
+
+        String formattedAttrName = formatAttributeName(objectName, attribute);
+        parseValue(formattedAttrName, value, output);
     }
 
     /**
@@ -567,6 +650,43 @@ public class JMXFetcher {
     }
 
     /**
+     * withConnectionExceptionHandler is needed while performing JMX requests
+     * to detect if there is a connection exception that require a disconnect.
+     *
+     * @param task
+     * @param <T>
+     * @return
+     * @throws Exception
+     */
+    private <T> T withConnectionExceptionHandler(Callable<T> task) throws Exception {
+        try {
+            return task.call();
+        } catch (
+            // Not connection errors.
+                MBeanException
+                | AttributeNotFoundException
+                | InstanceNotFoundException
+                | ReflectionException
+                | RuntimeOperationsException
+                | IllegalArgumentException
+                | IntrospectionException e) {
+            throw e;
+        } catch (Exception e) {
+            if (e instanceof ConnectException) {
+                disconnect();
+                throw e;
+            }
+
+            boolean isConnErr = knownConnectionExceptions.contains(e.getClass().getName());
+            if (isConnErr || !isConnectionAlive()) {
+                disconnect();
+                throw new ConnectException(e.getMessage());
+            }
+            throw e;
+        }
+    }
+
+    /**
      * parseValue converts the received value from JMX into an JMXAttribute object.
      *
      * @param mBeanAttributeName of the value
@@ -641,6 +761,24 @@ public class JMXFetcher {
         }
 
         return internalStats.getStats();
+    }
+
+    /**
+     * isConnectionAlive check if the connection is still open.
+     * This method might not work for custom connector implementations.
+     *
+     * @return boolean
+     */
+    private boolean isConnectionAlive() {
+        if (connector == null) {
+            return false;
+        }
+        try {
+            connector.getConnectionId();
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -743,11 +881,18 @@ public class JMXFetcher {
         }
     }
 
+    private String removeNewLines(String msg) {
+        if (msg == null) {
+            return msg;
+        }
+        return msg.replace("\n", "").replace("\r", "");
+    }
+
     private String getStackTrace(Throwable throwable) {
         if (throwable == null || jmxConfig == null || !jmxConfig.verbose) {
             return "";
         }
-        return ExceptionUtils.getStackTrace(throwable);
+        return removeNewLines(ExceptionUtils.getStackTrace(throwable));
     }
 
     private String getErrorMessage(Throwable throwable) {

@@ -41,28 +41,10 @@
             <version>1.16.0</version>
             <scope>test</scope>
         </dependency>
-        <!-- This dependency is required to fix a security issue in thrift dependency -->
-        <dependency>
-            <groupId>commons-codec</groupId>
-            <artifactId>commons-codec</artifactId>
-            <version>1.15</version>
-        </dependency>
-        <!-- This dependency is required to fix a security issue in thrift dependency -->
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>4.5.13</version>
-        </dependency>
-        <!-- This dependency is required to fix a security issue in thrift dependency -->
-        <dependency>
-            <groupId>org.apache.tomcat.embed</groupId>
-            <artifactId>tomcat-embed-core</artifactId>
-            <version>10.1.0-M7</version>
-        </dependency>
         <dependency>
             <groupId>org.apache.thrift</groupId>
             <artifactId>libthrift</artifactId>
-            <version>0.16.0</version>
+            <version>0.17.0</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
