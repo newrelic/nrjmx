@@ -5,6 +5,7 @@ ARG GO_VERSION='1.18.5'
 
 RUN apt-get update && \
     apt-get install -y \
+    ca-certificates-java \
     make \
     rpm \
     gnupg2 \
