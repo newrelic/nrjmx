@@ -1,6 +1,6 @@
-FROM ubuntu:20.04 as builder
+FROM ubuntu:22.04 as builder
 
-ARG THRIFT_VERSION='0.17.0'
+ARG THRIFT_VERSION='0.21.0'
 
 ENV TZ=Etc/UCT
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
@@ -42,5 +42,5 @@ RUN cd thrift-${THRIFT_VERSION} \
     && cd /  \
     && rm -rf thrift-${THRIFT_VERSION}
 
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 COPY --from=builder /usr/bin/thrift /usr/bin/thrift
