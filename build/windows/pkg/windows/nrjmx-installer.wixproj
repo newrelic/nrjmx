@@ -34,7 +34,7 @@
     <Import Project="$(WixTargetsPath)"/>
     <Target Name="SignInstaller">
         <Exec Command="&quot;$(SignToolPath)signtool.exe&quot; sign /d &quot;New Relic NRJMX&quot; /a &quot;$(OutputPath)$(OutputName).msi&quot;"/>
-        <Copy SourceFiles="$(OutputPath)$(OutputName).msi" DestinationFiles="$(OutputPath)$(OutputName).x.y.z.msi"/>
+        <Copy SourceFiles="$(OutputPath)$(OutputName).msi" DestinationFiles="$(OutputPath)$(OutputName).msi"/>
     </Target>
     <Target Name="AfterBuild" DependsOnTargets="SignInstaller" Condition=" '$(SkipSigning)' == 'False' " />
 </Project>
