@@ -23,7 +23,7 @@ jobs:
           scan-type: 'fs'
           scan-ref: '.'
           format: 'template'
-          template: '@/contrib/sarif.tpl'
+          template: '@/contrib/sarif'
           output: 'trivy-results-java.sarif'
           severity: 'HIGH,CRITICAL'
           skip-dirs: 'gojmx/'
@@ -37,7 +37,7 @@ jobs:
           scan-type: 'fs'
           scan-ref: 'gojmx/'
           format: 'template'
-          template: '@/contrib/sarif.tpl'
+          template: '@/contrib/sarif'
           output: 'trivy-results-go.sarif'
           severity: 'HIGH,CRITICAL'
         env:
