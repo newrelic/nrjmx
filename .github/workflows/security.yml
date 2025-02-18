@@ -1,11 +1,6 @@
 ---
 name: Security Testing
 
-env:
-  SNYK_TOKEN: ${{ secrets.CAOS_SNYK_TOKEN }}
-  DOCKER_HUB_ID: ${{ secrets.OHAI_DOCKER_HUB_ID }}
-  DOCKER_HUB_PASSWORD: ${{ secrets.OHAI_DOCKER_HUB_PASSWORD }}
-
 on:
   push:
     branches:
@@ -17,18 +12,28 @@ on:
 
 jobs:
   scan-deps:
-    name: Run security checks Snyk
-    runs-on: ubuntu-20.04
+    name: Run security checks Trivy
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Login to DockerHub
-        uses: docker/login-action@v1
+      - uses: actions/checkout@v4
+          
+      - name: Run Trivy vulnerability scanner for Java
+        uses: aquasecurity/trivy-action@master
         with:
-          username: ${{ env.DOCKER_HUB_ID }}
-          password: ${{ env.DOCKER_HUB_PASSWORD }}
-      - name: Scan java code for vulnerabilities with Snyk
-        run: make ci/snyk-test-java
-
-      - name: Scan go code for vulnerabilities with Snyk
-        run: make ci/snyk-test-go
-
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          template: '@/contrib/sarif.tpl'
+          output: 'trivy-results-java.sarif'
+          severity: 'HIGH,CRITICAL'
+          skip-dirs: 'gojmx/'
+          
+      - name: Run Trivy vulnerability scanner for Go
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: 'gojmx/'
+          format: 'table'
+          template: '@/contrib/sarif.tpl'
+          output: 'trivy-results-go.sarif'
+          severity: 'HIGH,CRITICAL'
