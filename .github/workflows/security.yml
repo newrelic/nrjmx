@@ -18,22 +18,28 @@ jobs:
       - uses: actions/checkout@v4
           
       - name: Run Trivy vulnerability scanner for Java
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.29.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
-          format: 'table'
+          format: 'template'
           template: '@/contrib/sarif.tpl'
           output: 'trivy-results-java.sarif'
           severity: 'HIGH,CRITICAL'
           skip-dirs: 'gojmx/'
+        env:
+          TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db
+          TRIVY_JAVA_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-java-db
           
       - name: Run Trivy vulnerability scanner for Go
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.29.0
         with:
           scan-type: 'fs'
           scan-ref: 'gojmx/'
-          format: 'table'
+          format: 'template'
           template: '@/contrib/sarif.tpl'
           output: 'trivy-results-go.sarif'
           severity: 'HIGH,CRITICAL'
+        env:
+          TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db
+          TRIVY_JAVA_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-java-db
