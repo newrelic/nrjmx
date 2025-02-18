@@ -11,8 +11,8 @@ on:
       - README.md
 
 jobs:
-  scan-deps:
-    name: Run security checks Trivy
+  scan-java:
+    name: Scan Java Dependencies
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -30,6 +30,12 @@ jobs:
         env:
           TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db
           TRIVY_JAVA_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-java-db
+
+  scan-go:
+    name: Scan Go Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
           
       - name: Run Trivy vulnerability scanner for Go
         uses: aquasecurity/trivy-action@0.29.0
