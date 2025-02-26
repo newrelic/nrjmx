@@ -59,6 +59,14 @@ jobs:
           gpg_passphrase: ${{ env.GPG_PASSPHRASE }}
           gpg_private_key_base64: ${{ env.GPG_PRIVATE_KEY_BASE64 }}
 
+      - name: Test package from Prod repo
+        uses: newrelic/integrations-pkg-test-action/linux@v1
+        with:
+          tag: ${{ env.TAG }}
+          integration: 'nrjmx'
+          packageLocation: repo
+          upgrade: false
+
       - name: Notify successful release
         uses: archive/github-actions-slack@master
         with:

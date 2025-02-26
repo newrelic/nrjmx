@@ -5,7 +5,7 @@ on:
     types:
       - prereleased
     tags:
-      - '*'
+      - 'v*'
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -169,6 +169,15 @@ jobs:
           # used for signing package stuff
           gpg_passphrase: ${{ env.GPG_PASSPHRASE }}
           gpg_private_key_base64: ${{ env.GPG_PRIVATE_KEY_BASE64 }}
+      
+      - name: Test package from Staging repo
+        uses: newrelic/integrations-pkg-test-action/linux@v1
+        with:
+          tag: ${{ env.TAG }}
+          integration: 'nrjmx'
+          packageLocation: repo
+          stagingRepo: true
+          upgrade: false
           
       - name: Update title for successful pre-release
         if: ${{ github.event.release.prerelease }}
@@ -179,7 +188,7 @@ jobs:
 
   notify-failure:
     if: ${{ always() && failure() }}
-    needs: [unit-test-linux, test-go-linux-jdk8, test-go-linux-jdk11, check-gen-code, publishing-to-s3]
+    needs: [unit-test-linux, test-go-linux-jdk8, test-go-linux-jdk11, check-gen-code, packaging, packaging-msi, publishing-to-s3]
     runs-on: ubuntu-latest
     steps:
       - name: Notify failure via Slack
@@ -191,7 +200,7 @@ jobs:
 
   update-title-on-failure:
     if: ${{ always() && failure() }}
-    needs: [unit-test-linux, test-go-linux-jdk8, test-go-linux-jdk11, check-gen-code, publishing-to-s3]
+    needs: [unit-test-linux, test-go-linux-jdk8, test-go-linux-jdk11, check-gen-code, packaging, packaging-msi, publishing-to-s3]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

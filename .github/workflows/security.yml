@@ -5,10 +5,7 @@ on:
   push:
     branches:
       - '**'
-    tags-ignore:
-      - '**'
-    paths-ignore:
-      - README.md
+  pull_request:
 
 jobs:
   scan-java:
