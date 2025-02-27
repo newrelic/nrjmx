@@ -4,7 +4,9 @@ name: Security Testing
 on:
   push:
     branches:
-      - '**'
+      - master
+      - main
+      - renovate/**
   pull_request:
 
 jobs:
