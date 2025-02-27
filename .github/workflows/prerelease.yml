@@ -169,6 +169,8 @@ jobs:
           # used for signing package stuff
           gpg_passphrase: ${{ env.GPG_PASSPHRASE }}
           gpg_private_key_base64: ${{ env.GPG_PRIVATE_KEY_BASE64 }}
+          # for testing
+          dest_prefix: "automated_release_testing/"
       
       - name: Test package from Staging repo
         uses: newrelic/integrations-pkg-test-action/linux@v1
