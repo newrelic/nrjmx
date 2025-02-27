@@ -5,7 +5,7 @@ on:
     types:
       - prereleased
     tags:
-      - '*'
+      - 'v*'
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -29,9 +29,9 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Login to DockerHub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
           username: ${{ env.DOCKER_HUB_ID }}
           password: ${{ env.DOCKER_HUB_PASSWORD }}
@@ -44,13 +44,13 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version-file: 'gojmx/go.mod'
       - name: Login to DockerHub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
           username: ${{ env.DOCKER_HUB_ID }}
           password: ${{ env.DOCKER_HUB_PASSWORD }}
@@ -63,13 +63,13 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Install Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version-file: 'gojmx/go.mod'
       - name: Login to DockerHub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
           username: ${{ env.DOCKER_HUB_ID }}
           password: ${{ env.DOCKER_HUB_PASSWORD }}
@@ -82,9 +82,9 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Login to DockerHub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
           username: ${{ env.DOCKER_HUB_ID }}
           password: ${{ env.DOCKER_HUB_PASSWORD }}
@@ -97,10 +97,10 @@ jobs:
     needs: [ unit-test-linux, test-go-linux-jdk8, test-go-linux-jdk11, check-gen-code ]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Login to DockerHub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
           username: ${{ env.DOCKER_HUB_ID }}
           password: ${{ env.DOCKER_HUB_PASSWORD }}
@@ -115,7 +115,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Get PFX certificate from GH secrets
         shell: bash
@@ -140,7 +140,7 @@ jobs:
 
     steps:
       - name: Login to DockerHub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
           username: ${{ env.DOCKER_HUB_ID }}
           password: ${{ env.DOCKER_HUB_PASSWORD }}
@@ -169,3 +169,43 @@ jobs:
           # used for signing package stuff
           gpg_passphrase: ${{ env.GPG_PASSPHRASE }}
           gpg_private_key_base64: ${{ env.GPG_PRIVATE_KEY_BASE64 }}
+      
+      - name: Test package from Staging repo
+        uses: newrelic/integrations-pkg-test-action/linux@v1
+        with:
+          tag: ${{ env.TAG }}
+          integration: 'nrjmx'
+          packageLocation: repo
+          stagingRepo: true
+          upgrade: false
+          
+      - name: Update title for successful pre-release
+        if: ${{ github.event.release.prerelease }}
+        env:
+          GH_TOKEN: "${{ secrets.COREINT_BOT_TOKEN }}"
+        run: |
+          gh release edit ${{ env.TAG }} --title "${{ env.TAG }}"
+
+  notify-failure:
+    if: ${{ always() && failure() }}
+    needs: [unit-test-linux, test-go-linux-jdk8, test-go-linux-jdk11, check-gen-code, packaging, packaging-msi, publishing-to-s3]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify failure via Slack
+        uses: archive/github-actions-slack@master
+        with:
+          slack-bot-user-oauth-access-token: ${{ secrets.COREINT_SLACK_TOKEN }}
+          slack-channel: ${{ secrets.COREINT_SLACK_CHANNEL }}
+          slack-text: "❌ `${{ github.event.repository.full_name }}`: [prerelease pipeline failed](${{ github.server_url }}/${{ github.event.repository.full_name }}/actions/runs/${{ github.run_id }})."
+
+  update-title-on-failure:
+    if: ${{ always() && failure() }}
+    needs: [unit-test-linux, test-go-linux-jdk8, test-go-linux-jdk11, check-gen-code, packaging, packaging-msi, publishing-to-s3]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reflect failure in prerelease title
+        env:
+          GH_TOKEN: "${{ secrets.COREINT_BOT_TOKEN }}"
+        run: |
+          gh release edit ${{ env.TAG }} --title "${{ env.TAG }} (pre-release-failure)"

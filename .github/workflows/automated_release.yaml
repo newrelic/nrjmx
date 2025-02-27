@@ -1,0 +1,11 @@
+name: Automated release creation
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 19 * * 3"
+
+jobs:
+  release_management:
+    uses: newrelic/coreint-automation/.github/workflows/reusable_release_automation.yaml@v3
+    secrets: inherit

@@ -1,26 +1,34 @@
-# Change Log
+# Changelog
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 1.NEXT
+## Unreleased
 
-## 1.5.3
+### bugfix
+- Upgraded golang.org/x/net to v0.35.0
 
-- Removed `org.yaml` unused bundled dependency. This will reduce the
-  size of the JAR file.
+## v1.5.3 - 2020-09-14
+
+### 🚀 Enhancements
+- Removed `org.yaml` unused bundled dependency. This will reduce the size of the JAR file.
 - Upgraded `jmxterm` to v1.0.2 (fixes a vulnerability in bundled jar)
 
-## 1.5.2 (2019-11-18)
-## Fixed
+## v1.5.2 - 2019-11-18
+
+### 🐞 Bug fixes
 - Install `jmxterm` in `/usr/lib/nrjmx` for deb packages.
 
-## 1.5.1 (2019-11-15)
-## Fixed
+## v1.5.1 - 2019-11-15
+
+### 🐞 Bug fixes
 - Install `jmxterm` in `/usr/bin` for deb packages.
 
-## 1.5.0 (2019-11-15)
+## v1.5.0 - 2019-11-15
+
+### 🚀 Enhancements
 - Build JMXFetcher from full connection URL
 - Set debug log entry on nice log lvl to be shown only for verbose mode
 - Clean up cmd execution log entries
@@ -28,39 +36,45 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Increase test timeout to build on slow boxes
 - Java version file
 - Windows build
-- Include `jmxterm` for troubleshooting queries within mvn packaging for:
-  * tarball
-  * rpm
-  * deb
+- Include `jmxterm` for troubleshooting queries within mvn packaging for tarball, deb, and rpm
 
-## 1.4.1 (2019-10-01)
+## v1.4.1 - 2019-10-01
+
+### 🐞 Bug fixes
 - Fixed issue when parsing float NaN values.
 
-## 1.4.0 (2019-09-18)
-- Upgrade project target to Java 1.8 and allow using a different Java version than 
-the default one by configuring JAVA_HOME or NRIA_JAVA_HOME environment variables.
+## v1.4.0 - 2019-09-18
 
-## 1.3.1 (2019-06-17)
+### 🐞 Bug fixes
+- Upgrade project target to Java 1.8 and allow using a different Java version than the default one by configuring JAVA_HOME or NRIA_JAVA_HOME environment variables.
+
+## v1.3.1 - 2019-06-17
+
+### 🚀 Enhancements
 - (Linux-only) tar.gz packaging as an alternative to the current package managers
 
-## 1.3.0 (2019-06-17)
-## Added
-- Non standard (`jmxrmi`) URI path support via `-uriPath` argument.
-- JBoss remoting v3 support for JBoss Domain-mode as default and Standalone-mode
-  optionally.
+## v1.3.0 - 2019-06-17
 
-## 1.2.1 (2019-06-04)
-## Fixed
+### 🚀 Enhancements
+- Non standard (`jmxrmi`) URI path support via `-uriPath` argument.
+- JBoss remoting v3 support for JBoss Domain-mode as default and Standalone-mode optionally.
+
+## v1.2.1 - 2019-06-04
+
+### 🐞 Bug fixes
 - Fixed SSL connection with keyStore and trustStore 
 
-## 1.1.2 (2019-03-18)
-### Added
+## v1.1.2 - 2019-03-18
+
+### 🚀 Enhancements
 - Added remote argument for JMX remote connections
 
-## 1.0.2 (2018-09-12)
-### Added
+## v1.0.2 - 2018-09-12
+
+### 🚀 Enhancements
 - Catch all exceptions
 
-## 1.0.0 (2017-07-21)
-### Added
+## v1.0.0 - 2017-07-21
+
+### 🚀 Enhancements
 - Initial release
