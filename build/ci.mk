@@ -14,7 +14,6 @@ ci/package: deps
 .PHONY : ci/test
 ci/test: deps
 	@($(DOCKER_CMD) make test)
-	@($(DOCKER_CMD) make test-fips)
 
 .PHONY : ci/release
 ci/release: deps

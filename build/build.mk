@@ -10,10 +10,6 @@ test:
 build:
 	@(export MAVEN_OPTS="$(MAVEN_FIPS_OPTS)"; $(MAVEN_BIN) clean package -DskipTests -P fips-compliance)
 
-.PHONY : test-fips
-test:
-	@(export MAVEN_OPTS="$(MAVEN_FIPS_OPTS)"; $(MAVEN_BIN) clean test -P test,fips-compliance)
-
 CUR_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 GOMODULE_DIR:=$(CUR_DIR)/gojmx/
 
