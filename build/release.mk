@@ -1,12 +1,26 @@
 .PHONY : release/package
-release/package:
-	@($(MAVEN_BIN) versions:set -DnewVersion=\$(subst v,,$(TAG)))
-	@($(MAVEN_BIN) clean package -DskipTests)
+release/package: release/package-fips release/package-non-fips
+
+.PHONY : release/package-fips
+release/package-fips:
+	@echo "=== [package-fips] Creating FIPS-compliant package"
+	@(export MAVEN_OPTS="$(MAVEN_FIPS_OPTS)"; $(MAVEN_BIN) versions:set -DnewVersion=$(subst v,,$(TAG)))
+	@(export MAVEN_OPTS="$(MAVEN_FIPS_OPTS)"; $(MAVEN_BIN) clean package -DskipTests -P fips-compliance,tarball-linux,deb,rpm,\!tarball-windows)
+	@mkdir -p $(CURDIR)/dist
+	@find target -name "*.jar" -o -name "*.tar.gz" -o -name "*.rpm" -o -name "*.deb" | xargs -I {} cp {} $(CURDIR)/dist/
+
+.PHONY : release/package-non-fips
+release/package-non-fips:
+	@echo "=== [package-non-fips] Creating non-FIPS package"
+	@($(MAVEN_BIN) versions:set -DnewVersion=$(subst v,,$(TAG)))
+	@($(MAVEN_BIN) clean package -DskipTests -P tarball-linux,tarball-windows,deb,rpm)
+	@mkdir -p $(CURDIR)/dist
+	@find target -name "*.jar" -o -name "*.tar.gz" -o -name "*.rpm" -o -name "*.deb" -o -name "*.zip" | xargs -I {} cp {} $(CURDIR)/dist/
 
 .PHONY : release/sign
 release/sign:
 	@echo "=== [sign] signing packages"
-	@bash $(CURDIR)/build/sign.sh
+	@bash sign.sh
 
 .PHONY : release/publish
 release/publish:

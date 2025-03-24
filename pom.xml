@@ -56,6 +56,17 @@
             <artifactId>slf4j-simple</artifactId>
             <version>1.7.36</version>
         </dependency>
+        <!-- FIPS-compliant Bouncy Castle provider -->
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bc-fips</artifactId>
+            <version>1.0.2.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-fips</artifactId>
+            <version>1.0.6</version>
+        </dependency>
     </dependencies>
     <build>
         <resources>
@@ -77,7 +88,7 @@
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
-                    <finalName>${project.artifactId}_${project.version}_noarch</finalName>
+                    <finalName>${project.artifactId}${fips.suffix}_${project.version}_noarch</finalName>
                     <appendAssemblyId>false</appendAssemblyId>
                 </configuration>
                 <executions>
@@ -101,16 +112,95 @@
                             <goal>copy</goal>
                         </goals>
                         <configuration>
-                            <sourceFile>target/${project.artifactId}_${project.version}_noarch.jar
-                            </sourceFile>
-                            <destinationFile>bin/nrjmx.jar</destinationFile>
+                            <sourceFile>target/${project.artifactId}${fips.suffix}_${project.version}_noarch.jar</sourceFile>
+                            <destinationFile>bin/nrjmx${fips.suffix}.jar</destinationFile>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
+            <!-- FIPS compliance check plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>enforce-fips-dependencies</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <bannedDependencies>
+                                    <excludes>
+                                        <!-- Exclude non-FIPS cryptographic libraries -->
+                                        <exclude>org.bouncycastle:bcprov-jdk*</exclude>
+                                        <exclude>org.bouncycastle:bcprov-ext-jdk*</exclude>
+                                    </excludes>
+                                </bannedDependencies>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Configure surefire to use FIPS mode for tests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.22.2</version>
+                <configuration>
+                    <argLine>-Djava.security.properties=${project.build.directory}/classes/fips.security</argLine>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
     <profiles>
+        <profile>
+            <id>fips-compliance</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <properties>
+                <!-- Add FIPS suffix for FIPS-compliant builds -->
+                <fips.suffix>-fips</fips.suffix>
+                <!-- FIPS-compliant TLS settings -->
+                <https.protocols>TLSv1.2</https.protocols>
+                <jdk.tls.client.protocols>TLSv1.2</jdk.tls.client.protocols>
+                <javax.net.ssl.keyStoreType>PKCS12</javax.net.ssl.keyStoreType>
+                <com.sun.net.ssl.checkRevocation>true</com.sun.net.ssl.checkRevocation>
+                <ssl.TrustManagerFactory.algorithm>PKIX</ssl.TrustManagerFactory.algorithm>
+            </properties>
+            <build>
+                <resources>
+                    <resource>
+                        <directory>src/main/resources</directory>
+                        <filtering>true</filtering>
+                    </resource>
+                    <!-- Add FIPS security configuration file -->
+                    <resource>
+                        <directory>src/main/resources-fips</directory>
+                        <filtering>true</filtering>
+                        <includes>
+                            <include>fips.security</include>
+                        </includes>
+                    </resource>
+                </resources>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-jar-plugin</artifactId>
+                        <version>3.2.0</version>
+                        <configuration>
+                            <archive>
+                                <manifestEntries>
+                                    <FIPS-Compliant>true</FIPS-Compliant>
+                                </manifestEntries>
+                            </archive>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
         <profile>
             <id>test</id>
             <activation>
@@ -141,7 +231,7 @@
             </build>
         </profile>
         <profile>
-            <id>tarball</id>
+            <id>tarball-linux</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
@@ -153,7 +243,7 @@
                             <execution>
                                 <id>create-targz</id>
                                 <configuration>
-                                    <finalName>${project.artifactId}_linux_${project.version}_noarch</finalName>
+                                    <finalName>${project.artifactId}_linux${fips.suffix}_${project.version}_noarch</finalName>
                                     <appendAssemblyId>false</appendAssemblyId>
                                     <descriptor>build/assembly/targz.xml</descriptor>
                                 </configuration>
@@ -162,10 +252,30 @@
                                     <goal>single</goal>
                                 </goals>
                             </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>tarball-windows</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+                <!-- Only activate for non-FIPS builds -->
+                <property>
+                    <name>fips.suffix</name>
+                    <value></value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <executions>
                             <execution>
                                 <id>create-zip</id>
                                 <configuration>
-                                    <finalName>${project.artifactId}_windows_${project.version}_noarch</finalName>
+                                    <finalName>${project.artifactId}_windows${fips.suffix}_${project.version}_noarch</finalName>
                                     <appendAssemblyId>false</appendAssemblyId>
                                     <descriptor>build/assembly/zip.xml</descriptor>
                                 </configuration>
@@ -200,27 +310,23 @@
                             </execution>
                         </executions>
                         <configuration>
-                            <deb>target/${project.artifactId}_${project.version}-1_noarch.deb</deb>
+                            <deb>target/${project.artifactId}${fips.suffix}_${project.version}-1_noarch.deb</deb>
                             <dataSet>
                                 <data>
                                     <type>file</type>
-                                    <src>target/${project.artifactId}_linux_${project.version}_noarch.jar</src>
-                                    <dst>
-                                        /usr/lib/${project.artifactId}/${project.artifactId}_linux_${project.version}_noarch.jar
-                                    </dst>
+                                    <src>target/${project.artifactId}_linux${fips.suffix}_${project.version}_noarch.jar</src>
+                                    <dst>/usr/lib/${project.artifactId}/${project.artifactId}_linux${fips.suffix}_${project.version}_noarch.jar</dst>
                                 </data>
                                 <data>
                                     <type>link</type>
-                                    <linkName>/usr/lib/${project.artifactId}/${project.artifactId}.jar</linkName>
-                                    <linkTarget>
-                                        /usr/lib/${project.artifactId}/${project.artifactId}_linux_${project.version}_noarch.jar
-                                    </linkTarget>
+                                    <linkName>/usr/lib/${project.artifactId}/${project.artifactId}${fips.suffix}.jar</linkName>
+                                    <linkTarget>/usr/lib/${project.artifactId}/${project.artifactId}_linux${fips.suffix}_${project.version}_noarch.jar</linkTarget>
                                     <symlink>true</symlink>
                                 </data>
                                 <data>
                                     <type>file</type>
                                     <src>bin/${project.artifactId}</src>
-                                    <dst>/usr/bin/${project.artifactId}</dst>
+                                    <dst>/usr/bin/${project.artifactId}${fips.suffix}</dst>
                                     <mapper>
                                         <type>perm</type>
                                         <filemode>755</filemode>
@@ -264,6 +370,7 @@
                             </execution>
                         </executions>
                         <configuration>
+                            <name>${project.artifactId}${fips.suffix}</name>
                             <license>https://newrelic.com/terms (also see LICENSE installed with this package)</license>
                             <packager>New Relic Infrastructure Team &lt;infrastructure-eng@newrelic.com&gt;</packager>
                             <group>Application/System</group>
@@ -275,15 +382,11 @@
                                     <directory>/usr/lib/${project.artifactId}</directory>
                                     <sources>
                                         <source>
-                                            <location>
-                                                target/${project.artifactId}_linux_${project.version}_noarch.jar
-                                            </location>
+                                            <location>target/${project.artifactId}_linux${fips.suffix}_${project.version}_noarch.jar</location>
                                         </source>
                                         <softlinkSource>
-                                            <location>
-                                                /usr/lib/${project.artifactId}/${project.artifactId}_linux_${project.version}_noarch.jar
-                                            </location>
-                                            <destination>${project.artifactId}.jar</destination>
+                                            <location>/usr/lib/${project.artifactId}/${project.artifactId}_linux${fips.suffix}_${project.version}_noarch.jar</location>
+                                            <destination>${project.artifactId}${fips.suffix}.jar</destination>
                                         </softlinkSource>
                                     </sources>
                                 </mapping>
@@ -297,6 +400,7 @@
                                     <sources>
                                         <source>
                                             <location>bin/nrjmx</location>
+                                            <destination>${project.artifactId}${fips.suffix}</destination>
                                         </source>
                                     </sources>
                                 </mapping>
@@ -306,7 +410,6 @@
                                     <documentation>true</documentation>
                                     <username>root</username>
                                     <groupname>root</groupname>
-                                    <!-- <filemode>444</filemode> -->
                                     <sources>
                                         <source>
                                             <location>README.md</location>
@@ -327,5 +430,10 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.compilerVersion>1.8</maven.compiler.compilerVersion>
+        <!-- Default to no suffix for non-FIPS builds -->
+        <fips.suffix></fips.suffix>
+        <!-- FIPS-compliant TLS settings in global properties -->
+        <https.protocols>TLSv1.2</https.protocols>
+        <jdk.tls.client.protocols>TLSv1.2</jdk.tls.client.protocols>
     </properties>
 </project>
