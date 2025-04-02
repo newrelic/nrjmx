@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### bugfix
+## v2.7.1 - 2025-04-02
+
+### 🐞 Bug fixes
 - Upgraded golang.org/x/net to v0.35.0
 
 ## v1.5.3 - 2020-09-14
