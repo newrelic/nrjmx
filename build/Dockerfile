@@ -24,7 +24,6 @@ RUN apt-get update && apt-get install -y \
     jq \
     g++ \
     gnupg2 \
-    gnupg-agent \
     debsigs \
     rpm \
     build-essential \
