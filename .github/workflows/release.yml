@@ -59,30 +59,30 @@ jobs:
           gpg_passphrase: ${{ env.GPG_PASSPHRASE }}
           gpg_private_key_base64: ${{ env.GPG_PRIVATE_KEY_BASE64 }}
 
-    - name: Publish to S3 action - FIPS
-      uses: newrelic/infrastructure-publish-action@v1
-      env:
-        AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ env.AWS_SECRET_ACCESS_KEY }}
-        AWS_ROLE_ARN: ${{ env.AWS_ROLE_ARN }}
-        AWS_ROLE_SESSION_NAME: ${{ env.AWS_ROLE_SESSION_NAME }}
-      with:
-        tag: ${{env.TAG}}
-        app_name: "nrjmx-fips"
-        repo_name: "newrelic/nrjmx"
-        schema: "nrjmx-fips"
-        aws_access_key_id: ${{ env.AWS_ACCESS_KEY_ID }}
-        aws_secret_access_key: ${{ env.AWS_SECRET_ACCESS_KEY }}
-        aws_s3_bucket_name: ${{ env.AWS_S3_BUCKET_NAME }}
-        aws_s3_lock_bucket_name: ${{ env.AWS_S3_LOCK_BUCKET_NAME }}
-        access_point_host: "production"
-        run_id: ${{ github.run_id }}
-        aws_region: ${{ env.AWS_REGION }}
-        aws_role_session_name: ${{ env.AWS_ROLE_SESSION_NAME }}
-        aws_role_arn: ${{ env.AWS_ROLE_ARN }}
-        # used for signing package stuff
-        gpg_passphrase: ${{ env.GPG_PASSPHRASE }}
-        gpg_private_key_base64: ${{ env.GPG_PRIVATE_KEY_BASE64 }}
+      - name: Publish to S3 action - FIPS
+        uses: newrelic/infrastructure-publish-action@v1
+        env:
+          AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          AWS_ROLE_ARN: ${{ env.AWS_ROLE_ARN }}
+          AWS_ROLE_SESSION_NAME: ${{ env.AWS_ROLE_SESSION_NAME }}
+        with:
+          tag: ${{env.TAG}}
+          app_name: "nrjmx-fips"
+          repo_name: "newrelic/nrjmx"
+          schema: "nrjmx-fips"
+          aws_access_key_id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws_s3_bucket_name: ${{ env.AWS_S3_BUCKET_NAME }}
+          aws_s3_lock_bucket_name: ${{ env.AWS_S3_LOCK_BUCKET_NAME }}
+          access_point_host: "production"
+          run_id: ${{ github.run_id }}
+          aws_region: ${{ env.AWS_REGION }}
+          aws_role_session_name: ${{ env.AWS_ROLE_SESSION_NAME }}
+          aws_role_arn: ${{ env.AWS_ROLE_ARN }}
+          # used for signing package stuff
+          gpg_passphrase: ${{ env.GPG_PASSPHRASE }}
+          gpg_private_key_base64: ${{ env.GPG_PRIVATE_KEY_BASE64 }}
 
       - name: Test package from Prod repo
         uses: newrelic/integrations-pkg-test-action/linux@v1
