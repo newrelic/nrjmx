@@ -1,10 +1,14 @@
 .PHONY : build
 build:
-	@($(MAVEN_BIN) clean package -DskipTests -P \!deb,\!rpm,\!tarball,\!test,\!tarball)
+	@($(MAVEN_BIN) clean package -DskipTests -f pom.xml -P \!deb,\!rpm,\!tarball,\!test)
 
 .PHONY : test
 test:
-	@($(MAVEN_BIN) clean test -P test)
+	@($(MAVEN_BIN) clean test -f pom.xml -P test)
+
+.PHONY : build-fips
+build-fips:
+	@(export MAVEN_OPTS="$(MAVEN_FIPS_OPTS)"; $(MAVEN_BIN) clean package -DskipTests -f pom-fips.xml -P \!deb,\!rpm,\!tarball,\!test)
 
 CUR_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 GOMODULE_DIR:=$(CUR_DIR)/gojmx/
@@ -41,6 +45,4 @@ code-gen:
 	rm -rf gojmx/internal/nrprotocol
 	@($(DOCKER_THRIFT) thrift -r --out src/main/java/ --gen java:generated_annotations=suppress ./commons/nrjmx.thrift)
 	@($(DOCKER_THRIFT) thrift -r --out gojmx/internal/ --gen go:package_prefix=github.com/newrelic/nrjmx/gojmx/internal/,package=nrprotocol ./commons/nrjmx.thrift)
-
-
 
