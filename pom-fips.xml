@@ -60,12 +60,12 @@
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bc-fips</artifactId>
-            <version>1.0.2.3</version>
+            <version>2.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcpkix-fips</artifactId>
-            <version>1.0.6</version>
+            <version>1.0.7</version>
         </dependency>
     </dependencies>
     <build>
@@ -371,6 +371,19 @@
             </build>
         </profile>
     </profiles>
+    <repositories>
+        <repository>
+            <id>central</id>
+            <name>Central Repository</name>
+            <url>https://repo1.maven.org/maven2</url>
+        </repository>
+        <repository>
+            <id>bouncycastle</id>
+            <name>Bouncy Castle Repository</name>
+            <url>https://repo.maven.apache.org/maven2</url>
+        </repository>
+    </repositories>
+    
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -383,5 +396,7 @@
         <javax.net.ssl.keyStoreType>PKCS12</javax.net.ssl.keyStoreType>
         <com.sun.net.ssl.checkRevocation>true</com.sun.net.ssl.checkRevocation>
         <ssl.TrustManagerFactory.algorithm>PKIX</ssl.TrustManagerFactory.algorithm>
+        <!-- FIPS provider name -->
+        <fips.provider.name>BCFIPS</fips.provider.name>
     </properties>
 </project>
