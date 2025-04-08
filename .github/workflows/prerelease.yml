@@ -153,6 +153,7 @@ jobs:
           AWS_ROLE_ARN: ${{ secrets.OHAI_AWS_ROLE_ARN_STAGING }}
           AWS_ROLE_SESSION_NAME: ${{ secrets.OHAI_AWS_ROLE_SESSION_NAME_STAGING }}
         with:
+          disable_lock: false
           tag: ${{env.TAG}}
           app_name: "nrjmx"
           repo_name: "newrelic/nrjmx"
@@ -179,6 +180,7 @@ jobs:
           AWS_ROLE_ARN: ${{ secrets.OHAI_AWS_ROLE_ARN_STAGING }}
           AWS_ROLE_SESSION_NAME: ${{ secrets.OHAI_AWS_ROLE_SESSION_NAME_STAGING }}
         with:
+          disable_lock: false
           tag: ${{env.TAG}}
           app_name: "nrjmx-fips"
           repo_name: "newrelic/nrjmx"

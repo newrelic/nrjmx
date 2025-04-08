@@ -42,6 +42,7 @@ jobs:
           AWS_ROLE_ARN: ${{ env.AWS_ROLE_ARN }}
           AWS_ROLE_SESSION_NAME: ${{ env.AWS_ROLE_SESSION_NAME }}
         with:
+          disable_lock: false
           tag: ${{env.TAG}}
           app_name: "nrjmx"
           repo_name: "newrelic/nrjmx"
@@ -67,6 +68,7 @@ jobs:
           AWS_ROLE_ARN: ${{ env.AWS_ROLE_ARN }}
           AWS_ROLE_SESSION_NAME: ${{ env.AWS_ROLE_SESSION_NAME }}
         with:
+          disable_lock: false
           tag: ${{env.TAG}}
           app_name: "nrjmx-fips"
           repo_name: "newrelic/nrjmx"
