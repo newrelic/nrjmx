@@ -153,7 +153,7 @@
                             <execution>
                                 <id>create-targz</id>
                                 <configuration>
-                                    <finalName>${project.artifactId}_linux${fips.suffix}_${project.version}_noarch</finalName>
+                                    <finalName>${project.artifactId}${fips.suffix}_linux_${project.version}_noarch</finalName>
                                     <appendAssemblyId>false</appendAssemblyId>
                                     <descriptor>build/assembly/targz.xml</descriptor>
                                 </configuration>
@@ -180,7 +180,7 @@
                             <execution>
                                 <id>create-zip</id>
                                 <configuration>
-                                    <finalName>${project.artifactId}_windows${fips.suffix}_${project.version}_noarch</finalName>
+                                    <finalName>${project.artifactId}${fips.suffix}_windows_${project.version}_noarch</finalName>
                                     <appendAssemblyId>false</appendAssemblyId>
                                     <descriptor>build/assembly/zip.xml</descriptor>
                                 </configuration>
@@ -219,13 +219,13 @@
                             <dataSet>
                                 <data>
                                     <type>file</type>
-                                    <src>target/${project.artifactId}_linux${fips.suffix}_${project.version}_noarch.jar</src>
-                                    <dst>/usr/lib/${project.artifactId}/${project.artifactId}_linux${fips.suffix}_${project.version}_noarch.jar</dst>
+                                    <src>target/${project.artifactId}${fips.suffix}_linux_${project.version}_noarch.jar</src>
+                                    <dst>/usr/lib/${project.artifactId}/${project.artifactId}${fips.suffix}_linux_${project.version}_noarch.jar</dst>
                                 </data>
                                 <data>
                                     <type>link</type>
                                     <linkName>/usr/lib/${project.artifactId}/${project.artifactId}${fips.suffix}.jar</linkName>
-                                    <linkTarget>/usr/lib/${project.artifactId}/${project.artifactId}_linux${fips.suffix}_${project.version}_noarch.jar</linkTarget>
+                                    <linkTarget>/usr/lib/${project.artifactId}/${project.artifactId}${fips.suffix}_linux_${project.version}_noarch.jar</linkTarget>
                                     <symlink>true</symlink>
                                 </data>
                                 <data>
@@ -287,10 +287,10 @@
                                     <directory>/usr/lib/${project.artifactId}</directory>
                                     <sources>
                                         <source>
-                                            <location>target/${project.artifactId}_linux${fips.suffix}_${project.version}_noarch.jar</location>
+                                            <location>target/${project.artifactId}${fips.suffix}_linux_${project.version}_noarch.jar</location>
                                         </source>
                                         <softlinkSource>
-                                            <location>/usr/lib/${project.artifactId}/${project.artifactId}_linux${fips.suffix}_${project.version}_noarch.jar</location>
+                                            <location>/usr/lib/${project.artifactId}/${project.artifactId}${fips.suffix}_linux_${project.version}_noarch.jar</location>
                                             <destination>${project.artifactId}${fips.suffix}.jar</destination>
                                         </softlinkSource>
                                     </sources>
