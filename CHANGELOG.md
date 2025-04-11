@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### bugfix
+- Added FIPS compliance for nrjmx
+- Moved to automated workflows to release nrjmx
+
 ## v2.7.1 - 2025-04-02
 
 ### 🐞 Bug fixes
