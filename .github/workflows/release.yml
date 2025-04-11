@@ -42,7 +42,6 @@ jobs:
           AWS_ROLE_ARN: ${{ env.AWS_ROLE_ARN }}
           AWS_ROLE_SESSION_NAME: ${{ env.AWS_ROLE_SESSION_NAME }}
         with:
-          disable_lock: false
           tag: ${{env.TAG}}
           app_name: "nrjmx"
           repo_name: "newrelic/nrjmx"
@@ -56,7 +55,6 @@ jobs:
           aws_region: ${{ env.AWS_REGION }}
           aws_role_session_name: ${{ env.AWS_ROLE_SESSION_NAME }}
           aws_role_arn: ${{ env.AWS_ROLE_ARN }}
-          # used for signing package stuff
           gpg_passphrase: ${{ env.GPG_PASSPHRASE }}
           gpg_private_key_base64: ${{ env.GPG_PRIVATE_KEY_BASE64 }}
 
@@ -68,7 +66,6 @@ jobs:
           AWS_ROLE_ARN: ${{ env.AWS_ROLE_ARN }}
           AWS_ROLE_SESSION_NAME: ${{ env.AWS_ROLE_SESSION_NAME }}
         with:
-          disable_lock: false
           tag: ${{env.TAG}}
           app_name: "nrjmx-fips"
           repo_name: "newrelic/nrjmx"
@@ -82,18 +79,8 @@ jobs:
           aws_region: ${{ env.AWS_REGION }}
           aws_role_session_name: ${{ env.AWS_ROLE_SESSION_NAME }}
           aws_role_arn: ${{ env.AWS_ROLE_ARN }}
-          # used for signing package stuff
           gpg_passphrase: ${{ env.GPG_PASSPHRASE }}
           gpg_private_key_base64: ${{ env.GPG_PRIVATE_KEY_BASE64 }}
-
-      # Can be enabled after the test action is properly tested for nrjmx
-      # - name: Test package from Prod repo
-      #   uses: newrelic/integrations-pkg-test-action/linux@v1
-      #   with:
-      #     tag: ${{ env.TAG }}
-      #     integration: 'nrjmx'
-      #     packageLocation: repo
-      #     upgrade: false
 
       - name: Notify successful release
         uses: archive/github-actions-slack@master

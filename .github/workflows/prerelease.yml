@@ -167,8 +167,6 @@ jobs:
           aws_region: ${{ env.AWS_REGION }}
           aws_role_session_name: ${{ env.AWS_ROLE_SESSION_NAME }}
           aws_role_arn: ${{ env.AWS_ROLE_ARN }}
-          # dest_prefix: "testing_nrjmx_fips/"
-          # used for signing package stuff
           gpg_passphrase: ${{ env.GPG_PASSPHRASE }}
           gpg_private_key_base64: ${{ env.GPG_PRIVATE_KEY_BASE64 }}
         
@@ -194,21 +192,9 @@ jobs:
           aws_region: ${{ env.AWS_REGION }}
           aws_role_session_name: ${{ env.AWS_ROLE_SESSION_NAME }}
           aws_role_arn: ${{ env.AWS_ROLE_ARN }}
-          # dest_prefix: "testing_nrjmx_fips/"
-          # used for signing package stuff
           gpg_passphrase: ${{ env.GPG_PASSPHRASE }}
           gpg_private_key_base64: ${{ env.GPG_PRIVATE_KEY_BASE64 }}
-      
-      # Can be enabled after the test action is properly tested for nrjmx
-      # - name: Test package from Staging repo
-      #   uses: newrelic/integrations-pkg-test-action/linux@v1
-      #   with:
-      #     tag: ${{ env.TAG }}
-      #     integration: 'nrjmx'
-      #     packageLocation: repo
-      #     stagingRepo: true
-      #     upgrade: false
-          
+                
       - name: Update title for successful pre-release
         if: ${{ github.event.release.prerelease }}
         env:
