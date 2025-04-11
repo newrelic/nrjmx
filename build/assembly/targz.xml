@@ -25,9 +25,9 @@
     </fileSets>
     <files>
         <file>
-            <source>target/${project.artifactId}_${project.version}_noarch.jar</source>
+            <source>target/${project.artifactId}${fips.suffix}_${project.version}_noarch.jar</source>
             <outputDirectory>usr/lib/nrjmx/</outputDirectory>
-            <destName>nrjmx.jar</destName>
+            <destName>nrjmx${fips.suffix}.jar</destName>
         </file>
     </files>
 </assembly>

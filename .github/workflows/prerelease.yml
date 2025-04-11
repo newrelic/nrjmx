@@ -26,7 +26,7 @@ env:
 jobs:
   unit-test-linux:
     name: Linux unit tests
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -41,7 +41,7 @@ jobs:
 
   test-go-linux-jdk8:
     name: Linux unit tests for Go on JDK 8
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -60,7 +60,7 @@ jobs:
 
   test-go-linux-jdk11:
     name: Linux unit tests for Go on JDK 11
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -79,7 +79,7 @@ jobs:
 
   check-gen-code:
     name: Checking generated code
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -93,7 +93,7 @@ jobs:
 
   packaging:
     name: Build and upload artifacts into GH Release assets
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     needs: [ unit-test-linux, test-go-linux-jdk8, test-go-linux-jdk11, check-gen-code ]
 
     steps:
@@ -135,7 +135,7 @@ jobs:
 
   publishing-to-s3:
     name: Publish linux artifacts into s3 staging bucket
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     needs: [ packaging, packaging-msi ]
 
     steps:
@@ -145,7 +145,7 @@ jobs:
           username: ${{ env.DOCKER_HUB_ID }}
           password: ${{ env.DOCKER_HUB_PASSWORD }}
 
-      - name: Publish all to S3 action
+      - name: Publish to S3 action
         uses: newrelic/infrastructure-publish-action@v1
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.OHAI_AWS_ACCESS_KEY_ID_STAGING }}
@@ -153,6 +153,7 @@ jobs:
           AWS_ROLE_ARN: ${{ secrets.OHAI_AWS_ROLE_ARN_STAGING }}
           AWS_ROLE_SESSION_NAME: ${{ secrets.OHAI_AWS_ROLE_SESSION_NAME_STAGING }}
         with:
+          disable_lock: false
           tag: ${{env.TAG}}
           app_name: "nrjmx"
           repo_name: "newrelic/nrjmx"
@@ -166,19 +167,34 @@ jobs:
           aws_region: ${{ env.AWS_REGION }}
           aws_role_session_name: ${{ env.AWS_ROLE_SESSION_NAME }}
           aws_role_arn: ${{ env.AWS_ROLE_ARN }}
-          # used for signing package stuff
           gpg_passphrase: ${{ env.GPG_PASSPHRASE }}
           gpg_private_key_base64: ${{ env.GPG_PRIVATE_KEY_BASE64 }}
-      
-      - name: Test package from Staging repo
-        uses: newrelic/integrations-pkg-test-action/linux@v1
+        
+      - name: Publish to S3 action - FIPS
+        uses: newrelic/infrastructure-publish-action@v1
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.OHAI_AWS_ACCESS_KEY_ID_STAGING }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.OHAI_AWS_SECRET_ACCESS_KEY_STAGING }}
+          AWS_ROLE_ARN: ${{ secrets.OHAI_AWS_ROLE_ARN_STAGING }}
+          AWS_ROLE_SESSION_NAME: ${{ secrets.OHAI_AWS_ROLE_SESSION_NAME_STAGING }}
         with:
-          tag: ${{ env.TAG }}
-          integration: 'nrjmx'
-          packageLocation: repo
-          stagingRepo: true
-          upgrade: false
-          
+          disable_lock: false
+          tag: ${{env.TAG}}
+          app_name: "nrjmx-fips"
+          repo_name: "newrelic/nrjmx"
+          schema: "nrjmx-fips"
+          aws_access_key_id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws_s3_bucket_name: ${{ env.AWS_S3_BUCKET_NAME }}
+          aws_s3_lock_bucket_name: ${{ env.AWS_S3_LOCK_BUCKET_NAME }}
+          access_point_host: "staging"
+          run_id: ${{ github.run_id }}
+          aws_region: ${{ env.AWS_REGION }}
+          aws_role_session_name: ${{ env.AWS_ROLE_SESSION_NAME }}
+          aws_role_arn: ${{ env.AWS_ROLE_ARN }}
+          gpg_passphrase: ${{ env.GPG_PASSPHRASE }}
+          gpg_private_key_base64: ${{ env.GPG_PRIVATE_KEY_BASE64 }}
+                
       - name: Update title for successful pre-release
         if: ${{ github.event.release.prerelease }}
         env:
