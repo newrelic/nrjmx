@@ -56,7 +56,6 @@
             <artifactId>slf4j-simple</artifactId>
             <version>1.7.36</version>
         </dependency>
-        <!-- No FIPS-specific dependencies in standard build -->
     </dependencies>
     <build>
         <resources>
@@ -78,7 +77,7 @@
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
-                    <finalName>${project.artifactId}${fips.suffix}_${project.version}_noarch</finalName>
+                    <finalName>${project.artifactId}_${project.version}_noarch</finalName>
                     <appendAssemblyId>false</appendAssemblyId>
                 </configuration>
                 <executions>
@@ -102,8 +101,9 @@
                             <goal>copy</goal>
                         </goals>
                         <configuration>
-                            <sourceFile>target/${project.artifactId}${fips.suffix}_${project.version}_noarch.jar</sourceFile>
-                            <destinationFile>bin/nrjmx${fips.suffix}.jar</destinationFile>
+                            <sourceFile>target/${project.artifactId}_${project.version}_noarch.jar
+                            </sourceFile>
+                            <destinationFile>bin/nrjmx.jar</destinationFile>
                         </configuration>
                     </execution>
                 </executions>
@@ -141,7 +141,7 @@
             </build>
         </profile>
         <profile>
-            <id>tarball-linux</id>
+            <id>tarball</id>
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
@@ -153,7 +153,7 @@
                             <execution>
                                 <id>create-targz</id>
                                 <configuration>
-                                    <finalName>${project.artifactId}${fips.suffix}_linux_${project.version}_noarch</finalName>
+                                    <finalName>${project.artifactId}_linux_${project.version}_noarch</finalName>
                                     <appendAssemblyId>false</appendAssemblyId>
                                     <descriptor>build/assembly/targz.xml</descriptor>
                                 </configuration>
@@ -162,25 +162,10 @@
                                     <goal>single</goal>
                                 </goals>
                             </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>tarball-windows</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <executions>
                             <execution>
                                 <id>create-zip</id>
                                 <configuration>
-                                    <finalName>${project.artifactId}${fips.suffix}_windows_${project.version}_noarch</finalName>
+                                    <finalName>${project.artifactId}_windows_${project.version}_noarch</finalName>
                                     <appendAssemblyId>false</appendAssemblyId>
                                     <descriptor>build/assembly/zip.xml</descriptor>
                                 </configuration>
@@ -215,23 +200,27 @@
                             </execution>
                         </executions>
                         <configuration>
-                            <deb>target/${project.artifactId}${fips.suffix}_${project.version}-1_noarch.deb</deb>
+                            <deb>target/${project.artifactId}_${project.version}-1_noarch.deb</deb>
                             <dataSet>
                                 <data>
                                     <type>file</type>
-                                    <src>target/${project.artifactId}${fips.suffix}_linux_${project.version}_noarch.jar</src>
-                                    <dst>/usr/lib/${project.artifactId}/${project.artifactId}${fips.suffix}_linux_${project.version}_noarch.jar</dst>
+                                    <src>target/${project.artifactId}_linux_${project.version}_noarch.jar</src>
+                                    <dst>
+                                        /usr/lib/${project.artifactId}/${project.artifactId}_linux_${project.version}_noarch.jar
+                                    </dst>
                                 </data>
                                 <data>
                                     <type>link</type>
-                                    <linkName>/usr/lib/${project.artifactId}/${project.artifactId}${fips.suffix}.jar</linkName>
-                                    <linkTarget>/usr/lib/${project.artifactId}/${project.artifactId}${fips.suffix}_linux_${project.version}_noarch.jar</linkTarget>
+                                    <linkName>/usr/lib/${project.artifactId}/${project.artifactId}.jar</linkName>
+                                    <linkTarget>
+                                        /usr/lib/${project.artifactId}/${project.artifactId}_linux_${project.version}_noarch.jar
+                                    </linkTarget>
                                     <symlink>true</symlink>
                                 </data>
                                 <data>
                                     <type>file</type>
                                     <src>bin/${project.artifactId}</src>
-                                    <dst>/usr/bin/${project.artifactId}${fips.suffix}</dst>
+                                    <dst>/usr/bin/${project.artifactId}</dst>
                                     <mapper>
                                         <type>perm</type>
                                         <filemode>755</filemode>
@@ -275,7 +264,6 @@
                             </execution>
                         </executions>
                         <configuration>
-                            <name>${project.artifactId}${fips.suffix}</name>
                             <license>https://newrelic.com/terms (also see LICENSE installed with this package)</license>
                             <packager>New Relic Infrastructure Team &lt;infrastructure-eng@newrelic.com&gt;</packager>
                             <group>Application/System</group>
@@ -287,11 +275,15 @@
                                     <directory>/usr/lib/${project.artifactId}</directory>
                                     <sources>
                                         <source>
-                                            <location>target/${project.artifactId}${fips.suffix}_linux_${project.version}_noarch.jar</location>
+                                            <location>
+                                                target/${project.artifactId}_linux_${project.version}_noarch.jar
+                                            </location>
                                         </source>
                                         <softlinkSource>
-                                            <location>/usr/lib/${project.artifactId}/${project.artifactId}${fips.suffix}_linux_${project.version}_noarch.jar</location>
-                                            <destination>${project.artifactId}${fips.suffix}.jar</destination>
+                                            <location>
+                                                /usr/lib/${project.artifactId}/${project.artifactId}_linux_${project.version}_noarch.jar
+                                            </location>
+                                            <destination>${project.artifactId}.jar</destination>
                                         </softlinkSource>
                                     </sources>
                                 </mapping>
@@ -305,7 +297,6 @@
                                     <sources>
                                         <source>
                                             <location>bin/nrjmx</location>
-                                            <destination>${project.artifactId}${fips.suffix}</destination>
                                         </source>
                                     </sources>
                                 </mapping>
@@ -315,6 +306,7 @@
                                     <documentation>true</documentation>
                                     <username>root</username>
                                     <groupname>root</groupname>
+                                    <!-- <filemode>444</filemode> -->
                                     <sources>
                                         <source>
                                             <location>README.md</location>
@@ -335,10 +327,5 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.compilerVersion>1.8</maven.compiler.compilerVersion>
-        <!-- CRITICAL: Define empty fips.suffix for property substitution -->
-        <fips.suffix></fips.suffix>
-        <!-- TLS settings (non-FIPS) -->
-        <https.protocols>TLSv1.2</https.protocols>
-        <jdk.tls.client.protocols>TLSv1.2</jdk.tls.client.protocols>
     </properties>
 </project>

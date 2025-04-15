@@ -163,7 +163,7 @@ func Test_Query_Success(t *testing.T) {
 			Name: "test:type=Cat,name=tomas,attr=DateValue",
 
 			ResponseType: ResponseTypeString,
-			StringValue:  "Jan 1, 2022, 1:23:45 AM",
+			StringValue:  "Jan 1, 2022 1:23:45 AM",
 		},
 		{
 			Name: "test:type=Cat,name=tomas,attr=BoolValue",
