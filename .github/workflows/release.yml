@@ -25,7 +25,7 @@ env:
 jobs:
   publishing-to-s3:
     name: Publish linux artifacts into s3 production bucket
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Login to DockerHub
