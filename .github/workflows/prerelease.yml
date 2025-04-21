@@ -146,7 +146,7 @@ jobs:
           password: ${{ env.DOCKER_HUB_PASSWORD }}
 
       - name: Publish to S3 action
-        uses: newrelic/infrastructure-publish-action@v1
+        uses: newrelic/infrastructure-publish-action@fix-nrjmx_schema_fix
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.OHAI_AWS_ACCESS_KEY_ID_STAGING }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.OHAI_AWS_SECRET_ACCESS_KEY_STAGING }}
@@ -169,9 +169,10 @@ jobs:
           aws_role_arn: ${{ env.AWS_ROLE_ARN }}
           gpg_passphrase: ${{ env.GPG_PASSPHRASE }}
           gpg_private_key_base64: ${{ env.GPG_PRIVATE_KEY_BASE64 }}
+          dest_prefix: "rahul_nrjmx_testing_again/"
         
       - name: Publish to S3 action - FIPS
-        uses: newrelic/infrastructure-publish-action@v1
+        uses: newrelic/infrastructure-publish-action@fix-nrjmx_schema_fix
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.OHAI_AWS_ACCESS_KEY_ID_STAGING }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.OHAI_AWS_SECRET_ACCESS_KEY_STAGING }}
@@ -194,6 +195,16 @@ jobs:
           aws_role_arn: ${{ env.AWS_ROLE_ARN }}
           gpg_passphrase: ${{ env.GPG_PASSPHRASE }}
           gpg_private_key_base64: ${{ env.GPG_PRIVATE_KEY_BASE64 }}
+          dest_prefix: "rahul_nrjmx_testing_again/"
+
+      - name: Test package from Staging repo
+        uses: newrelic/integrations-pkg-test-action/linux@v1
+        with:
+          tag: ${{ env.TAG }}
+          integration: 'nrjmx'
+          packageLocation: repo
+          stagingRepo: true
+          upgrade: false
                 
       - name: Update title for successful pre-release
         if: ${{ github.event.release.prerelease }}
