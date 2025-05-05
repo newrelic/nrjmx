@@ -169,7 +169,7 @@ jobs:
           aws_role_arn: ${{ env.AWS_ROLE_ARN }}
           gpg_passphrase: ${{ env.GPG_PASSPHRASE }}
           gpg_private_key_base64: ${{ env.GPG_PRIVATE_KEY_BASE64 }}
-          dest_prefix: "sairaj_nrjmx_test_1/"
+          dest_prefix: "rahul_nrjmx_test_2/"
         
       - name: Publish to S3 action - FIPS
         uses: newrelic/infrastructure-publish-action@fix-nrjmx_schema_fix
@@ -195,7 +195,7 @@ jobs:
           aws_role_arn: ${{ env.AWS_ROLE_ARN }}
           gpg_passphrase: ${{ env.GPG_PASSPHRASE }}
           gpg_private_key_base64: ${{ env.GPG_PRIVATE_KEY_BASE64 }}
-          dest_prefix: "sairaj_nrjmx_test_1/"
+          dest_prefix: "rahul_nrjmx_test_2/"
 
       - name: Test package from Staging repo
         uses: newrelic/integrations-pkg-test-action/linux@v1
