@@ -838,39 +838,96 @@ func Test_Connector_Success(t *testing.T) {
 	// GIVEN a JBoss Server with JMX exposed running inside a container
 	container, err := testutils.RunJbossStandaloneJMXContainer(ctx)
 	require.NoError(t, err)
-	defer container.Terminate(ctx)
+	defer func() {
+		if container != nil {
+			container.Terminate(ctx)
+		}
+	}()
 
-	// Wait for JBoss to be fully ready - JBoss takes longer to start than simple JMX servers
-	t.Log("Waiting for JBoss container to be fully ready...")
-	time.Sleep(30 * time.Second) // JBoss needs more time to start up completely
+	// Step 1: Wait significantly longer for JBoss to fully start
+	// JBoss is a heavyweight application server that needs substantial startup time
+	t.Log("Waiting for JBoss application server to fully initialize...")
+	time.Sleep(45 * time.Second) // Increased from 30s to 45s
 
-	// Install the connector with retry logic
-	dstFile := filepath.Join(testutils.PrjDir, "/bin/jboss-client.jar")
-	maxRetries := 10
-	var copyErr error
+	// Step 2: Verify container is still running and healthy
+	state, err := container.State(ctx)
+	require.NoError(t, err, "Failed to get container state")
+	require.True(t, state.Running, "Container should still be running after startup wait")
+
+	// Step 3: Get container ports with detailed error handling
+	t.Log("Retrieving JBoss container port mappings...")
 	
-	for i := 0; i < maxRetries; i++ {
-		copyErr = testutils.CopyFileFromContainer(ctx, container, "/opt/jboss/wildfly/bin/client/jboss-client.jar", dstFile)
-		if copyErr == nil {
+	// First, let's inspect what ports are actually exposed
+	inspectData, err := container.Inspect(ctx)
+	require.NoError(t, err, "Failed to inspect container")
+	
+	t.Logf("Container exposed ports: %+v", inspectData.NetworkSettings.Ports)
+	
+	// Try to get the JMX port with multiple attempts and better error handling
+	var jmxHost string
+	var jmxPort nat.Port
+	var portErr error
+	
+	maxPortRetries := 10
+	for i := 0; i < maxPortRetries; i++ {
+		jmxHost, jmxPort, portErr = testutils.GetContainerMappedPort(ctx, container, testutils.JbossJMXPort)
+		if portErr == nil {
 			break
 		}
 		
-		waitTime := time.Duration(i+2) * time.Second // Start with 2s, then 3s, 4s, etc.
+		waitTime := time.Duration(2+i) * time.Second
+		t.Logf("Attempt %d to get JBoss JMX port failed, retrying in %v. Error: %v", i+1, waitTime, portErr)
+		
+		// Re-inspect container to see current state
+		currentState, stateErr := container.State(ctx)
+		if stateErr == nil {
+			t.Logf("Container state - Running: %v, Status: %s", currentState.Running, currentState.Status)
+		}
+		
+		time.Sleep(waitTime)
+	}
+	
+	require.NoError(t, portErr, "Failed to get JBoss JMX port after %d attempts. Container ports: %+v", maxPortRetries, inspectData.NetworkSettings.Ports)
+	
+	t.Logf("Successfully obtained JMX connection details - Host: %s, Port: %s", jmxHost, jmxPort.Port())
+
+	// Step 4: Install the JBoss client connector with enhanced retry logic
+	t.Log("Installing JBoss client connector...")
+	dstFile := filepath.Join(testutils.PrjDir, "/bin/jboss-client.jar")
+	
+	// Clean up any existing file first
+	if _, err := os.Stat(dstFile); err == nil {
+		os.Remove(dstFile)
+	}
+	
+	var copyErr error
+	maxCopyRetries := 15
+	for i := 0; i < maxCopyRetries; i++ {
+		copyErr = testutils.CopyFileFromContainer(ctx, container, "/opt/jboss/wildfly/bin/client/jboss-client.jar", dstFile)
+		if copyErr == nil {
+			// Verify the file was actually copied and has content
+			if stat, statErr := os.Stat(dstFile); statErr == nil && stat.Size() > 0 {
+				t.Logf("Successfully copied jboss-client.jar (size: %d bytes)", stat.Size())
+				break
+			} else {
+				copyErr = fmt.Errorf("copied file is empty or invalid")
+			}
+		}
+		
+		waitTime := time.Duration(3+i) * time.Second
 		t.Logf("Attempt %d to copy jboss-client.jar failed, retrying in %v. Error: %v", i+1, waitTime, copyErr)
 		time.Sleep(waitTime)
 	}
 	
-	require.NoError(t, copyErr, "Failed to copy jboss-client.jar after %d attempts", maxRetries)
+	require.NoError(t, copyErr, "Failed to copy jboss-client.jar after %d attempts", maxCopyRetries)
 	defer os.Remove(dstFile)
 
-	jmxHost, jmxPort, err := testutils.GetContainerMappedPort(ctx, container, testutils.JbossJMXPort)
-	require.NoError(t, err)
+	// Step 5: Additional wait to ensure all JBoss services are ready
+	t.Log("Waiting for all JBoss services to be fully ready...")
+	time.Sleep(15 * time.Second)
 
-	// Additional wait to ensure JMX endpoint is ready
-	t.Log("Waiting for JMX endpoint to be accessible...")
-	time.Sleep(10 * time.Second)
-
-	// THEN JMX connection can be opened with retry logic
+	// Step 6: Establish JMX connection with comprehensive retry logic
+	t.Log("Establishing JMX connection to JBoss...")
 	config := &JMXConfig{
 		Hostname:              jmxHost,
 		Port:                  int32(jmxPort.Int()),
@@ -878,35 +935,44 @@ func Test_Connector_Success(t *testing.T) {
 		Password:              testutils.JbossJMXPassword,
 		IsJBossStandaloneMode: true,
 		IsRemote:              true,
-		RequestTimeoutMs:      30000, // Increase timeout for JBoss
+		RequestTimeoutMs:      45000, // Increased to 45 seconds
 	}
 
 	var client *Client
 	var connectionErr error
 	
-	// Retry connection establishment
-	for i := 0; i < 10; i++ {
+	maxConnectionRetries := 15
+	for i := 0; i < maxConnectionRetries; i++ {
+		t.Logf("JMX connection attempt %d...", i+1)
 		client, connectionErr = NewClient(ctx).Open(config)
 		if connectionErr == nil {
+			t.Log("JMX connection established successfully")
 			break
 		}
 		
-		waitTime := time.Duration(i+2) * time.Second
-		t.Logf("Attempt %d to connect to JMX failed, retrying in %v. Error: %v", i+1, waitTime, connectionErr)
+		waitTime := time.Duration(3+i) * time.Second
+		t.Logf("JMX connection attempt %d failed, retrying in %v. Error: %v", i+1, waitTime, connectionErr)
 		time.Sleep(waitTime)
 	}
 	
-	require.NoError(t, connectionErr, "Failed to establish JMX connection after retries")
-	defer assertCloseClientNoError(t, client)
+	require.NoError(t, connectionErr, "Failed to establish JMX connection after %d attempts", maxConnectionRetries)
+	defer func() {
+		if client != nil {
+			assertCloseClientNoError(t, client)
+		}
+	}()
 
-	// Verify connection is working by testing a simple query first
+	// Step 7: Verify basic JMX functionality first
 	t.Log("Testing basic JMX connectivity...")
 	basicQuery := "java.lang:type=Runtime"
 	basicResult, err := client.QueryMBeanNames(basicQuery)
-	require.NoError(t, err, "Basic connectivity test failed")
-	require.NotEmpty(t, basicResult, "Basic connectivity test returned no results")
+	require.NoError(t, err, "Basic JMX connectivity test failed")
+	require.NotEmpty(t, basicResult, "Basic JMX connectivity test returned no results")
+	t.Logf("Basic JMX test successful, found %d runtime MBeans", len(basicResult))
+
+	// Step 8: Test JBoss-specific MBeans with retries
+	t.Log("Testing JBoss-specific MBean queries...")
 	
-	// AND Query returns expected data with retry logic for the main test
 	expectedMbeanNames := []string{
 		"jboss.as:subsystem=remoting,configuration=endpoint",
 	}
@@ -914,24 +980,28 @@ func Test_Connector_Success(t *testing.T) {
 	var actualMbeanNames []string
 	var queryErr error
 	
-	// Retry the main query as JBoss MBeans might take time to be fully registered
-	for i := 0; i < 15; i++ {
+	maxQueryRetries := 20 // JBoss MBeans can take time to register
+	for i := 0; i < maxQueryRetries; i++ {
 		actualMbeanNames, queryErr = client.QueryMBeanNames("jboss.as:subsystem=remoting,configuration=endpoint")
 		if queryErr == nil && len(actualMbeanNames) > 0 {
+			t.Logf("Successfully found JBoss MBeans on attempt %d: %v", i+1, actualMbeanNames)
 			break
 		}
 		
-		waitTime := time.Duration(2) * time.Second
-		t.Logf("Attempt %d to query JBoss MBeans failed or returned empty, retrying in %v. Error: %v, Results: %v", i+1, waitTime, queryErr, actualMbeanNames)
+		waitTime := time.Duration(3) * time.Second
+		t.Logf("JBoss MBean query attempt %d failed or returned empty, retrying in %v. Error: %v, Results: %v", i+1, waitTime, queryErr, actualMbeanNames)
 		time.Sleep(waitTime)
 	}
 	
-	require.NoError(t, queryErr, "Failed to query JBoss MBeans after retries")
-	require.ElementsMatch(t, expectedMbeanNames, actualMbeanNames, "Expected MBean names don't match")
+	require.NoError(t, queryErr, "Failed to query JBoss MBeans after %d attempts", maxQueryRetries)
+	require.ElementsMatch(t, expectedMbeanNames, actualMbeanNames, "Expected MBean names don't match actual")
 
+	// Step 9: Get MBean attribute names with retries
+	t.Log("Retrieving MBean attribute names...")
+	
 	expectedMBeanAttrNames := []string{
 		"authRealm",
-		"authenticationRetries",
+		"authenticationRetries", 
 		"authorizeId",
 		"bufferRegionSize",
 		"heartbeatInterval",
@@ -953,21 +1023,25 @@ func Test_Connector_Success(t *testing.T) {
 	var actualMBeanAttrNames []string
 	var attrErr error
 	
-	// Retry getting attribute names
-	for i := 0; i < 5; i++ {
+	maxAttrRetries := 10
+	for i := 0; i < maxAttrRetries; i++ {
 		actualMBeanAttrNames, attrErr = client.GetMBeanAttributeNames("jboss.as:subsystem=remoting,configuration=endpoint")
 		if attrErr == nil && len(actualMBeanAttrNames) > 0 {
+			t.Logf("Successfully retrieved %d attribute names on attempt %d", len(actualMBeanAttrNames), i+1)
 			break
 		}
 		
 		waitTime := time.Duration(2) * time.Second
-		t.Logf("Attempt %d to get MBean attributes failed, retrying in %v. Error: %v", i+1, waitTime, attrErr)
+		t.Logf("Attribute names retrieval attempt %d failed, retrying in %v. Error: %v", i+1, waitTime, attrErr)
 		time.Sleep(waitTime)
 	}
 	
-	require.NoError(t, attrErr, "Failed to get MBean attribute names after retries")
-	require.ElementsMatch(t, expectedMBeanAttrNames, actualMBeanAttrNames, "Expected attribute names don't match")
+	require.NoError(t, attrErr, "Failed to get MBean attribute names after %d attempts", maxAttrRetries)
+	require.ElementsMatch(t, expectedMBeanAttrNames, actualMBeanAttrNames, "Expected attribute names don't match actual")
 
+	// Step 10: Test attribute value retrieval
+	t.Log("Testing attribute value retrieval...")
+	
 	expected := []*AttributeResponse{
 		{
 			Name:         "jboss.as:subsystem=remoting,configuration=endpoint,attr=authRealm",
@@ -1062,33 +1136,54 @@ func Test_Connector_Success(t *testing.T) {
 	}
 
 	var actual []*AttributeResponse
-	var getAttrsErr error
+	var retrievalErrors []string
 	
-	// Collect attributes with error handling and retries
+	// Collect attributes with individual error handling
 	for _, mBeanAttrName := range expectedMBeanAttrNames {
 		var jmxAttrs []*AttributeResponse
+		var getAttrsErr error
 		
-		// Retry getting each attribute
-		for i := 0; i < 3; i++ {
+		// Retry getting each attribute individually
+		maxAttrValueRetries := 5
+		for i := 0; i < maxAttrValueRetries; i++ {
 			jmxAttrs, getAttrsErr = client.GetMBeanAttributes("jboss.as:subsystem=remoting,configuration=endpoint", mBeanAttrName)
 			if getAttrsErr == nil {
 				break
 			}
 			
-			t.Logf("Attempt %d to get attribute %s failed, retrying. Error: %v", i+1, mBeanAttrName, getAttrsErr)
-			time.Sleep(1 * time.Second)
+			if i < maxAttrValueRetries-1 {
+				t.Logf("Attempt %d to get attribute %s failed, retrying. Error: %v", i+1, mBeanAttrName, getAttrsErr)
+				time.Sleep(2 * time.Second)
+			}
 		}
 		
 		if getAttrsErr != nil {
-			t.Logf("Failed to get attribute %s after retries, skipping. Error: %v", mBeanAttrName, getAttrsErr)
+			retrievalErrors = append(retrievalErrors, fmt.Sprintf("Attribute %s: %v", mBeanAttrName, getAttrsErr))
 			continue
 		}
 		
 		actual = append(actual, jmxAttrs...)
+		t.Logf("Successfully retrieved attribute %s", mBeanAttrName)
 	}
 
-	require.NotEmpty(t, actual, "No attributes were successfully retrieved")
+	// Log any retrieval errors for debugging
+	if len(retrievalErrors) > 0 {
+		t.Logf("Some attributes failed to retrieve: %v", retrievalErrors)
+	}
+
+	require.NotEmpty(t, actual, "No attributes were successfully retrieved. Errors: %v", retrievalErrors)
+	
+	// Sort both slices for more predictable comparison
+	sort.Slice(expected, func(i, j int) bool {
+		return expected[i].Name < expected[j].Name
+	})
+	sort.Slice(actual, func(i, j int) bool {
+		return actual[i].Name < actual[j].Name
+	})
+	
 	assert.ElementsMatch(t, expected, actual, "Expected and actual attribute responses don't match")
+	
+	t.Log("Test_Connector_Success completed successfully!")
 }
 
 func TestClientClose(t *testing.T) {
