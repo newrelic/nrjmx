@@ -17,33 +17,11 @@ COPY --from=builder jmxremote.access /usr/local/openjdk-11/conf/management/jmxre
 
 RUN chmod 400 /usr/local/openjdk-11/conf/management/jmxremote.password
 
-# Environment variables for SSL-enabled JMX
-ENV JAVA_OPTS_BASE -Dcom.sun.management.jmxremote.port=7199 \
-      -Dcom.sun.management.jmxremote.rmi.port=7199 \
-      -Djava.rmi.server.hostname=0.0.0.0 \
-      -Dcom.sun.management.jmxremote.local.only=false
-
-# Default to non-SSL for regular tests
-ENV JAVA_OPTS ${JAVA_OPTS_BASE} \
+ENV JAVA_OPTS -Dcom.sun.management.jmxremote.port=7199 \
       -Dcom.sun.management.jmxremote.authenticate=false \
-      -Dcom.sun.management.jmxremote.ssl=false
-
-# SSL-specific options (can be overridden at runtime)
-ENV JAVA_OPTS_SSL ${JAVA_OPTS_BASE} \
-      -Dcom.sun.management.jmxremote.authenticate=true \
-      -Dcom.sun.management.jmxremote.ssl=true \
-      -Dcom.sun.management.jmxremote.password.file=/usr/local/openjdk-11/conf/management/jmxremote.password \
-      -Dcom.sun.management.jmxremote.access.file=/usr/local/openjdk-11/conf/management/jmxremote.access \
-      -Djavax.net.ssl.keyStore=/keystore \
-      -Djavax.net.ssl.keyStorePassword=password \
-      -Djavax.net.ssl.trustStore=/truststore \
-      -Djavax.net.ssl.trustStorePassword=password
-
-# Install curl for health check
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
-
-# Health check
-HEALTHCHECK --interval=5s --timeout=3s --start-period=30s --retries=10 \
-    CMD curl -f http://localhost:4567/health || exit 1
+      -Dcom.sun.management.jmxremote.ssl=false \
+      -Dcom.sun.management.jmxremote=true \
+      -Dcom.sun.management.jmxremote.rmi.port=7199 \
+      -Djava.rmi.server.hostname=localhost
 
 CMD ["/bin/bash", "-c", "java ${JAVA_OPTS} -jar /test-server.jar"]
