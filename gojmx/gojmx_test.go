@@ -391,6 +391,92 @@ func Test_Query_CompositeData(t *testing.T) {
 	require.NoError(t, err)
 	defer container.Terminate(ctx)
 
+	// Wait for the JMX server to be fully ready before proceeding
+	// This ensures the container is accepting connections
+	time.Sleep(5 * time.Second)
+
+	// Retry the MBean population with exponential backoff
+	var resp []byte
+	maxRetries := 5
+	for i := 0; i < maxRetries; i++ {
+		resp, err = testutils.AddMCompositeDataBeans(ctx, container, map[string]interface{}{
+			"name":        "tomas",
+			"doubleValue": 1.2,
+		})
+		
+		if err == nil && string(resp) == "ok!\n" {
+			break
+		}
+		
+		// Wait before retrying with exponential backoff
+		waitTime := time.Duration(i+1) * time.Second
+		t.Logf("Attempt %d failed, retrying in %v. Error: %v, Response: %s", i+1, waitTime, err, string(resp))
+		time.Sleep(waitTime)
+	}
+	
+	require.NoError(t, err, "Failed to populate MBeans after %d attempts", maxRetries)
+	require.Equal(t, "ok!\n", string(resp), "Expected 'ok!' response from MBean population")
+
+	defer testutils.CleanMBeans(ctx, container)
+
+	jmxHost, jmxPort, err := testutils.GetContainerMappedPort(ctx, container, testutils.TestServerJMXPort)
+	require.NoError(t, err)
+
+	// THEN JMX connection can be oppened
+	config := &JMXConfig{
+		Hostname:         jmxHost,
+		Port:             int32(jmxPort.Int()),
+		RequestTimeoutMs: testutils.DefaultTimeoutMs,
+	}
+
+	client, err := NewClient(ctx).Open(config)
+	assert.NoError(t, err)
+	defer assertCloseClientNoError(t, client)
+
+	// AND Query returns expected data
+	expectedMBeanNames := []string{
+		"test:type=CompositeDataCat,name=tomas",
+	}
+	actualMBeanNames, err := client.QueryMBeanNames("test:type=CompositeDataCat,*")
+	require.NoError(t, err)
+	require.ElementsMatch(t, expectedMBeanNames, actualMBeanNames)
+
+	expectedMBeanAttrNames := []string{
+		"CatInfo",
+	}
+	actualMBeanAttrNames, err := client.GetMBeanAttributeNames("test:name=tomas,type=CompositeDataCat")
+	require.NoError(t, err)
+	require.ElementsMatch(t, expectedMBeanAttrNames, actualMBeanAttrNames)
+
+	// AND Query returns expected data
+	expected := []*AttributeResponse{
+		{
+			Name: "test:type=CompositeDataCat,name=tomas,attr=CatInfo.Double",
+
+			ResponseType: ResponseTypeDouble,
+			DoubleValue:  1.2,
+		},
+		{
+			Name: "test:type=CompositeDataCat,name=tomas,attr=CatInfo.Name",
+
+			ResponseType: ResponseTypeString,
+			StringValue:  "tomas",
+		},
+	}
+
+	actual, err := client.GetMBeanAttributes("test:type=CompositeDataCat,name=tomas", "CatInfo")
+	assert.NoError(t, err)
+	assert.ElementsMatch(t, expected, actual)
+}
+
+func Test_Query_CompositeData(t *testing.T) {
+	ctx := context.Background()
+
+	// GIVEN a JMX Server running inside a container
+	container, err := testutils.RunJMXServiceContainer(ctx)
+	require.NoError(t, err)
+	defer container.Terminate(ctx)
+
 	// Populate the JMX Server with mbeans
 	resp, err := testutils.AddMCompositeDataBeans(ctx, container, map[string]interface{}{
 		"name":        "tomas",
