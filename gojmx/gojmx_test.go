@@ -754,17 +754,37 @@ func Test_Connector_Success(t *testing.T) {
 	require.NoError(t, err)
 	defer container.Terminate(ctx)
 
-	// Install the connector
-	dstFile := filepath.Join(testutils.PrjDir, "/bin/jboss-client.jar")
-	err = testutils.CopyFileFromContainer(ctx, container, "/opt/jboss/wildfly/bin/client/jboss-client.jar", dstFile)
-	assert.NoError(t, err)
+	// Wait for JBoss to be fully ready - JBoss takes longer to start than simple JMX servers
+	t.Log("Waiting for JBoss container to be fully ready...")
+	time.Sleep(30 * time.Second) // JBoss needs more time to start up completely
 
+	// Install the connector with retry logic
+	dstFile := filepath.Join(testutils.PrjDir, "/bin/jboss-client.jar")
+	maxRetries := 10
+	var copyErr error
+	
+	for i := 0; i < maxRetries; i++ {
+		copyErr = testutils.CopyFileFromContainer(ctx, container, "/opt/jboss/wildfly/bin/client/jboss-client.jar", dstFile)
+		if copyErr == nil {
+			break
+		}
+		
+		waitTime := time.Duration(i+2) * time.Second // Start with 2s, then 3s, 4s, etc.
+		t.Logf("Attempt %d to copy jboss-client.jar failed, retrying in %v. Error: %v", i+1, waitTime, copyErr)
+		time.Sleep(waitTime)
+	}
+	
+	require.NoError(t, copyErr, "Failed to copy jboss-client.jar after %d attempts", maxRetries)
 	defer os.Remove(dstFile)
 
 	jmxHost, jmxPort, err := testutils.GetContainerMappedPort(ctx, container, testutils.JbossJMXPort)
 	require.NoError(t, err)
 
-	// THEN JMX connection can be opened
+	// Additional wait to ensure JMX endpoint is ready
+	t.Log("Waiting for JMX endpoint to be accessible...")
+	time.Sleep(10 * time.Second)
+
+	// THEN JMX connection can be opened with retry logic
 	config := &JMXConfig{
 		Hostname:              jmxHost,
 		Port:                  int32(jmxPort.Int()),
@@ -772,19 +792,56 @@ func Test_Connector_Success(t *testing.T) {
 		Password:              testutils.JbossJMXPassword,
 		IsJBossStandaloneMode: true,
 		IsRemote:              true,
-		RequestTimeoutMs:      testutils.DefaultTimeoutMs,
+		RequestTimeoutMs:      30000, // Increase timeout for JBoss
 	}
-	client, err := NewClient(ctx).Open(config)
-	assert.NoError(t, err)
+
+	var client *Client
+	var connectionErr error
+	
+	// Retry connection establishment
+	for i := 0; i < 10; i++ {
+		client, connectionErr = NewClient(ctx).Open(config)
+		if connectionErr == nil {
+			break
+		}
+		
+		waitTime := time.Duration(i+2) * time.Second
+		t.Logf("Attempt %d to connect to JMX failed, retrying in %v. Error: %v", i+1, waitTime, connectionErr)
+		time.Sleep(waitTime)
+	}
+	
+	require.NoError(t, connectionErr, "Failed to establish JMX connection after retries")
 	defer assertCloseClientNoError(t, client)
 
-	// AND Query returns expected data
+	// Verify connection is working by testing a simple query first
+	t.Log("Testing basic JMX connectivity...")
+	basicQuery := "java.lang:type=Runtime"
+	basicResult, err := client.QueryMBeanNames(basicQuery)
+	require.NoError(t, err, "Basic connectivity test failed")
+	require.NotEmpty(t, basicResult, "Basic connectivity test returned no results")
+	
+	// AND Query returns expected data with retry logic for the main test
 	expectedMbeanNames := []string{
 		"jboss.as:subsystem=remoting,configuration=endpoint",
 	}
-	actualMbeanNames, err := client.QueryMBeanNames("jboss.as:subsystem=remoting,configuration=endpoint")
-	assert.NoError(t, err)
-	assert.ElementsMatch(t, expectedMbeanNames, actualMbeanNames)
+	
+	var actualMbeanNames []string
+	var queryErr error
+	
+	// Retry the main query as JBoss MBeans might take time to be fully registered
+	for i := 0; i < 15; i++ {
+		actualMbeanNames, queryErr = client.QueryMBeanNames("jboss.as:subsystem=remoting,configuration=endpoint")
+		if queryErr == nil && len(actualMbeanNames) > 0 {
+			break
+		}
+		
+		waitTime := time.Duration(2) * time.Second
+		t.Logf("Attempt %d to query JBoss MBeans failed or returned empty, retrying in %v. Error: %v, Results: %v", i+1, waitTime, queryErr, actualMbeanNames)
+		time.Sleep(waitTime)
+	}
+	
+	require.NoError(t, queryErr, "Failed to query JBoss MBeans after retries")
+	require.ElementsMatch(t, expectedMbeanNames, actualMbeanNames, "Expected MBean names don't match")
 
 	expectedMBeanAttrNames := []string{
 		"authRealm",
@@ -806,8 +863,24 @@ func Test_Connector_Success(t *testing.T) {
 		"transmitWindowSize",
 		"worker",
 	}
-	actualMBeanAttrNames, err := client.GetMBeanAttributeNames("jboss.as:subsystem=remoting,configuration=endpoint")
-	assert.ElementsMatch(t, expectedMBeanAttrNames, actualMBeanAttrNames)
+	
+	var actualMBeanAttrNames []string
+	var attrErr error
+	
+	// Retry getting attribute names
+	for i := 0; i < 5; i++ {
+		actualMBeanAttrNames, attrErr = client.GetMBeanAttributeNames("jboss.as:subsystem=remoting,configuration=endpoint")
+		if attrErr == nil && len(actualMBeanAttrNames) > 0 {
+			break
+		}
+		
+		waitTime := time.Duration(2) * time.Second
+		t.Logf("Attempt %d to get MBean attributes failed, retrying in %v. Error: %v", i+1, waitTime, attrErr)
+		time.Sleep(waitTime)
+	}
+	
+	require.NoError(t, attrErr, "Failed to get MBean attribute names after retries")
+	require.ElementsMatch(t, expectedMBeanAttrNames, actualMBeanAttrNames, "Expected attribute names don't match")
 
 	expected := []*AttributeResponse{
 		{
@@ -903,15 +976,33 @@ func Test_Connector_Success(t *testing.T) {
 	}
 
 	var actual []*AttributeResponse
+	var getAttrsErr error
+	
+	// Collect attributes with error handling and retries
 	for _, mBeanAttrName := range expectedMBeanAttrNames {
-		jmxAttrs, err := client.GetMBeanAttributes("jboss.as:subsystem=remoting,configuration=endpoint", mBeanAttrName)
-		if err != nil {
+		var jmxAttrs []*AttributeResponse
+		
+		// Retry getting each attribute
+		for i := 0; i < 3; i++ {
+			jmxAttrs, getAttrsErr = client.GetMBeanAttributes("jboss.as:subsystem=remoting,configuration=endpoint", mBeanAttrName)
+			if getAttrsErr == nil {
+				break
+			}
+			
+			t.Logf("Attempt %d to get attribute %s failed, retrying. Error: %v", i+1, mBeanAttrName, getAttrsErr)
+			time.Sleep(1 * time.Second)
+		}
+		
+		if getAttrsErr != nil {
+			t.Logf("Failed to get attribute %s after retries, skipping. Error: %v", mBeanAttrName, getAttrsErr)
 			continue
 		}
+		
 		actual = append(actual, jmxAttrs...)
 	}
 
-	assert.ElementsMatch(t, expected, actual)
+	require.NotEmpty(t, actual, "No attributes were successfully retrieved")
+	assert.ElementsMatch(t, expected, actual, "Expected and actual attribute responses don't match")
 }
 
 func TestClientClose(t *testing.T) {
