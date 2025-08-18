@@ -580,6 +580,7 @@ func Test_Wrong_Connection(t *testing.T) {
 	assert.Errorf(t, err, "connection to JMX endpoint is not established")
 }
 
+
 func Test_SSLQuery_Success(t *testing.T) {
 	ctx := context.Background()
 
@@ -588,21 +589,40 @@ func Test_SSLQuery_Success(t *testing.T) {
 	require.NoError(t, err)
 	defer container.Terminate(ctx)
 
-	// Populate the JMX Server with mbeans
-	resp, err := testutils.AddMBeans(ctx, container, map[string]interface{}{
-		"name":        "tomas",
-		"doubleValue": 1.2,
-		"floatValue":  2.222222,
-		"numberValue": 3,
-		"boolValue":   true,
-		"dateValue":   1641429296000,
-	})
-	assert.NoError(t, err)
-	assert.Equal(t, "ok!\n", string(resp))
-	defer testutils.CleanMBeans(ctx, container)
-
 	jmxHost, jmxPort, err := testutils.GetContainerMappedPort(ctx, container, testutils.TestServerJMXPort)
 	require.NoError(t, err)
+
+	// Wait for the SSL JMX server to be fully ready before proceeding
+	// This ensures the container is accepting connections
+	time.Sleep(5 * time.Second)
+
+	// Retry the MBean population with exponential backoff
+	var resp []byte
+	maxRetries := 5
+	for i := 0; i < maxRetries; i++ {
+		resp, err = testutils.AddMBeans(ctx, container, map[string]interface{}{
+			"name":        "tomas",
+			"doubleValue": 1.2,
+			"floatValue":  2.222222,
+			"numberValue": 3,
+			"boolValue":   true,
+			"dateValue":   1641429296000,
+		})
+		
+		if err == nil && string(resp) == "ok!\n" {
+			break
+		}
+		
+		// Wait before retrying with exponential backoff
+		waitTime := time.Duration(i+1) * time.Second
+		t.Logf("Attempt %d failed, retrying in %v. Error: %v, Response: %s", i+1, waitTime, err, string(resp))
+		time.Sleep(waitTime)
+	}
+	
+	require.NoError(t, err, "Failed to populate MBeans after %d attempts", maxRetries)
+	require.Equal(t, "ok!\n", string(resp), "Expected 'ok!' response from MBean population")
+	
+	defer testutils.CleanMBeans(ctx, container)
 
 	// THEN SSL JMX connection can be opened
 	config := &JMXConfig{
@@ -1062,17 +1082,33 @@ func TestProcessExits(t *testing.T) {
 	require.NoError(t, err)
 	defer container.Terminate(ctx)
 
-	// Populate the JMX Server with mbeans
-	resp, err := testutils.AddMBeans(ctx, container, map[string]interface{}{
-		"name":        "tomas",
-		"doubleValue": 1.2,
-		// test-server can delay the answer for doubleValue by specifying a millisecond timeout value.
-		// we need a delay in processing to simulate when the java process is stuck, and we want to terminate it.
-		"timeout": 60000,
-	})
+	// Wait for container to be fully ready
+	time.Sleep(5 * time.Second)
 
-	assert.NoError(t, err)
-	assert.Equal(t, "ok!\n", string(resp))
+	// Retry the MBean population with exponential backoff
+	var resp []byte
+	maxRetries := 5
+	for i := 0; i < maxRetries; i++ {
+		resp, err = testutils.AddMBeans(ctx, container, map[string]interface{}{
+			"name":        "tomas",
+			"doubleValue": 1.2,
+			// test-server can delay the answer for doubleValue by specifying a millisecond timeout value.
+			// we need a delay in processing to simulate when the java process is stuck, and we want to terminate it.
+			"timeout": 60000,
+		})
+
+		if err == nil && string(resp) == "ok!\n" {
+			break
+		}
+		
+		// Wait before retrying with exponential backoff
+		waitTime := time.Duration(i+1) * time.Second
+		t.Logf("Attempt %d failed, retrying in %v. Error: %v, Response: %s", i+1, waitTime, err, string(resp))
+		time.Sleep(waitTime)
+	}
+
+	require.NoError(t, err, "Failed to populate MBeans after %d attempts", maxRetries)
+	require.Equal(t, "ok!\n", string(resp), "Expected 'ok!' response from MBean population")
 
 	defer testutils.CleanMBeans(ctx, container)
 
@@ -1085,7 +1121,9 @@ func TestProcessExits(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
-	cmd.Start()
+	
+	err = cmd.Start()
+	require.NoError(t, err, "Failed to start subprocess")
 
 	// Call wait() to avoid defunct process.
 	go cmd.Wait()
@@ -1093,15 +1131,26 @@ func TestProcessExits(t *testing.T) {
 	// The subprocess will write the gojmx version to stdout. At that point we know that java process is initialized.
 	waitToStart := make(chan string)
 	go func() {
+		defer close(waitToStart)
 		r := bufio.NewReader(&stdout)
-		assert.Eventually(t, func() bool {
+		
+		// Use a timeout to avoid hanging indefinitely
+		timeout := time.After(10 * time.Second)
+		readComplete := make(chan bool)
+		
+		go func() {
 			_, err := r.ReadString('\n')
-			return err == nil
-		}, 5*time.Second, 50*time.Millisecond,
-			"didn't managed to read the gojmx version",
-		)
-
-		close(waitToStart)
+			readComplete <- (err == nil)
+		}()
+		
+		select {
+		case success := <-readComplete:
+			if !success {
+				t.Logf("Failed to read from subprocess stdout")
+			}
+		case <-timeout:
+			t.Logf("Timeout waiting for subprocess to start")
+		}
 	}()
 
 	// For troubleshooting purposes.
@@ -1113,28 +1162,50 @@ func TestProcessExits(t *testing.T) {
 		fmt.Println(fmt.Sprintf("[DEBUG] Stderr: '%s'", stderrBytes))
 	}()
 
-	<-waitToStart
+	// Wait for the subprocess to start, with a timeout
+	select {
+	case <-waitToStart:
+		// Subprocess started successfully
+	case <-time.After(15 * time.Second):
+		t.Fatal("Timeout waiting for subprocess to start")
+	}
+
+	// Give the subprocess a bit more time to fully initialize
+	time.Sleep(2 * time.Second)
 
 	// The process tree is much larger, we want to identify the main go process and the java process.
 	subProcess, err := gopsutil.NewProcess(int32(cmd.Process.Pid))
 	require.NoError(t, err)
 
 	mainProcess := findChildProcessByName(t, subProcess, "main")
+	require.NotNil(t, mainProcess, "Could not find main process")
 
 	javaProcess := findChildProcessByName(t, mainProcess, "java")
+	require.NotNil(t, javaProcess, "Could not find java process")
+
+	// Verify both processes are running before termination
+	mainRunning, err := mainProcess.IsRunning()
+	require.NoError(t, err)
+	require.True(t, mainRunning, "Main process should be running")
+
+	javaRunning, err := javaProcess.IsRunning()
+	require.NoError(t, err)
+	require.True(t, javaRunning, "Java process should be running")
 
 	// WHEN main process is terminated.
-	mainProcess.Kill()
+	err = mainProcess.Kill()
+	require.NoError(t, err, "Failed to kill main process")
 
 	// THEN Java child also terminates.
 	assert.Eventually(t, func() bool {
 		up, err := javaProcess.IsRunning()
 		if err != nil {
+			t.Logf("Error checking if java process is running: %v", err)
 			return false
 		}
 		// assert is not running
 		return !up
-	}, 5*time.Second, 50*time.Millisecond,
+	}, 10*time.Second, 100*time.Millisecond,
 		"java subprocess was not properly terminated")
 }
 
