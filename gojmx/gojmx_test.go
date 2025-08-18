@@ -256,16 +256,34 @@ func Test_QueryMBean_Success(t *testing.T) {
 	require.NoError(t, err)
 	defer container.Terminate(ctx)
 
-	// Populate the JMX Server with mbeans
-	resp, err := testutils.AddMBeans(ctx, container, map[string]interface{}{
-		"name":        "tomas",
-		"doubleValue": 1.2,
-		"floatValue":  2.2222222,
-		"numberValue": 3,
-		"boolValue":   true,
-	})
-	assert.NoError(t, err)
-	assert.Equal(t, "ok!\n", string(resp))
+	// Wait for the JMX server to be fully ready before proceeding
+	// This ensures the container is accepting connections
+	time.Sleep(5 * time.Second)
+
+	// Retry the MBean population with exponential backoff
+	var resp []byte
+	maxRetries := 5
+	for i := 0; i < maxRetries; i++ {
+		resp, err = testutils.AddMBeans(ctx, container, map[string]interface{}{
+			"name":        "tomas",
+			"doubleValue": 1.2,
+			"floatValue":  2.2222222,
+			"numberValue": 3,
+			"boolValue":   true,
+		})
+		
+		if err == nil && string(resp) == "ok!\n" {
+			break
+		}
+		
+		// Wait before retrying with exponential backoff
+		waitTime := time.Duration(i+1) * time.Second
+		t.Logf("Attempt %d failed, retrying in %v. Error: %v, Response: %s", i+1, waitTime, err, string(resp))
+		time.Sleep(waitTime)
+	}
+	
+	require.NoError(t, err, "Failed to populate MBeans after %d attempts", maxRetries)
+	require.Equal(t, "ok!\n", string(resp), "Expected 'ok!' response from MBean population")
 
 	defer testutils.CleanMBeans(ctx, container)
 
