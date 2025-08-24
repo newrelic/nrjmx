@@ -1,6 +1,6 @@
 module github.com/newrelic/nrjmx/gojmx
 
-go 1.23.6
+go 1.24.6
 
 require (
 	github.com/apache/thrift v0.21.0
