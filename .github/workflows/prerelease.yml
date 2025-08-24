@@ -110,7 +110,7 @@ jobs:
 
   packaging-msi:
     name: Build and upload MSI packages into GH Release assets
-    runs-on: windows-2019
+    runs-on: windows-2022
     needs: [ packaging ]
 
     steps:
