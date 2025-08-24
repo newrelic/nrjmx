@@ -246,7 +246,7 @@
                     <plugin>
                         <artifactId>jdeb</artifactId>
                         <groupId>org.vafer</groupId>
-                        <version>1.5</version>
+                        <version>1.10</version>
                         <executions>
                             <execution>
                                 <phase>package</phase>
@@ -256,6 +256,8 @@
                             </execution>
                         </executions>
                         <configuration>
+                            <name>${project.artifactId}${fips.suffix}</name>
+                            <version>${project.version}</version>
                             <deb>target/${project.artifactId}${fips.suffix}_${project.version}-1_noarch.deb</deb>
                             <dataSet>
                                 <data>

@@ -144,7 +144,7 @@ jobs:
           echo "Regular packages publishing:"
           echo "  app_name: nrjmx"
           echo "  schema: nrjmx"
-          echo "  dest_prefix: rahul_testing_nrjmx_part_un/"
+          echo "  dest_prefix: rahul_testing_nrjmx_part_deux/"
           
       - name: Login to DockerHub
         uses: docker/login-action@v3
@@ -174,7 +174,7 @@ jobs:
           aws_region: ${{ env.AWS_REGION }}
           aws_role_session_name: ${{ env.AWS_ROLE_SESSION_NAME }}
           aws_role_arn: ${{ env.AWS_ROLE_ARN }}
-          dest_prefix: "rahul_testing_nrjmx_part_un/"
+          dest_prefix: "rahul_testing_nrjmx_part_deux/"
           gpg_passphrase: ${{ env.GPG_PASSPHRASE }}
           gpg_private_key_base64: ${{ env.GPG_PRIVATE_KEY_BASE64 }}
 
