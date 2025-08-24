@@ -273,7 +273,7 @@ func RunJbossStandaloneJMXContainer(ctx context.Context) (testcontainers.Contain
 		ExposedPorts: []string{
 			fmt.Sprintf("%[1]s:%[1]s", JbossJMXPort),
 		},
-		WaitingFor: wait.ForListeningPort(JbossJMXPort),
+		WaitingFor: wait.ForListeningPort(JbossJMXPort).WithStartupTimeout(120 * time.Second),
 	}
 
 	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
@@ -410,34 +410,77 @@ func waitForServiceReady(ctx context.Context, container testcontainers.Container
 
 // waitForJBossReady ensures JBoss is fully initialized and ready to accept JMX connections
 func waitForJBossReady(ctx context.Context, container testcontainers.Container) error {
-	maxRetries := 60  // JBoss can take longer to start
+	maxRetries := 120  // JBoss can take up to 2 minutes to start
 	retryDelay := 1 * time.Second
 	
-	// First, wait for the port to be accessible
 	host, port, err := GetContainerMappedPort(ctx, container, JbossJMXPort)
 	if err != nil {
 		return fmt.Errorf("failed to get container port: %w", err)
 	}
 	
+	// First wait for the port to be actually listening
+	fmt.Printf("[JBoss Wait] Waiting for JBoss to start on %s:%s...\n", host, port.Port())
+	
 	for i := 0; i < maxRetries; i++ {
-		// Check if we can establish a TCP connection to the JMX port
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+		
+		// Check if port is open
 		conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%s", host, port.Port()), 2*time.Second)
 		if err == nil {
 			conn.Close()
+			fmt.Printf("[JBoss Wait] Port %s is open after %d attempts\n", port.Port(), i+1)
 			
-			// Port is open, but JBoss might still be initializing
-			// Wait a bit more for JBoss internal services to be ready
-			time.Sleep(3 * time.Second)
+			// Port is open, but JBoss management interface might still be initializing
+			// Let's wait a bit more and then try to verify it's actually ready
+			time.Sleep(5 * time.Second)
 			
-			// Try to verify JBoss is actually ready by checking logs if possible
-			// or just give it enough time to fully initialize
+			// Try to verify JBoss is actually ready by attempting an HTTP request
+			// JBoss management interface also responds to HTTP
+			if err := verifyJBossManagementReady(host, port.Port()); err == nil {
+				fmt.Println("[JBoss Wait] JBoss management interface is ready")
+				return nil
+			}
+			
+			// If verification failed, give it more time
+			fmt.Println("[JBoss Wait] Management interface not ready yet, waiting additional 10 seconds...")
+			time.Sleep(10 * time.Second)
 			return nil
 		}
 		
-		if i < maxRetries-1 {
-			time.Sleep(retryDelay)
+		if i > 0 && i%10 == 0 {
+			fmt.Printf("[JBoss Wait] Still waiting for JBoss... (attempt %d/%d)\n", i, maxRetries)
 		}
+		
+		time.Sleep(retryDelay)
 	}
 	
-	return fmt.Errorf("JBoss failed to become ready after %d attempts", maxRetries)
+	return fmt.Errorf("JBoss failed to become ready after %d seconds", maxRetries)
+}
+
+// verifyJBossManagementReady tries to verify if JBoss management interface is responsive
+func verifyJBossManagementReady(host, port string) error {
+	// Try a simple HTTP request to the management endpoint
+	// Even though we'll use JMX, the management port also serves HTTP
+	client := &http.Client{
+		Timeout: 5 * time.Second,
+	}
+	
+	// JBoss management interface requires authentication, so we expect 401
+	// but this tells us the service is ready
+	resp, err := client.Get(fmt.Sprintf("http://%s:%s/management", host, port))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	
+	// 401 Unauthorized is expected and means the service is up
+	if resp.StatusCode == 401 || resp.StatusCode == 200 {
+		return nil
+	}
+	
+	return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 }
