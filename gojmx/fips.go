@@ -4,7 +4,7 @@
 //go:build fips
 // +build fips
 
-package main
+package gojmx
 
 import (
 	_ "crypto/tls/fipsonly"

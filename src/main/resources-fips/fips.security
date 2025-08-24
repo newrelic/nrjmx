@@ -3,7 +3,7 @@
 
 # Set security providers - FIPS 140 approved providers first
 security.provider.1=org.bouncycastle.jcajce.provider.BouncyCastleFipsProvider BCFIPS
-security.provider.2=com.sun.net.ssl.internal.ssl.Provider BCFIPS
+security.provider.2=com.sun.net.ssl.internal.ssl.Provider
 security.provider.3=sun.security.provider.Sun
 
 # Restrict algorithms to FIPS 140 approved ones

@@ -133,19 +133,26 @@ jobs:
         shell: bash
         run: build/upload_artifacts_gh.sh
 
-  publishing-to-s3:
-    name: Publish linux artifacts into s3 staging bucket
-    runs-on: ubuntu-latest
+  publishing-regular-to-s3:
+    name: Publish regular packages to S3 staging bucket
+    runs-on: ubuntu-latest-4-cores
     needs: [ packaging, packaging-msi ]
 
     steps:
+      - name: Debug - Show parameters for regular packages
+        run: |
+          echo "Regular packages publishing:"
+          echo "  app_name: nrjmx"
+          echo "  schema: nrjmx"
+          echo "  dest_prefix: rahul_testing_nrjmx_part_un/"
+          
       - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
           username: ${{ env.DOCKER_HUB_ID }}
           password: ${{ env.DOCKER_HUB_PASSWORD }}
 
-      - name: Publish to S3 action
+      - name: Publish regular packages to S3
         uses: newrelic/infrastructure-publish-action@v1
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.OHAI_AWS_ACCESS_KEY_ID_STAGING }}
@@ -167,10 +174,32 @@ jobs:
           aws_region: ${{ env.AWS_REGION }}
           aws_role_session_name: ${{ env.AWS_ROLE_SESSION_NAME }}
           aws_role_arn: ${{ env.AWS_ROLE_ARN }}
+          dest_prefix: "rahul_testing_nrjmx_part_un/"
           gpg_passphrase: ${{ env.GPG_PASSPHRASE }}
           gpg_private_key_base64: ${{ env.GPG_PRIVATE_KEY_BASE64 }}
-        
-      - name: Publish to S3 action - FIPS
+
+  # FIXED: Split into separate job for FIPS packages - SEQUENTIAL EXECUTION
+  publishing-fips-to-s3:
+    name: Publish FIPS packages to S3 staging bucket
+    runs-on: ubuntu-latest-4-cores
+    needs: [ packaging, packaging-msi, publishing-regular-to-s3 ]  # Wait for regular publishing
+    if: ${{ always() && !cancelled() && !failure() && needs.publishing-regular-to-s3.result == 'success' }}
+
+    steps:
+      - name: Debug - Show parameters for FIPS packages
+        run: |
+          echo "FIPS packages publishing:"
+          echo "  app_name: nrjmx-fips"
+          echo "  schema: nrjmx-fips"
+          echo "  dest_prefix: rahul_testing_nrjmx_part_un/"
+          
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKER_HUB_ID }}
+          password: ${{ env.DOCKER_HUB_PASSWORD }}
+
+      - name: Publish FIPS packages to S3
         uses: newrelic/infrastructure-publish-action@v1
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.OHAI_AWS_ACCESS_KEY_ID_STAGING }}
@@ -192,9 +221,19 @@ jobs:
           aws_region: ${{ env.AWS_REGION }}
           aws_role_session_name: ${{ env.AWS_ROLE_SESSION_NAME }}
           aws_role_arn: ${{ env.AWS_ROLE_ARN }}
+          dest_prefix: "rahul_testing_nrjmx_part_un/"
+          # NOT setting dest_prefix - uses default "infrastructure_agent/"
           gpg_passphrase: ${{ env.GPG_PASSPHRASE }}
           gpg_private_key_base64: ${{ env.GPG_PRIVATE_KEY_BASE64 }}
-                
+
+  # FIXED: Consolidated finalization job
+  finalize-release:
+    name: Finalize release
+    needs: [ publishing-regular-to-s3, publishing-fips-to-s3 ]
+    if: ${{ always() && !cancelled() && !failure() && needs.publishing-regular-to-s3.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
       - name: Update title for successful pre-release
         if: ${{ github.event.release.prerelease }}
         env:
@@ -204,7 +243,7 @@ jobs:
 
   notify-failure:
     if: ${{ always() && failure() }}
-    needs: [unit-test-linux, test-go-linux-jdk8, test-go-linux-jdk11, check-gen-code, packaging, packaging-msi, publishing-to-s3]
+    needs: [unit-test-linux, test-go-linux-jdk8, test-go-linux-jdk11, check-gen-code, packaging, packaging-msi, publishing-regular-to-s3, publishing-fips-to-s3]
     runs-on: ubuntu-latest
     steps:
       - name: Notify failure via Slack
@@ -216,7 +255,7 @@ jobs:
 
   update-title-on-failure:
     if: ${{ always() && failure() }}
-    needs: [unit-test-linux, test-go-linux-jdk8, test-go-linux-jdk11, check-gen-code, packaging, packaging-msi, publishing-to-s3]
+    needs: [unit-test-linux, test-go-linux-jdk8, test-go-linux-jdk11, check-gen-code, packaging, packaging-msi, publishing-regular-to-s3, publishing-fips-to-s3]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
