@@ -144,7 +144,6 @@ jobs:
           echo "Regular packages publishing:"
           echo "  app_name: nrjmx"
           echo "  schema: nrjmx"
-          echo "  dest_prefix: rahul_testing_nrjmx_part_trois/"
           
       - name: Login to DockerHub
         uses: docker/login-action@v3
@@ -153,7 +152,7 @@ jobs:
           password: ${{ env.DOCKER_HUB_PASSWORD }}
 
       - name: Publish regular packages to S3
-        uses: newrelic/infrastructure-publish-action@fix_fips_publishing_schema
+        uses: newrelic/infrastructure-publish-action@v1
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.OHAI_AWS_ACCESS_KEY_ID_STAGING }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.OHAI_AWS_SECRET_ACCESS_KEY_STAGING }}
@@ -174,9 +173,17 @@ jobs:
           aws_region: ${{ env.AWS_REGION }}
           aws_role_session_name: ${{ env.AWS_ROLE_SESSION_NAME }}
           aws_role_arn: ${{ env.AWS_ROLE_ARN }}
-          dest_prefix: "rahul_testing_nrjmx_part_trois/"
           gpg_passphrase: ${{ env.GPG_PASSPHRASE }}
           gpg_private_key_base64: ${{ env.GPG_PRIVATE_KEY_BASE64 }}
+
+      - name: Test package installation from staging repo
+        uses: newrelic/integrations-pkg-test-action/linux@v1
+        with:
+          tag: ${{env.TAG}}
+          integration: 'nrjmx'
+          packageLocation: repo
+          stagingRepo: true
+          upgrade: false
 
   # FIXED: Split into separate job for FIPS packages - SEQUENTIAL EXECUTION
   publishing-fips-to-s3:
@@ -191,7 +198,6 @@ jobs:
           echo "FIPS packages publishing:"
           echo "  app_name: nrjmx-fips"
           echo "  schema: nrjmx-fips"
-          echo "  dest_prefix: rahul_testing_nrjmx_part_trois/"
           
       - name: Login to DockerHub
         uses: docker/login-action@v3
@@ -200,7 +206,7 @@ jobs:
           password: ${{ env.DOCKER_HUB_PASSWORD }}
 
       - name: Publish FIPS packages to S3
-        uses: newrelic/infrastructure-publish-action@fix_fips_publishing_schema
+        uses: newrelic/infrastructure-publish-action@v1
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.OHAI_AWS_ACCESS_KEY_ID_STAGING }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.OHAI_AWS_SECRET_ACCESS_KEY_STAGING }}
@@ -221,10 +227,18 @@ jobs:
           aws_region: ${{ env.AWS_REGION }}
           aws_role_session_name: ${{ env.AWS_ROLE_SESSION_NAME }}
           aws_role_arn: ${{ env.AWS_ROLE_ARN }}
-          dest_prefix: "rahul_testing_nrjmx_part_trois/"
           # NOT setting dest_prefix - uses default "infrastructure_agent/"
           gpg_passphrase: ${{ env.GPG_PASSPHRASE }}
           gpg_private_key_base64: ${{ env.GPG_PRIVATE_KEY_BASE64 }}
+
+      - name: Test FIPS package installation from staging repo
+        uses: newrelic/integrations-pkg-test-action/linux@v1
+        with:
+          tag: ${{env.TAG}}
+          integration: 'nrjmx-fips'
+          packageLocation: repo
+          stagingRepo: true
+          upgrade: false
 
   # FIXED: Consolidated finalization job
   finalize-release:
