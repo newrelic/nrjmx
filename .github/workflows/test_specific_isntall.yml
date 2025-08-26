@@ -2,9 +2,7 @@ name: 🧪 Test NRJMX 2.9.0 in Staging
 
 on:
   push:
-    branches: [ main, develop ]
   pull_request:
-    branches: [ main ]
   workflow_dispatch:
     inputs:
       test_fips:
