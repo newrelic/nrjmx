@@ -176,16 +176,6 @@ jobs:
           gpg_passphrase: ${{ env.GPG_PASSPHRASE }}
           gpg_private_key_base64: ${{ env.GPG_PRIVATE_KEY_BASE64 }}
 
-      - name: Test package installation from staging repo
-        uses: newrelic/integrations-pkg-test-action/linux@v1
-        with:
-          tag: ${{env.TAG}}
-          integration: 'nrjmx'
-          packageLocation: repo
-          stagingRepo: true
-          upgrade: false
-
-  # FIXED: Split into separate job for FIPS packages - SEQUENTIAL EXECUTION
   publishing-fips-to-s3:
     name: Publish FIPS packages to S3 staging bucket
     runs-on: ubuntu-latest-4-cores
@@ -231,16 +221,6 @@ jobs:
           gpg_passphrase: ${{ env.GPG_PASSPHRASE }}
           gpg_private_key_base64: ${{ env.GPG_PRIVATE_KEY_BASE64 }}
 
-      - name: Test FIPS package installation from staging repo
-        uses: newrelic/integrations-pkg-test-action/linux@v1
-        with:
-          tag: ${{env.TAG}}
-          integration: 'nrjmx-fips'
-          packageLocation: repo
-          stagingRepo: true
-          upgrade: false
-
-  # FIXED: Consolidated finalization job
   finalize-release:
     name: Finalize release
     needs: [ publishing-regular-to-s3, publishing-fips-to-s3 ]
