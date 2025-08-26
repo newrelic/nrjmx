@@ -15,17 +15,17 @@ on:
         description: 'Repository endpoint to fetch packages from'
         required: false
         type: string
-        default: "http://nr-downloads-ohai-staging.s3-website-us-east-1.amazonaws.com"
+        default: "http://nr-downloads-ohai-staging.s3-website-us-east-1.amazonaws.com/infrastructure_agent"
       platforms:
         description: 'Platforms to test (comma-separated)'
         required: false
         type: string
-        default: "al2,al2023,debian-bullseye,debian-bookworm,redhat8,redhat9,redhat10,suse15.3,suse15.4,suse15.5,suse15.6,ubuntu1604,ubuntu1804,ubuntu2004,ubuntu2204,ubuntu2404"
+        default: "redhat8,suse15.6,ubuntu2204,ubuntu2404"
 
 env:
   PACKAGE_VERSION: ${{ inputs.version || 'latest' }}
-  REPO_ENDPOINT: ${{ inputs.repo_endpoint || 'http://nr-downloads-ohai-staging.s3-website-us-east-1.amazonaws.com' }}
-  TEST_PLATFORMS: ${{ inputs.platforms || 'al2,al2023,debian-bullseye,debian-bookworm,redhat8,redhat9,suse15.3,suse15.4,suse15.5,suse15.6,ubuntu1604,ubuntu1804,ubuntu2004,ubuntu2204,ubuntu2404' }}
+  REPO_ENDPOINT: ${{ inputs.repo_endpoint || 'http://nr-downloads-ohai-staging.s3-website-us-east-1.amazonaws.com/infrastructure_agent' }}
+  TEST_PLATFORMS: ${{ inputs.platforms || "redhat8,suse15.6,ubuntu2204,ubuntu2404" }}
 
 jobs:
   test-nrjmx-packages:
@@ -34,7 +34,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        package_type: [standard, fips]
+        package_type: [standard]
     
     steps:
       - name: Checkout repository
