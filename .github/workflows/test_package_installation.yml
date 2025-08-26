@@ -25,7 +25,7 @@ on:
 env:
   PACKAGE_VERSION: ${{ inputs.version || 'latest' }}
   REPO_ENDPOINT: ${{ inputs.repo_endpoint || 'http://nr-downloads-ohai-staging.s3-website-us-east-1.amazonaws.com/infrastructure_agent' }}
-  TEST_PLATFORMS: ${{ inputs.platforms || "redhat8,suse15.6,ubuntu2204,ubuntu2404" }}
+  TEST_PLATFORMS: ${{ inputs.platforms || 'redhat8,suse15.6,ubuntu2204,ubuntu2404' }}
 
 jobs:
   test-nrjmx-packages:
