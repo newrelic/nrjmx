@@ -23,18 +23,18 @@ env:
   AWS_ROLE_SESSION_NAME: ${{ secrets.OHAI_AWS_ROLE_SESSION_NAME_PRODUCTION }}
 
 jobs:
-  publishing-to-s3:
-    name: Publish linux artifacts into s3 production bucket
+  publishing-regular-to-s3:
+    name: Publish regular packages to S3 production bucket
     runs-on: ubuntu-latest-4-cores
 
     steps:
-      - name: Login to DockerHub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ env.DOCKER_HUB_ID }}
-          password: ${{ env.DOCKER_HUB_PASSWORD }}
-
-      - name: Publish to S3 action
+      - name: Debug - Show parameters for regular packages
+        run: |
+          echo "Regular packages publishing:"
+          echo "  app_name: nrjmx"
+          echo "  schema: nrjmx"
+          
+      - name: Publish regular packages to S3
         uses: newrelic/infrastructure-publish-action@v1
         env:
           AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
@@ -59,7 +59,20 @@ jobs:
           gpg_passphrase: ${{ env.GPG_PASSPHRASE }}
           gpg_private_key_base64: ${{ env.GPG_PRIVATE_KEY_BASE64 }}
 
-      - name: Publish to S3 action - FIPS
+  publishing-fips-to-s3:
+    name: Publish FIPS packages to S3 production bucket
+    runs-on: ubuntu-latest-4-cores
+    needs: [ publishing-regular-to-s3 ]  # Wait for regular publishing
+    if: ${{ always() && !cancelled() && !failure() && needs.publishing-regular-to-s3.result == 'success' }}
+
+    steps:
+      - name: Debug - Show parameters for FIPS packages
+        run: |
+          echo "FIPS packages publishing:"
+          echo "  app_name: nrjmx-fips"
+          echo "  schema: nrjmx-fips"
+          
+      - name: Publish FIPS packages to S3
         uses: newrelic/infrastructure-publish-action@v1
         env:
           AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
@@ -84,22 +97,44 @@ jobs:
           gpg_passphrase: ${{ env.GPG_PASSPHRASE }}
           gpg_private_key_base64: ${{ env.GPG_PRIVATE_KEY_BASE64 }}
 
-      - name: Test package installation from prod repo
+  test-packages:
+    name: Test package installation from production repo
+    runs-on: ubuntu-latest
+    needs: [ publishing-regular-to-s3, publishing-fips-to-s3 ]  # Wait for BOTH publishing jobs
+    if: ${{ always() && !cancelled() && !failure() && needs.publishing-regular-to-s3.result == 'success' && needs.publishing-fips-to-s3.result == 'success' }}
+
+    steps:
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKER_HUB_ID }}
+          password: ${{ env.DOCKER_HUB_PASSWORD }}
+
+      - name: Test regular package installation from production repo
         uses: newrelic/integrations-pkg-test-action/linux@v1
         with:
           tag: ${{env.TAG}}
           integration: 'nrjmx'
           packageLocation: repo
           upgrade: false
-      
-      - name: Test FIPS package installation from prod repo
+          postInstall: "true"
+
+      - name: Test FIPS package installation from production repo
         uses: newrelic/integrations-pkg-test-action/linux@v1
         with:
           tag: ${{env.TAG}}
           integration: 'nrjmx-fips'
           packageLocation: repo
           upgrade: false
+          postInstall: "true"
 
+  finalize-release:
+    name: Finalize and notify successful release
+    needs: [ publishing-regular-to-s3, publishing-fips-to-s3, test-packages ]
+    if: ${{ always() && !cancelled() && !failure() && needs.publishing-regular-to-s3.result == 'success' && needs.publishing-fips-to-s3.result == 'success' && needs.test-packages.result == 'success' }}
+    runs-on: ubuntu-latest
+    
+    steps:
       - name: Notify successful release
         uses: archive/github-actions-slack@master
         with:
@@ -109,7 +144,7 @@ jobs:
 
   notify-failure:
     if: ${{ always() && failure() }}
-    needs: [publishing-to-s3]
+    needs: [publishing-regular-to-s3, publishing-fips-to-s3, test-packages]
     runs-on: ubuntu-latest
     steps:
       - name: Notify failure via Slack
