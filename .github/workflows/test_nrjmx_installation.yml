@@ -1,0 +1,71 @@
+name: 🚧 Test NRJMX Package Installation
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: 'Package version to test'
+        required: true
+        type: string
+      environment:
+        description: 'Environment to test against (staging or production)'
+        required: true
+        type: string
+      fips:
+        description: 'Test FIPS packages'
+        required: false
+        type: boolean
+        default: false
+      platforms:
+        description: 'Platforms to test (comma-separated)'
+        required: false
+        type: string
+        default: "al2023java,redhat8java,suse15.6java,ubuntu2204java,ubuntu2404java"
+
+env:
+  PACKAGE_VERSION: ${{ inputs.version }}
+  REPO_ENDPOINT: ${{ inputs.environment == 'staging' && 'http://nr-downloads-ohai-staging.s3-website-us-east-1.amazonaws.com/infrastructure_agent' || 'https://download.newrelic.com/infrastructure_agent' }}
+  TEST_PLATFORMS: ${{ inputs.platforms }}
+  TEST_FIPS: ${{ inputs.fips }}
+
+jobs:
+  test-nrjmx-packages:
+    name: Test NRJMX Package Installation
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package_type: ${{ inputs.fips && fromJson('["regular", "fips"]') || fromJson('["regular"]') }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Test NRJMX package installation
+        uses: newrelic/pkg-installation-testing-action@platforms_with_java
+        with:
+          gpg_key: 'https://download.newrelic.com/infrastructure_agent/gpg/newrelic-infra.gpg'
+          repo_base_url: ${{ env.REPO_ENDPOINT }}
+          package_name: ${{ matrix.package_type == 'fips' && 'nrjmx-fips' || 'nrjmx' }}
+          exec_name: 'nrjmx'
+          package_version: ${{ env.PACKAGE_VERSION }}
+          platforms: ${{ env.TEST_PLATFORMS }}
+
+  test-results:
+    name: Package Installation Test Results
+    runs-on: ubuntu-latest
+    needs: test-nrjmx-packages
+    if: always()
+    
+    steps:
+      - name: Check test results
+        run: |
+          if [[ "${{ needs.test-nrjmx-packages.result }}" == "success" ]]; then
+            echo "✅ All NRJMX package installation tests passed!"
+            echo "Environment: ${{ inputs.environment }}"
+            echo "Version: ${{ inputs.version }}"
+            echo "FIPS testing: ${{ inputs.fips }}"
+          else
+            echo "❌ NRJMX package installation tests failed!"
+            exit 1
+          fi

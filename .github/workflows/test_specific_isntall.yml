@@ -1,0 +1,54 @@
+name: 🧪 Test NRJMX 2.9.0 in Staging
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      test_fips:
+        description: 'Also test FIPS packages'
+        required: false
+        type: boolean
+        default: false
+      custom_platforms:
+        description: 'Custom platforms to test (leave empty for Java-enabled defaults)'
+        required: false
+        type: string
+
+jobs:
+  test-nrjmx-staging:
+    name: Test NRJMX 2.9.0 Installation
+    uses: ./.github/workflows/test-nrjmx-installation.yml
+    with:
+      version: "2.9.0"
+      environment: "staging"
+      fips: ${{ inputs.test_fips || false }}
+      platforms: ${{ inputs.custom_platforms || 'al2023java,redhat8java,suse15.6java,ubuntu2204java,ubuntu2404java' }}
+
+  notify-results:
+    name: Test Results Summary
+    runs-on: ubuntu-latest
+    needs: test-nrjmx-staging
+    if: always()
+    
+    steps:
+      - name: Summary
+        run: |
+          echo "## NRJMX 2.9.0 Staging Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version Tested:** 2.9.0" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** Staging" >> $GITHUB_STEP_SUMMARY
+          echo "**FIPS Testing:** ${{ inputs.test_fips || false }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Platforms:** ${{ inputs.custom_platforms || 'al2023java,redhat8java,suse15.6java,ubuntu2204java,ubuntu2404java' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ needs.test-nrjmx-staging.result }}" == "success" ]]; then
+            echo "✅ **Status:** All tests PASSED" >> $GITHUB_STEP_SUMMARY
+            echo "🎉 NRJMX 2.9.0 installation successful on all tested platforms!"
+          else
+            echo "❌ **Status:** Tests FAILED" >> $GITHUB_STEP_SUMMARY
+            echo "💥 NRJMX 2.9.0 installation failed on one or more platforms."
+            exit 1
+          fi
