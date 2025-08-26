@@ -25,6 +25,7 @@ jobs:
       fips: ${{ inputs.test_fips || false }}
       platforms: ${{ inputs.custom_platforms || 'al2023java,redhat8java,suse15.6java,ubuntu2204java,ubuntu2404java' }}
 
+
   notify-results:
     name: Test Results Summary
     runs-on: ubuntu-latest
