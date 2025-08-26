@@ -18,7 +18,7 @@ on:
 jobs:
   test-nrjmx-staging:
     name: Test NRJMX 2.9.0 Installation
-    uses: ./.github/workflows/test-nrjmx-installation.yml
+    uses: ./.github/workflows/test_nrjmx_installation.yml
     with:
       version: "2.9.0"
       environment: "staging"
