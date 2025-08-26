@@ -25,7 +25,7 @@ env:
 jobs:
   publishing-to-s3:
     name: Publish linux artifacts into s3 production bucket
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest-4-cores
 
     steps:
       - name: Login to DockerHub
@@ -83,6 +83,22 @@ jobs:
           aws_role_arn: ${{ env.AWS_ROLE_ARN }}
           gpg_passphrase: ${{ env.GPG_PASSPHRASE }}
           gpg_private_key_base64: ${{ env.GPG_PRIVATE_KEY_BASE64 }}
+
+      - name: Test package installation from prod repo
+        uses: newrelic/integrations-pkg-test-action/linux@v1
+        with:
+          tag: ${{env.TAG}}
+          integration: 'nrjmx'
+          packageLocation: repo
+          upgrade: false
+      
+      - name: Test FIPS package installation from prod repo
+        uses: newrelic/integrations-pkg-test-action/linux@v1
+        with:
+          tag: ${{env.TAG}}
+          integration: 'nrjmx-fips'
+          packageLocation: repo
+          upgrade: false
 
       - name: Notify successful release
         uses: archive/github-actions-slack@master

@@ -3,7 +3,7 @@ ARG UBUNTU_VERSION=16.04
 # Use Ubuntu as the base image
 FROM ubuntu:${UBUNTU_VERSION}
 
-ARG GO_VERSION=1.23.2
+ARG GO_VERSION=1.24.6
 ARG ARCH='amd64'
 ARG GH_VERSION='2.61.0'
 ARG DOCKER_VERSION='24.0.5'
@@ -81,21 +81,7 @@ RUN add-apt-repository -y ppa:openjdk-r/ppa && \
 # Setup FIPS compliant OpenSSL
 RUN mkdir -p /etc/ssl/fips-enabled
 
-# Configure OpenSSL for FIPS mode
-RUN echo "openssl_conf = openssl_init" > /etc/ssl/openssl.cnf && \
-    echo "" >> /etc/ssl/openssl.cnf && \
-    echo "[openssl_init]" >> /etc/ssl/openssl.cnf && \
-    echo "providers = provider_sect" >> /etc/ssl/openssl.cnf && \
-    echo "" >> /etc/ssl/openssl.cnf && \
-    echo "[provider_sect]" >> /etc/ssl/openssl.cnf && \
-    echo "default = default_sect" >> /etc/ssl/openssl.cnf && \
-    echo "fips = fips_sect" >> /etc/ssl/openssl.cnf && \
-    echo "" >> /etc/ssl/openssl.cnf && \
-    echo "[default_sect]" >> /etc/ssl/openssl.cnf && \
-    echo "activate = 1" >> /etc/ssl/openssl.cnf && \
-    echo "" >> /etc/ssl/openssl.cnf && \
-    echo "[fips_sect]" >> /etc/ssl/openssl.cnf && \
-    echo "activate = 1" >> /etc/ssl/openssl.cnf
+
 
 # Set environment variable for FIPS mode
 ENV OPENSSL_FORCE_FIPS_MODE=1
@@ -115,6 +101,9 @@ RUN mkdir -p /root/.m2 && \
     echo "      <properties>" >> /root/.m2/settings.xml && \
     echo "        <https.protocols>TLSv1.2</https.protocols>" >> /root/.m2/settings.xml && \
     echo "        <jdk.tls.client.protocols>TLSv1.2</jdk.tls.client.protocols>" >> /root/.m2/settings.xml && \
+    echo "        <javax.net.ssl.keyStoreType>PKCS12</javax.net.ssl.keyStoreType>" >> /root/.m2/settings.xml && \
+    echo "        <com.sun.net.ssl.checkRevocation>true</com.sun.net.ssl.checkRevocation>" >> /root/.m2/settings.xml && \
+    echo "        <ssl.TrustManagerFactory.algorithm>PKIX</ssl.TrustManagerFactory.algorithm>" >> /root/.m2/settings.xml && \
     echo "      </properties>" >> /root/.m2/settings.xml && \
     echo "    </profile>" >> /root/.m2/settings.xml && \
     echo "  </profiles>" >> /root/.m2/settings.xml && \

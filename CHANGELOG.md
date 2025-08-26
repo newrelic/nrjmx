@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### bugfix
+- Fix publishing FIPS compliant nrjmx packages
+- Added name and version to pom files
+
+### enhancements
+- Upgraded golang version to v1.24.6
+- Switched to Windows 2025 runners
+
 ## v2.8.0 - 2025-04-23
 
 ### 🚀 Enhancements

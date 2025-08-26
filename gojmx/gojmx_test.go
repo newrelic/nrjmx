@@ -101,18 +101,20 @@ func Test_Query_Success(t *testing.T) {
 	require.NoError(t, err)
 	defer container.Terminate(ctx)
 
+
 	// Populate the JMX Server with mbeans
-	resp, err := testutils.AddMBeans(ctx, container, map[string]interface{}{
+	testData := map[string]interface{}{
 		"name":        "tomas",
 		"doubleValue": 1.2,
 		"floatValue":  2.2222222,
 		"numberValue": 3,
 		"boolValue":   true,
 		"dateValue":   timeStamp,
-	})
+	}
+
+	resp, err := testutils.AddMBeansWithRetry(ctx, container, testData, 5)
 	assert.NoError(t, err)
 	assert.Equal(t, "ok!\n", string(resp))
-
 	defer testutils.CleanMBeans(ctx, container)
 
 	jmxHost, jmxPort, err := testutils.GetContainerMappedPort(ctx, container, testutils.TestServerJMXPort)
@@ -191,6 +193,21 @@ func Test_Query_Success(t *testing.T) {
 		assert.NoError(t, err)
 		actual = append(actual, jmxAttrs...)
 	}
+
+	// Normalize date strings to handle unicode space differences
+	normalizeDate := func(attrs []*AttributeResponse) {
+		for _, attr := range attrs {
+			if strings.Contains(attr.Name, "DateValue") {
+				// Replace unicode non-breaking space with regular space
+				attr.StringValue = strings.ReplaceAll(attr.StringValue, "\u202f", " ")
+				attr.StringValue = strings.ReplaceAll(attr.StringValue, "\u00a0", " ")
+			}
+		}
+	}
+	
+	normalizeDate(expected)
+	normalizeDate(actual)
+
 	assert.ElementsMatch(t, expected, actual)
 }
 
@@ -720,13 +737,12 @@ func Test_Connector_Success(t *testing.T) {
 	dstFile := filepath.Join(testutils.PrjDir, "/bin/jboss-client.jar")
 	err = testutils.CopyFileFromContainer(ctx, container, "/opt/jboss/wildfly/bin/client/jboss-client.jar", dstFile)
 	assert.NoError(t, err)
-
 	defer os.Remove(dstFile)
 
 	jmxHost, jmxPort, err := testutils.GetContainerMappedPort(ctx, container, testutils.JbossJMXPort)
 	require.NoError(t, err)
 
-	// THEN JMX connection can be opened
+	// THEN JMX connection can be opened (with retry for robustness)
 	config := &JMXConfig{
 		Hostname:              jmxHost,
 		Port:                  int32(jmxPort.Int()),
@@ -736,15 +752,44 @@ func Test_Connector_Success(t *testing.T) {
 		IsRemote:              true,
 		RequestTimeoutMs:      testutils.DefaultTimeoutMs,
 	}
-	client, err := NewClient(ctx).Open(config)
-	assert.NoError(t, err)
+
+	// Retry connection as JBoss might need more time to fully initialize JMX
+	var client *Client
+	maxRetries := 10
+	for i := 0; i < maxRetries; i++ {
+		client, err = NewClient(ctx).Open(config)
+		if err == nil {
+			break
+		}
+		
+		if strings.Contains(err.Error(), "Connection closed unexpectedly") && i < maxRetries-1 {
+			t.Logf("JBoss JMX not ready yet (attempt %d/%d): %v, retrying in 2s...", i+1, maxRetries, err)
+			time.Sleep(2 * time.Second)
+			continue
+		}
+	}
+	
+	assert.NoError(t, err, "Failed to connect to JBoss JMX after %d attempts", maxRetries)
+	assert.NotNil(t, client)
 	defer assertCloseClientNoError(t, client)
 
-	// AND Query returns expected data
+	// AND Query returns expected data (with retry as JBoss might still be initializing MBeans)
 	expectedMbeanNames := []string{
 		"jboss.as:subsystem=remoting,configuration=endpoint",
 	}
-	actualMbeanNames, err := client.QueryMBeanNames("jboss.as:subsystem=remoting,configuration=endpoint")
+	
+	var actualMbeanNames []string
+	for i := 0; i < 5; i++ {
+		actualMbeanNames, err = client.QueryMBeanNames("jboss.as:subsystem=remoting,configuration=endpoint")
+		if err == nil && len(actualMbeanNames) > 0 {
+			break
+		}
+		if i < 4 {
+			t.Logf("MBeans not ready yet (attempt %d/5), waiting...", i+1)
+			time.Sleep(1 * time.Second)
+		}
+	}
+	
 	assert.NoError(t, err)
 	assert.ElementsMatch(t, expectedMbeanNames, actualMbeanNames)
 

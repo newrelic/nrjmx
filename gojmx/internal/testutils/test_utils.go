@@ -16,6 +16,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"time"
+	"net"
 
 	"github.com/docker/go-connections/nat"
 	"github.com/testcontainers/testcontainers-go"
@@ -80,7 +81,6 @@ func RunJMXServiceContainer(ctx context.Context) (testcontainers.Container, erro
 				"-Dcom.sun.management.jmxremote.rmi.port=" + TestServerJMXPort + " " +
 				hostnameOpt,
 		},
-
 		WaitingFor: wait.ForListeningPort(TestServerPort),
 	}
 
@@ -95,7 +95,14 @@ func RunJMXServiceContainer(ctx context.Context) (testcontainers.Container, erro
 
 	container.StartLogProducer(ctx)
 	container.FollowOutput(&TestLogConsumer{})
-	return container, err
+
+	// Wait for the service to be fully ready
+	if err := waitForServiceReady(ctx, container); err != nil {
+		container.Terminate(ctx)
+		return nil, fmt.Errorf("service failed to become ready: %w", err)
+	}
+
+	return container, nil
 }
 
 // RunJMXServiceContainerSSL will start a container running test-server configured with SSL JMX.
@@ -111,7 +118,6 @@ func RunJMXServiceContainerSSL(ctx context.Context) (testcontainers.Container, e
 			fmt.Sprintf("%[1]s:%[1]s", TestServerPort),
 			fmt.Sprintf("%[1]s:%[1]s", TestServerJMXPort),
 		},
-
 		Env: map[string]string{
 			"JAVA_OPTS": "-Dcom.sun.management.jmxremote.port=" + TestServerJMXPort + " " +
 				"-Dcom.sun.management.jmxremote.authenticate=true " +
@@ -141,7 +147,14 @@ func RunJMXServiceContainerSSL(ctx context.Context) (testcontainers.Container, e
 
 	container.StartLogProducer(ctx)
 	container.FollowOutput(&TestLogConsumer{})
-	return container, err
+
+	// Wait for the service to be fully ready
+	if err := waitForServiceReady(ctx, container); err != nil {
+		container.Terminate(ctx)
+		return nil, fmt.Errorf("service failed to become ready: %w", err)
+	}
+
+	return container, nil
 }
 
 // GetContainerServiceURL will return the url to the test-server running inside the container.
@@ -207,6 +220,44 @@ func addMBeans(ctx context.Context, container testcontainers.Container, body int
 	return DoHttpRequest(http.MethodPost, url, json)
 }
 
+// AddMBeansWithRetry wraps AddMBeans with retry logic for resilience
+func AddMBeansWithRetry(ctx context.Context, container testcontainers.Container, body map[string]interface{}, maxRetries int) ([]byte, error) {
+	var resp []byte
+	var err error
+	
+	for i := 0; i < maxRetries; i++ {
+		resp, err = AddMBeans(ctx, container, body)
+		if err == nil && string(resp) == "ok!\n" {
+			return resp, nil
+		}
+		
+		if i < maxRetries-1 {
+			time.Sleep(500 * time.Millisecond)
+		}
+	}
+	
+	return resp, fmt.Errorf("failed to add MBeans after %d attempts: %w", maxRetries, err)
+}
+
+// AddMBeansBatchWithRetry wraps AddMBeansBatch with retry logic
+func AddMBeansBatchWithRetry(ctx context.Context, container testcontainers.Container, body []map[string]interface{}, maxRetries int) ([]byte, error) {
+	var resp []byte
+	var err error
+	
+	for i := 0; i < maxRetries; i++ {
+		resp, err = AddMBeansBatch(ctx, container, body)
+		if err == nil && string(resp) == "ok!\n" {
+			return resp, nil
+		}
+		
+		if i < maxRetries-1 {
+			time.Sleep(500 * time.Millisecond)
+		}
+	}
+	
+	return resp, fmt.Errorf("failed to add MBeans batch after %d attempts: %w", maxRetries, err)
+}
+
 // TestLogConsumer is used to print container logs to stdout.
 type TestLogConsumer struct {
 }
@@ -219,12 +270,10 @@ func (g *TestLogConsumer) Accept(l testcontainers.Log) {
 func RunJbossStandaloneJMXContainer(ctx context.Context) (testcontainers.Container, error) {
 	req := testcontainers.ContainerRequest{
 		Image: "test_jboss",
-
 		ExposedPorts: []string{
 			fmt.Sprintf("%[1]s:%[1]s", JbossJMXPort),
 		},
-
-		WaitingFor: wait.ForListeningPort(JbossJMXPort),
+		WaitingFor: wait.ForListeningPort(JbossJMXPort).WithStartupTimeout(120 * time.Second),
 	}
 
 	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
@@ -238,7 +287,14 @@ func RunJbossStandaloneJMXContainer(ctx context.Context) (testcontainers.Contain
 
 	container.StartLogProducer(ctx)
 	container.FollowOutput(&TestLogConsumer{})
-	return container, err
+
+	// Wait for JBoss to be fully ready
+	if err := waitForJBossReady(ctx, container); err != nil {
+		container.Terminate(ctx)
+		return nil, fmt.Errorf("JBoss failed to become ready: %w", err)
+	}
+
+	return container, nil
 }
 
 // CopyFileFromContainer will copy a file from a given docker container.
@@ -320,4 +376,111 @@ func NrJMXAsSubprocess(ctx context.Context, host, port string) *exec.Cmd {
 	return exec.CommandContext(ctx,
 		"go", "run", cmdPath, host, port,
 	)
+}
+
+// waitForServiceReady ensures the test server is fully initialized and ready to accept requests
+func waitForServiceReady(ctx context.Context, container testcontainers.Container) error {
+	maxRetries := 30
+	retryDelay := 500 * time.Millisecond
+	
+	for i := 0; i < maxRetries; i++ {
+		// Try to connect to the test server's HTTP endpoint
+		url, err := GetContainerServiceURL(ctx, container, TestServerPort, "/health")
+		if err == nil {
+			// Try a simple HTTP request to check if service is responsive
+			resp, err := http.Get(url)
+			if err == nil {
+				resp.Body.Close()
+				if resp.StatusCode == 200 || resp.StatusCode == 404 {
+					// Service is responding, even if /health doesn't exist (404)
+					// Give it a tiny bit more time to fully initialize JMX
+					time.Sleep(200 * time.Millisecond)
+					return nil
+				}
+			}
+		}
+		
+		if i < maxRetries-1 {
+			time.Sleep(retryDelay)
+		}
+	}
+	
+	return fmt.Errorf("service failed to become ready after %d attempts", maxRetries)
+}
+
+// waitForJBossReady ensures JBoss is fully initialized and ready to accept JMX connections
+func waitForJBossReady(ctx context.Context, container testcontainers.Container) error {
+	maxRetries := 120  // JBoss can take up to 2 minutes to start
+	retryDelay := 1 * time.Second
+	
+	host, port, err := GetContainerMappedPort(ctx, container, JbossJMXPort)
+	if err != nil {
+		return fmt.Errorf("failed to get container port: %w", err)
+	}
+	
+	// First wait for the port to be actually listening
+	fmt.Printf("[JBoss Wait] Waiting for JBoss to start on %s:%s...\n", host, port.Port())
+	
+	for i := 0; i < maxRetries; i++ {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+		
+		// Check if port is open
+		conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%s", host, port.Port()), 2*time.Second)
+		if err == nil {
+			conn.Close()
+			fmt.Printf("[JBoss Wait] Port %s is open after %d attempts\n", port.Port(), i+1)
+			
+			// Port is open, but JBoss management interface might still be initializing
+			// Let's wait a bit more and then try to verify it's actually ready
+			time.Sleep(5 * time.Second)
+			
+			// Try to verify JBoss is actually ready by attempting an HTTP request
+			// JBoss management interface also responds to HTTP
+			if err := verifyJBossManagementReady(host, port.Port()); err == nil {
+				fmt.Println("[JBoss Wait] JBoss management interface is ready")
+				return nil
+			}
+			
+			// If verification failed, give it more time
+			fmt.Println("[JBoss Wait] Management interface not ready yet, waiting additional 10 seconds...")
+			time.Sleep(10 * time.Second)
+			return nil
+		}
+		
+		if i > 0 && i%10 == 0 {
+			fmt.Printf("[JBoss Wait] Still waiting for JBoss... (attempt %d/%d)\n", i, maxRetries)
+		}
+		
+		time.Sleep(retryDelay)
+	}
+	
+	return fmt.Errorf("JBoss failed to become ready after %d seconds", maxRetries)
+}
+
+// verifyJBossManagementReady tries to verify if JBoss management interface is responsive
+func verifyJBossManagementReady(host, port string) error {
+	// Try a simple HTTP request to the management endpoint
+	// Even though we'll use JMX, the management port also serves HTTP
+	client := &http.Client{
+		Timeout: 5 * time.Second,
+	}
+	
+	// JBoss management interface requires authentication, so we expect 401
+	// but this tells us the service is ready
+	resp, err := client.Get(fmt.Sprintf("http://%s:%s/management", host, port))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	
+	// 401 Unauthorized is expected and means the service is up
+	if resp.StatusCode == 401 || resp.StatusCode == 200 {
+		return nil
+	}
+	
+	return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 }
