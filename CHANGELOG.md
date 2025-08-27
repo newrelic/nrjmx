@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-## v2.8.0 - 2025-08-26
+## v2.10.0 - 2025-08-26
 
 ### 🚀 Enhancements
 - Upgraded golang version to v1.24.6

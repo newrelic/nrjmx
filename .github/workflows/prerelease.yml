@@ -139,17 +139,6 @@ jobs:
     needs: [ packaging, packaging-msi ]
 
     steps:
-      - name: Debug - Show parameters for regular packages
-        run: |
-          echo "Regular packages publishing:"
-          echo "  app_name: nrjmx"
-          echo "  schema: nrjmx"
-          
-      - name: Login to DockerHub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ env.DOCKER_HUB_ID }}
-          password: ${{ env.DOCKER_HUB_PASSWORD }}
 
       - name: Publish regular packages to S3
         uses: newrelic/infrastructure-publish-action@v1
@@ -176,16 +165,7 @@ jobs:
           gpg_passphrase: ${{ env.GPG_PASSPHRASE }}
           gpg_private_key_base64: ${{ env.GPG_PRIVATE_KEY_BASE64 }}
 
-      - name: Test package installation from staging repo
-        uses: newrelic/integrations-pkg-test-action/linux@v1
-        with:
-          tag: ${{env.TAG}}
-          integration: 'nrjmx'
-          packageLocation: repo
-          stagingRepo: true
-          upgrade: false
 
-  # FIXED: Split into separate job for FIPS packages - SEQUENTIAL EXECUTION
   publishing-fips-to-s3:
     name: Publish FIPS packages to S3 staging bucket
     runs-on: ubuntu-latest-4-cores
@@ -193,18 +173,7 @@ jobs:
     if: ${{ always() && !cancelled() && !failure() && needs.publishing-regular-to-s3.result == 'success' }}
 
     steps:
-      - name: Debug - Show parameters for FIPS packages
-        run: |
-          echo "FIPS packages publishing:"
-          echo "  app_name: nrjmx-fips"
-          echo "  schema: nrjmx-fips"
           
-      - name: Login to DockerHub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ env.DOCKER_HUB_ID }}
-          password: ${{ env.DOCKER_HUB_PASSWORD }}
-
       - name: Publish FIPS packages to S3
         uses: newrelic/infrastructure-publish-action@v1
         env:
@@ -231,6 +200,29 @@ jobs:
           gpg_passphrase: ${{ env.GPG_PASSPHRASE }}
           gpg_private_key_base64: ${{ env.GPG_PRIVATE_KEY_BASE64 }}
 
+  test-packages:
+    name: Test package installation from staging repo
+    runs-on: ubuntu-latest
+    needs: [ publishing-regular-to-s3, publishing-fips-to-s3 ]  # Wait for BOTH publishing jobs
+    if: ${{ always() && !cancelled() && !failure() && needs.publishing-regular-to-s3.result == 'success' && needs.publishing-fips-to-s3.result == 'success' }}
+
+    steps:
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKER_HUB_ID }}
+          password: ${{ env.DOCKER_HUB_PASSWORD }}
+
+      - name: Test regular package installation from staging repo
+        uses: newrelic/integrations-pkg-test-action/linux@v1
+        with:
+          tag: ${{env.TAG}}
+          integration: 'nrjmx'
+          packageLocation: repo
+          stagingRepo: true
+          upgrade: false
+          postInstall: "test -f /usr/bin/nrjmx || test -f /bin/nrjmx"
+
       - name: Test FIPS package installation from staging repo
         uses: newrelic/integrations-pkg-test-action/linux@v1
         with:
@@ -239,12 +231,12 @@ jobs:
           packageLocation: repo
           stagingRepo: true
           upgrade: false
+          postInstall: "test -f /usr/bin/nrjmx-fips || test -f /bin/nrjmx-fips"
 
-  # FIXED: Consolidated finalization job
   finalize-release:
     name: Finalize release
-    needs: [ publishing-regular-to-s3, publishing-fips-to-s3 ]
-    if: ${{ always() && !cancelled() && !failure() && needs.publishing-regular-to-s3.result == 'success' }}
+    needs: [ publishing-regular-to-s3, publishing-fips-to-s3, test-packages ]
+    if: ${{ always() && !cancelled() && !failure() && needs.publishing-regular-to-s3.result == 'success' && needs.publishing-fips-to-s3.result == 'success' && needs.test-packages.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -257,7 +249,7 @@ jobs:
 
   notify-failure:
     if: ${{ always() && failure() }}
-    needs: [unit-test-linux, test-go-linux-jdk8, test-go-linux-jdk11, check-gen-code, packaging, packaging-msi, publishing-regular-to-s3, publishing-fips-to-s3]
+    needs: [unit-test-linux, test-go-linux-jdk8, test-go-linux-jdk11, check-gen-code, packaging, packaging-msi, publishing-regular-to-s3, publishing-fips-to-s3, test-packages]
     runs-on: ubuntu-latest
     steps:
       - name: Notify failure via Slack
@@ -269,7 +261,7 @@ jobs:
 
   update-title-on-failure:
     if: ${{ always() && failure() }}
-    needs: [unit-test-linux, test-go-linux-jdk8, test-go-linux-jdk11, check-gen-code, packaging, packaging-msi, publishing-regular-to-s3, publishing-fips-to-s3]
+    needs: [unit-test-linux, test-go-linux-jdk8, test-go-linux-jdk11, check-gen-code, packaging, packaging-msi, publishing-regular-to-s3, publishing-fips-to-s3, test-packages]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
