@@ -28,11 +28,6 @@ jobs:
     runs-on: ubuntu-latest-4-cores
 
     steps:
-      - name: Debug - Show parameters for regular packages
-        run: |
-          echo "Regular packages publishing:"
-          echo "  app_name: nrjmx"
-          echo "  schema: nrjmx"
           
       - name: Publish regular packages to S3
         uses: newrelic/infrastructure-publish-action@v1
@@ -66,11 +61,6 @@ jobs:
     if: ${{ always() && !cancelled() && !failure() && needs.publishing-regular-to-s3.result == 'success' }}
 
     steps:
-      - name: Debug - Show parameters for FIPS packages
-        run: |
-          echo "FIPS packages publishing:"
-          echo "  app_name: nrjmx-fips"
-          echo "  schema: nrjmx-fips"
           
       - name: Publish FIPS packages to S3
         uses: newrelic/infrastructure-publish-action@v1
