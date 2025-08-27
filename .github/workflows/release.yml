@@ -107,7 +107,7 @@ jobs:
           integration: 'nrjmx'
           packageLocation: repo
           upgrade: false
-          postInstall: "true"
+          postInstall: "test -f /usr/bin/nrjmx || test -f /bin/nrjmx"
 
       - name: Test FIPS package installation from production repo
         uses: newrelic/integrations-pkg-test-action/linux@v1
@@ -116,7 +116,7 @@ jobs:
           integration: 'nrjmx-fips'
           packageLocation: repo
           upgrade: false
-          postInstall: "true"
+          postInstall: "test -f /usr/bin/nrjmx-fips || test -f /bin/nrjmx-fips"
 
   finalize-release:
     name: Finalize and notify successful release

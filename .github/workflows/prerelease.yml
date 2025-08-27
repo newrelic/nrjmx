@@ -221,7 +221,7 @@ jobs:
           packageLocation: repo
           stagingRepo: true
           upgrade: false
-          postInstall: "true"
+          postInstall: "test -f /usr/bin/nrjmx || test -f /bin/nrjmx"
 
       - name: Test FIPS package installation from staging repo
         uses: newrelic/integrations-pkg-test-action/linux@v1
@@ -231,7 +231,7 @@ jobs:
           packageLocation: repo
           stagingRepo: true
           upgrade: false
-          postInstall: "true"
+          postInstall: "test -f /usr/bin/nrjmx-fips || test -f /bin/nrjmx-fips"
 
   finalize-release:
     name: Finalize release
