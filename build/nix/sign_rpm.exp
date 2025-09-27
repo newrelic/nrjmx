@@ -2,9 +2,52 @@
 
 set rpm_file [lindex $argv 0];
 set GPG_PASSPHRASE [lindex $argv 1];
+set use_batch_mode [lindex $argv 2];
 
-set timeout -1
-spawn rpmsign -v --addsign $rpm_file
-expect "Enter pass phrase:"
-send -- "${GPG_PASSPHRASE}\r"
-expect eof
+if {$use_batch_mode eq "batch"} {
+    # Use batch mode for FIPS packages to avoid interactive prompts
+    puts "Using batch mode for RPM signing..."
+
+    set env(GPG_TTY) ""
+    set env(DISPLAY) ""
+    set env(GNUPGHOME) "/root/.gnupg"
+    
+    set timeout 120
+
+    puts "Using batch signing method with pinentry-mode loopback..."
+
+    set passphrase_file "/tmp/gpg_passphrase_[pid]"
+    set fp [open $passphrase_file w]
+    puts $fp $GPG_PASSPHRASE
+    close $fp
+    
+    spawn rpm --define "_gpg_sign_cmd_extra_args --batch --pinentry-mode loopback --passphrase-file $passphrase_file" --addsign $rpm_file
+    
+    expect {
+        timeout {
+            puts "Error: Timeout during batch mode RPM signing"
+            catch {file delete $passphrase_file}
+            exit 1
+        }
+        eof {
+            # Check if signing was successful
+            catch {wait} result
+            set exit_code [lindex $result 3]
+            
+            catch {file delete $passphrase_file}
+            
+            if {$exit_code != 0} {
+                puts "Error: Batch mode RPM signing failed with exit code $exit_code"
+                exit $exit_code
+            }
+            puts "Batch mode RPM signing completed successfully"
+            exit 0
+        }
+    }
+} else {
+    set timeout -1
+    spawn rpmsign -v --addsign $rpm_file
+    expect "Enter pass phrase:"
+    send -- "${GPG_PASSPHRASE}\r"
+    expect eof
+}

@@ -1,11 +1,18 @@
 .PHONY : deps
 deps:
 	@($(DOCKER_BIN) build -t nrjmx_builder ./build/.)
+# A new nrjmx_builder_fips image is created because:
+# In ubuntu 16.04 the lastest version of rpm supported is 4.12
+# Inorder to build RPM with SHA256 payload digest the rpm version should be 4.14+
+# So, a new nrjmx_builder_fips image which use ubuntu 22.04 as base image.
+	@($(DOCKER_BIN) build -t nrjmx_builder_fips -f ./build/fips.dockerfile ./build/.)
 
 .PHONY : ci/build
 ci/build: deps
 	@($(DOCKER_CMD) make build)
 	@($(DOCKER_CMD) make build-fips)
+# Verify if the build is successful on a ubuntu 22.04 container.
+	@($(DOCKER_FIPS_CMD) make build-fips)
 
 .PHONY : ci/package
 ci/package: deps
@@ -17,7 +24,10 @@ ci/test: deps
 
 .PHONY : ci/release
 ci/release: deps
+# Uploads all fips and non-fips packages expect FIPS RPM
 	@($(DOCKER_CMD) make release)
+# Uploads FIPS RPM packages
+	@($(DOCKER_FIPS_CMD) make release/package-fips/rpm)
 
 .PHONY : ci/go-test
 ci/go-test: deps go-test-utils
