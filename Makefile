@@ -7,8 +7,8 @@ MAVEN_BIN       ?= mvn
 
 TAG				?= v0.0.0
 
-# FIPS compliant options
-MAVEN_FIPS_OPTS = -Dhttps.protocols=TLSv1.2 -Djdk.tls.client.protocols=TLSv1.2 -Djavax.net.ssl.keyStoreType=PKCS12 -Dcom.sun.net.ssl.checkRevocation=true -Dssl.TrustManagerFactory.algorithm=PKIX
+# FIPS compliant options (build-time friendly)
+MAVEN_FIPS_OPTS = -Dhttps.protocols=TLSv1.2 -Djdk.tls.client.protocols=TLSv1.2 -Djavax.net.ssl.keyStoreType=PKCS12 -Dcom.sun.net.ssl.checkRevocation=false -Dssl.TrustManagerFactory.algorithm=PKIX
 export MAVEN_FIPS_OPTS
 
 export GOEXPERIMENT=boringcrypto

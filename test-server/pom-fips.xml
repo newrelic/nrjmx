@@ -69,10 +69,6 @@
         </dependency>
     </dependencies>
     <build>
-        <!-- Add source directory configuration -->
-        <sourceDirectory>src/main/java</sourceDirectory>
-        <testSourceDirectory>src/test/java</testSourceDirectory>
-        
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
@@ -85,13 +81,10 @@
                 <includes>
                     <include>fips.security</include>
                 </includes>
-                <!-- Make this optional if the directory doesn't exist -->
-                <targetPath>${project.build.outputDirectory}</targetPath>
             </resource>
         </resources>
-        
         <plugins>
-            <!-- Add explicit compiler plugin configuration -->
+            <!-- Add maven-compiler-plugin explicitly -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -99,13 +92,12 @@
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
-                    <encoding>UTF-8</encoding>
+                    <compilerVersion>1.8</compilerVersion>
                 </configuration>
             </plugin>
-            
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.2.2</version>
+                <version>3.3.0</version>
                 <configuration>
                     <archive>
                         <manifest>
@@ -130,7 +122,6 @@
                     </execution>
                 </executions>
             </plugin>
-            
             <plugin>
                 <groupId>com.coderplus.maven.plugins</groupId>
                 <artifactId>copy-rename-maven-plugin</artifactId>
@@ -149,7 +140,6 @@
                     </execution>
                 </executions>
             </plugin>
-            
             <!-- FIPS compliance check plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -175,7 +165,6 @@
                     </execution>
                 </executions>
             </plugin>
-            
             <!-- Configure surefire to use FIPS mode for tests -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -185,7 +174,6 @@
                     <argLine>-Djava.security.properties=${project.build.directory}/classes/fips.security</argLine>
                 </configuration>
             </plugin>
-            
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -198,9 +186,14 @@
                     </archive>
                 </configuration>
             </plugin>
+            <!-- Add versions-maven-plugin for version management -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <version>2.8.1</version>
+            </plugin>
         </plugins>
     </build>
-    
     <profiles>
         <profile>
             <id>test</id>
@@ -209,6 +202,7 @@
             </activation>
             <build>
                 <plugins>
+                    <!-- before testing, it builds the test-server docker image -->
                     <plugin>
                         <groupId>com.spotify</groupId>
                         <artifactId>dockerfile-maven-plugin</artifactId>
@@ -230,7 +224,6 @@
                 </plugins>
             </build>
         </profile>
-        
         <profile>
             <id>tarball-linux</id>
             <activation>
@@ -244,6 +237,7 @@
                             <execution>
                                 <id>create-targz</id>
                                 <configuration>
+                                    <!-- Modified: Changed from ${project.artifactId}_linux${fips.suffix}_${project.version}_noarch -->
                                     <finalName>${project.artifactId}${fips.suffix}_linux_${project.version}_noarch</finalName>
                                     <appendAssemblyId>false</appendAssemblyId>
                                     <descriptor>build/assembly/targz.xml</descriptor>
@@ -258,7 +252,6 @@
                 </plugins>
             </build>
         </profile>
-
         <profile>
             <id>deb</id>
             <activation>
@@ -266,6 +259,7 @@
             </activation>
             <build>
                 <plugins>
+                    <!-- DEB definitions for NR-JMX -->
                     <plugin>
                         <artifactId>jdeb</artifactId>
                         <groupId>org.vafer</groupId>
@@ -279,8 +273,6 @@
                             </execution>
                         </executions>
                         <configuration>
-                            <name>${project.artifactId}${fips.suffix}</name>
-                            <version>${project.version}</version>
                             <deb>target/${project.artifactId}${fips.suffix}_${project.version}-1_noarch.deb</deb>
                             <dataSet>
                                 <data>
@@ -294,13 +286,6 @@
                                     <linkTarget>/usr/lib/${project.artifactId}/${project.artifactId}${fips.suffix}_linux_${project.version}_noarch.jar</linkTarget>
                                     <symlink>true</symlink>
                                 </data>
-                                <!-- Add symlink for nrjmx.jar to make the java class available to the jmx script -->
-                                <data>
-                                    <type>link</type>
-                                    <linkName>/usr/lib/${project.artifactId}/${project.artifactId}.jar</linkName>
-                                    <linkTarget>/usr/lib/${project.artifactId}/${project.artifactId}${fips.suffix}_linux_${project.version}_noarch.jar</linkTarget>
-                                    <symlink>true</symlink>
-                                </data>
                                 <data>
                                     <type>file</type>
                                     <src>bin/${project.artifactId}</src>
@@ -310,6 +295,7 @@
                                         <filemode>755</filemode>
                                     </mapper>
                                 </data>
+                                <!-- doc -->
                                 <data>
                                     <type>file</type>
                                     <src>README.md</src>
@@ -326,7 +312,6 @@
                 </plugins>
             </build>
         </profile>
-        
         <profile>
             <id>rpm</id>
             <activation>
@@ -334,6 +319,7 @@
             </activation>
             <build>
                 <plugins>
+                    <!-- RPM definitions for NR-JMX tool -->
                     <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>rpm-maven-plugin</artifactId>
@@ -365,11 +351,6 @@
                                             <location>/usr/lib/${project.artifactId}/${project.artifactId}${fips.suffix}_linux_${project.version}_noarch.jar</location>
                                             <destination>${project.artifactId}${fips.suffix}.jar</destination>
                                         </softlinkSource>
-                                        <!-- Add symlink for nrjmx.jar to make the java class available to the jmx script -->
-                                        <softlinkSource>
-                                            <location>/usr/lib/${project.artifactId}/${project.artifactId}${fips.suffix}_linux_${project.version}_noarch.jar</location>
-                                            <destination>${project.artifactId}.jar</destination>
-                                        </softlinkSource>
                                     </sources>
                                 </mapping>
                                 <mapping>
@@ -386,6 +367,7 @@
                                         </source>
                                     </sources>
                                 </mapping>
+                                <!-- doc -->
                                 <mapping>
                                     <directory>/usr/share/doc/${project.artifactId}</directory>
                                     <documentation>true</documentation>
@@ -407,32 +389,67 @@
             </build>
         </profile>
     </profiles>
-    
     <repositories>
         <repository>
             <id>central</id>
             <name>Central Repository</name>
             <url>https://repo1.maven.org/maven2</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
         </repository>
         <repository>
-            <id>bouncycastle</id>
-            <name>Bouncy Castle Repository</name>
+            <id>maven-central</id>
+            <name>Maven Central Repository</name>
             <url>https://repo.maven.apache.org/maven2</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
         </repository>
     </repositories>
+    
+    <pluginRepositories>
+        <pluginRepository>
+            <id>central</id>
+            <name>Central Repository</name>
+            <url>https://repo1.maven.org/maven2</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </pluginRepository>
+        <pluginRepository>
+            <id>maven-central</id>
+            <name>Maven Central Repository</name>
+            <url>https://repo.maven.apache.org/maven2</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>
     
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.compilerVersion>1.8</maven.compiler.compilerVersion>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!-- Always use the FIPS suffix -->
         <fips.suffix>-fips</fips.suffix>
         <!-- FIPS-compliant TLS settings -->
         <https.protocols>TLSv1.2</https.protocols>
         <jdk.tls.client.protocols>TLSv1.2</jdk.tls.client.protocols>
         <javax.net.ssl.keyStoreType>PKCS12</javax.net.ssl.keyStoreType>
-        <com.sun.net.ssl.checkRevocation>false</com.sun.net.ssl.checkRevocation>
+        <com.sun.net.ssl.checkRevocation>true</com.sun.net.ssl.checkRevocation>
         <ssl.TrustManagerFactory.algorithm>PKIX</ssl.TrustManagerFactory.algorithm>
         <!-- FIPS provider name -->
         <fips.provider.name>BCFIPS</fips.provider.name>
