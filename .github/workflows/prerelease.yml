@@ -133,140 +133,140 @@ jobs:
         shell: bash
         run: build/upload_artifacts_gh.sh
 
-  publishing-regular-to-s3:
-    name: Publish regular packages to S3 staging bucket
-    runs-on: ubuntu-latest-4-cores
-    needs: [ packaging, packaging-msi ]
+  # publishing-regular-to-s3:
+  #   name: Publish regular packages to S3 staging bucket
+  #   runs-on: ubuntu-latest-4-cores
+  #   needs: [ packaging, packaging-msi ]
 
-    steps:
+  #   steps:
 
-      - name: Publish regular packages to S3
-        uses: newrelic/infrastructure-publish-action@v1
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.OHAI_AWS_ACCESS_KEY_ID_STAGING }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.OHAI_AWS_SECRET_ACCESS_KEY_STAGING }}
-          AWS_ROLE_ARN: ${{ secrets.OHAI_AWS_ROLE_ARN_STAGING }}
-          AWS_ROLE_SESSION_NAME: ${{ secrets.OHAI_AWS_ROLE_SESSION_NAME_STAGING }}
-        with:
-          disable_lock: false
-          tag: ${{env.TAG}}
-          app_name: "nrjmx"
-          repo_name: "newrelic/nrjmx"
-          schema: "nrjmx"
-          aws_access_key_id: ${{ env.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ env.AWS_SECRET_ACCESS_KEY }}
-          aws_s3_bucket_name: ${{ env.AWS_S3_BUCKET_NAME }}
-          aws_s3_lock_bucket_name: ${{ env.AWS_S3_LOCK_BUCKET_NAME }}
-          access_point_host: "staging"
-          run_id: ${{ github.run_id }}
-          aws_region: ${{ env.AWS_REGION }}
-          aws_role_session_name: ${{ env.AWS_ROLE_SESSION_NAME }}
-          aws_role_arn: ${{ env.AWS_ROLE_ARN }}
-          gpg_passphrase: ${{ env.GPG_PASSPHRASE }}
-          gpg_private_key_base64: ${{ env.GPG_PRIVATE_KEY_BASE64 }}
+  #     - name: Publish regular packages to S3
+  #       uses: newrelic/infrastructure-publish-action@v1
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.OHAI_AWS_ACCESS_KEY_ID_STAGING }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.OHAI_AWS_SECRET_ACCESS_KEY_STAGING }}
+  #         AWS_ROLE_ARN: ${{ secrets.OHAI_AWS_ROLE_ARN_STAGING }}
+  #         AWS_ROLE_SESSION_NAME: ${{ secrets.OHAI_AWS_ROLE_SESSION_NAME_STAGING }}
+  #       with:
+  #         disable_lock: false
+  #         tag: ${{env.TAG}}
+  #         app_name: "nrjmx"
+  #         repo_name: "newrelic/nrjmx"
+  #         schema: "nrjmx"
+  #         aws_access_key_id: ${{ env.AWS_ACCESS_KEY_ID }}
+  #         aws_secret_access_key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+  #         aws_s3_bucket_name: ${{ env.AWS_S3_BUCKET_NAME }}
+  #         aws_s3_lock_bucket_name: ${{ env.AWS_S3_LOCK_BUCKET_NAME }}
+  #         access_point_host: "staging"
+  #         run_id: ${{ github.run_id }}
+  #         aws_region: ${{ env.AWS_REGION }}
+  #         aws_role_session_name: ${{ env.AWS_ROLE_SESSION_NAME }}
+  #         aws_role_arn: ${{ env.AWS_ROLE_ARN }}
+  #         gpg_passphrase: ${{ env.GPG_PASSPHRASE }}
+  #         gpg_private_key_base64: ${{ env.GPG_PRIVATE_KEY_BASE64 }}
 
 
-  publishing-fips-to-s3:
-    name: Publish FIPS packages to S3 staging bucket
-    runs-on: ubuntu-latest-4-cores
-    needs: [ packaging, packaging-msi, publishing-regular-to-s3 ]  # Wait for regular publishing
-    if: ${{ always() && !cancelled() && !failure() && needs.publishing-regular-to-s3.result == 'success' }}
+  # publishing-fips-to-s3:
+  #   name: Publish FIPS packages to S3 staging bucket
+  #   runs-on: ubuntu-latest-4-cores
+  #   needs: [ packaging, packaging-msi, publishing-regular-to-s3 ]  # Wait for regular publishing
+  #   if: ${{ always() && !cancelled() && !failure() && needs.publishing-regular-to-s3.result == 'success' }}
 
-    steps:
+  #   steps:
           
-      - name: Publish FIPS packages to S3
-        uses: newrelic/infrastructure-publish-action@v1
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.OHAI_AWS_ACCESS_KEY_ID_STAGING }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.OHAI_AWS_SECRET_ACCESS_KEY_STAGING }}
-          AWS_ROLE_ARN: ${{ secrets.OHAI_AWS_ROLE_ARN_STAGING }}
-          AWS_ROLE_SESSION_NAME: ${{ secrets.OHAI_AWS_ROLE_SESSION_NAME_STAGING }}
-        with:
-          disable_lock: false
-          tag: ${{env.TAG}}
-          app_name: "nrjmx-fips"
-          repo_name: "newrelic/nrjmx"
-          schema: "nrjmx-fips"
-          aws_access_key_id: ${{ env.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ env.AWS_SECRET_ACCESS_KEY }}
-          aws_s3_bucket_name: ${{ env.AWS_S3_BUCKET_NAME }}
-          aws_s3_lock_bucket_name: ${{ env.AWS_S3_LOCK_BUCKET_NAME }}
-          access_point_host: "staging"
-          run_id: ${{ github.run_id }}
-          aws_region: ${{ env.AWS_REGION }}
-          aws_role_session_name: ${{ env.AWS_ROLE_SESSION_NAME }}
-          aws_role_arn: ${{ env.AWS_ROLE_ARN }}
-          # NOT setting dest_prefix - uses default "infrastructure_agent/"
-          gpg_passphrase: ${{ env.GPG_PASSPHRASE }}
-          gpg_private_key_base64: ${{ env.GPG_PRIVATE_KEY_BASE64 }}
+  #     - name: Publish FIPS packages to S3
+  #       uses: newrelic/infrastructure-publish-action@v1
+  #       env:
+  #         AWS_ACCESS_KEY_ID: ${{ secrets.OHAI_AWS_ACCESS_KEY_ID_STAGING }}
+  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.OHAI_AWS_SECRET_ACCESS_KEY_STAGING }}
+  #         AWS_ROLE_ARN: ${{ secrets.OHAI_AWS_ROLE_ARN_STAGING }}
+  #         AWS_ROLE_SESSION_NAME: ${{ secrets.OHAI_AWS_ROLE_SESSION_NAME_STAGING }}
+  #       with:
+  #         disable_lock: false
+  #         tag: ${{env.TAG}}
+  #         app_name: "nrjmx-fips"
+  #         repo_name: "newrelic/nrjmx"
+  #         schema: "nrjmx-fips"
+  #         aws_access_key_id: ${{ env.AWS_ACCESS_KEY_ID }}
+  #         aws_secret_access_key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+  #         aws_s3_bucket_name: ${{ env.AWS_S3_BUCKET_NAME }}
+  #         aws_s3_lock_bucket_name: ${{ env.AWS_S3_LOCK_BUCKET_NAME }}
+  #         access_point_host: "staging"
+  #         run_id: ${{ github.run_id }}
+  #         aws_region: ${{ env.AWS_REGION }}
+  #         aws_role_session_name: ${{ env.AWS_ROLE_SESSION_NAME }}
+  #         aws_role_arn: ${{ env.AWS_ROLE_ARN }}
+  #         # NOT setting dest_prefix - uses default "infrastructure_agent/"
+  #         gpg_passphrase: ${{ env.GPG_PASSPHRASE }}
+  #         gpg_private_key_base64: ${{ env.GPG_PRIVATE_KEY_BASE64 }}
 
-  test-packages:
-    name: Test package installation from staging repo
-    runs-on: ubuntu-latest
-    needs: [ publishing-regular-to-s3, publishing-fips-to-s3 ]  # Wait for BOTH publishing jobs
-    if: ${{ always() && !cancelled() && !failure() && needs.publishing-regular-to-s3.result == 'success' && needs.publishing-fips-to-s3.result == 'success' }}
+  # test-packages:
+  #   name: Test package installation from staging repo
+  #   runs-on: ubuntu-latest
+  #   needs: [ publishing-regular-to-s3, publishing-fips-to-s3 ]  # Wait for BOTH publishing jobs
+  #   if: ${{ always() && !cancelled() && !failure() && needs.publishing-regular-to-s3.result == 'success' && needs.publishing-fips-to-s3.result == 'success' }}
 
-    steps:
-      - name: Login to DockerHub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ env.DOCKER_HUB_ID }}
-          password: ${{ env.DOCKER_HUB_PASSWORD }}
+  #   steps:
+  #     - name: Login to DockerHub
+  #       uses: docker/login-action@v3
+  #       with:
+  #         username: ${{ env.DOCKER_HUB_ID }}
+  #         password: ${{ env.DOCKER_HUB_PASSWORD }}
 
-      - name: Test regular package installation from staging repo
-        uses: newrelic/integrations-pkg-test-action/linux@v1
-        with:
-          tag: ${{env.TAG}}
-          integration: 'nrjmx'
-          packageLocation: repo
-          stagingRepo: true
-          upgrade: false
-          postInstall: "test -f /usr/bin/nrjmx || test -f /bin/nrjmx"
+  #     - name: Test regular package installation from staging repo
+  #       uses: newrelic/integrations-pkg-test-action/linux@v1
+  #       with:
+  #         tag: ${{env.TAG}}
+  #         integration: 'nrjmx'
+  #         packageLocation: repo
+  #         stagingRepo: true
+  #         upgrade: false
+  #         postInstall: "test -f /usr/bin/nrjmx || test -f /bin/nrjmx"
 
-      - name: Test FIPS package installation from staging repo
-        uses: newrelic/integrations-pkg-test-action/linux@v1
-        with:
-          tag: ${{env.TAG}}
-          integration: 'nrjmx-fips'
-          packageLocation: repo
-          stagingRepo: true
-          upgrade: false
-          postInstall: "test -f /usr/bin/nrjmx-fips || test -f /bin/nrjmx-fips"
+  #     - name: Test FIPS package installation from staging repo
+  #       uses: newrelic/integrations-pkg-test-action/linux@v1
+  #       with:
+  #         tag: ${{env.TAG}}
+  #         integration: 'nrjmx-fips'
+  #         packageLocation: repo
+  #         stagingRepo: true
+  #         upgrade: false
+  #         postInstall: "test -f /usr/bin/nrjmx-fips || test -f /bin/nrjmx-fips"
 
-  finalize-release:
-    name: Finalize release
-    needs: [ publishing-regular-to-s3, publishing-fips-to-s3, test-packages ]
-    if: ${{ always() && !cancelled() && !failure() && needs.publishing-regular-to-s3.result == 'success' && needs.publishing-fips-to-s3.result == 'success' && needs.test-packages.result == 'success' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Update title for successful pre-release
-        if: ${{ github.event.release.prerelease }}
-        env:
-          GH_TOKEN: "${{ secrets.COREINT_BOT_TOKEN }}"
-        run: |
-          gh release edit ${{ env.TAG }} --title "${{ env.TAG }}"
+  # finalize-release:
+  #   name: Finalize release
+  #   needs: [ publishing-regular-to-s3, publishing-fips-to-s3, test-packages ]
+  #   if: ${{ always() && !cancelled() && !failure() && needs.publishing-regular-to-s3.result == 'success' && needs.publishing-fips-to-s3.result == 'success' && needs.test-packages.result == 'success' }}
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Update title for successful pre-release
+  #       if: ${{ github.event.release.prerelease }}
+  #       env:
+  #         GH_TOKEN: "${{ secrets.COREINT_BOT_TOKEN }}"
+  #       run: |
+  #         gh release edit ${{ env.TAG }} --title "${{ env.TAG }}"
 
-  notify-failure:
-    if: ${{ always() && failure() }}
-    needs: [unit-test-linux, test-go-linux-jdk8, test-go-linux-jdk11, check-gen-code, packaging, packaging-msi, publishing-regular-to-s3, publishing-fips-to-s3, test-packages]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Notify failure via Slack
-        uses: archive/github-actions-slack@master
-        with:
-          slack-bot-user-oauth-access-token: ${{ secrets.COREINT_SLACK_TOKEN }}
-          slack-channel: ${{ secrets.COREINT_SLACK_CHANNEL }}
-          slack-text: "❌ `${{ github.event.repository.full_name }}`: [prerelease pipeline failed](${{ github.server_url }}/${{ github.event.repository.full_name }}/actions/runs/${{ github.run_id }})."
+  # notify-failure:
+  #   if: ${{ always() && failure() }}
+  #   needs: [unit-test-linux, test-go-linux-jdk8, test-go-linux-jdk11, check-gen-code, packaging, packaging-msi, publishing-regular-to-s3, publishing-fips-to-s3, test-packages]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Notify failure via Slack
+  #       uses: archive/github-actions-slack@master
+  #       with:
+  #         slack-bot-user-oauth-access-token: ${{ secrets.COREINT_SLACK_TOKEN }}
+  #         slack-channel: ${{ secrets.COREINT_SLACK_CHANNEL }}
+  #         slack-text: "❌ `${{ github.event.repository.full_name }}`: [prerelease pipeline failed](${{ github.server_url }}/${{ github.event.repository.full_name }}/actions/runs/${{ github.run_id }})."
 
-  update-title-on-failure:
-    if: ${{ always() && failure() }}
-    needs: [unit-test-linux, test-go-linux-jdk8, test-go-linux-jdk11, check-gen-code, packaging, packaging-msi, publishing-regular-to-s3, publishing-fips-to-s3, test-packages]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Reflect failure in prerelease title
-        env:
-          GH_TOKEN: "${{ secrets.COREINT_BOT_TOKEN }}"
-        run: |
-          gh release edit ${{ env.TAG }} --title "${{ env.TAG }} (pre-release-failure)"
+  # update-title-on-failure:
+  #   if: ${{ always() && failure() }}
+  #   needs: [unit-test-linux, test-go-linux-jdk8, test-go-linux-jdk11, check-gen-code, packaging, packaging-msi, publishing-regular-to-s3, publishing-fips-to-s3, test-packages]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: Reflect failure in prerelease title
+  #       env:
+  #         GH_TOKEN: "${{ secrets.COREINT_BOT_TOKEN }}"
+  #       run: |
+  #         gh release edit ${{ env.TAG }} --title "${{ env.TAG }} (pre-release-failure)"

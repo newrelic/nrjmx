@@ -21,11 +21,9 @@ start_gpg_agent() {
 # Ensure gpg-agent is running
 start_gpg_agent
 
-# Ensure GPG configuration directory and files exist
+# Ensure GPG configuration directory exists
 mkdir -p ~/.gnupg
 chmod 700 ~/.gnupg
-touch ~/.gnupg/gpg.conf
-touch ~/.gnupg/gpg-agent.conf
 
 # Sign FIPS RPM's with proper digest configuration
 echo "===> Create .rpmmacros for FIPS-compliant RPM signing"
@@ -33,18 +31,6 @@ echo "%_gpg_name ${GPG_MAIL}" >> ~/.rpmmacros
 echo "%_signature gpg" >> ~/.rpmmacros
 echo "%_gpg_path /root/.gnupg" >> ~/.rpmmacros
 echo "%_gpgbin /usr/bin/gpg" >> ~/.rpmmacros
-
-# Configure GPG for batch mode - disable pinentry (Stack Overflow recommended method)
-echo "pinentry-mode loopback" >> ~/.gnupg/gpg.conf
-echo "use-agent" >> ~/.gnupg/gpg.conf
-echo "batch" >> ~/.gnupg/gpg.conf
-
-# Configure GPG agent for batch mode
-echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
-echo "pinentry-program /bin/true" >> ~/.gnupg/gpg-agent.conf
-
-# Reload GPG agent with new configuration
-gpg-connect-agent reloadagent /bye || true
 
 echo "%__gpg_sign_cmd %{__gpg} gpg --no-verbose --no-armor --passphrase ${GPG_PASSPHRASE} --no-secmem-warning --digest-algo sha256 -u "%{_gpg_name}" -sbo %{__signature_filename} %{__plaintext_filename}" >> ~/.rpmmacros
 
