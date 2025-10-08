@@ -8,7 +8,8 @@ MAVEN_BIN       ?= mvn
 TAG				?= v0.0.0
 
 # FIPS compliant options
-MAVEN_FIPS_OPTS = -Dhttps.protocols=TLSv1.2 -Djdk.tls.client.protocols=TLSv1.2 -Djavax.net.ssl.keyStoreType=PKCS12 -Dcom.sun.net.ssl.checkRevocation=true -Dssl.TrustManagerFactory.algorithm=PKIX
+# Disabled revocation checking for build-time dependency resolution as it is needed during run-time.
+MAVEN_FIPS_OPTS = -Dhttps.protocols=TLSv1.2 -Djdk.tls.client.protocols=TLSv1.2 -Djavax.net.ssl.keyStoreType=PKCS12 -Dcom.sun.net.ssl.checkRevocation=false -Dssl.TrustManagerFactory.algorithm=PKIX
 export MAVEN_FIPS_OPTS
 
 export GOEXPERIMENT=boringcrypto
@@ -33,3 +34,17 @@ DOCKER_CMD 		?= $(DOCKER_BIN) run --rm -t \
 					-e GPG_PASSPHRASE \
 					-e GPG_PRIVATE_KEY_BASE64 \
 					nrjmx_builder
+
+DOCKER_FIPS_CMD  ?= $(DOCKER_BIN) run --rm -t \
+					--name "nrjmx-builder-fips" \
+					-v $(HOME)/.docker/:/root/.docker/ \
+					-v /var/run/docker.sock:/var/run/docker.sock \
+					-v $(CURDIR):/src/nrjmx \
+					-w /src/nrjmx \
+					$(DOCKER_ENV_VARS) \
+					-e GITHUB_TOKEN \
+					-e TAG \
+					-e GPG_MAIL \
+					-e GPG_PASSPHRASE \
+					-e GPG_PRIVATE_KEY_BASE64 \
+					nrjmx_builder_fips

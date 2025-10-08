@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### bugfix
+- Add FIPS compliance rpm packages for nrjmx
+
 ## v2.10.0 - 2025-08-26
 
 ### 🚀 Enhancements
