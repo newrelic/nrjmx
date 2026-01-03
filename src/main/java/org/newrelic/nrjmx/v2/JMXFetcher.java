@@ -721,6 +721,9 @@ public class JMXFetcher {
         } else if (value instanceof java.util.Date) {
             attr.stringValue = dateFormat.format(value);
             attr.responseType = ResponseType.STRING;
+        } else if (value instanceof ArrayList || value.getClass().isArray()) {
+            attr.stringValue = new Gson().toJson(value);
+            attr.responseType = ResponseType.STRING;
         } else if (value instanceof CompositeData) {
             CompositeData cdata = (CompositeData) value;
             Set<String> fieldKeys = cdata.getCompositeType().keySet();
