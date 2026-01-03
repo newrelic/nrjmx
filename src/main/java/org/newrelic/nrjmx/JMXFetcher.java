@@ -379,8 +379,8 @@ public class JMXFetcher {
       // TODO: Process hashmaps
       logger.fine("HashMaps are not supported yet: " + name);
     } else if (value instanceof ArrayList || value.getClass().isArray()) {
-      // TODO: Process arrays
-      logger.fine("Arrays are not supported yet: " + name);
+      String stringValue = new Gson().toJson(value);
+      result.put(name, stringValue)
     } else {
       throw new ValueError("Unsuported data type (" + value.getClass() + ") for bean " + name);
     }
