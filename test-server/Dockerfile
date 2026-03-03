@@ -4,7 +4,7 @@ ADD . .
 
 RUN mvn package
 
-FROM openjdk:11-jre
+FROM eclipse-temurin:11-jre
 
 EXPOSE 4567
 EXPOSE 7199
