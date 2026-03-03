@@ -4,7 +4,7 @@ ADD . .
 
 RUN mvn package
 
-FROM openjdk:11-jre
+FROM eclipse-temurin:11-jre
 
 EXPOSE 4567
 EXPOSE 7199
@@ -12,10 +12,10 @@ EXPOSE 7199
 COPY --from=builder target/test-server.jar /
 COPY --from=builder truststore /
 COPY --from=builder keystore /
-COPY --from=builder jmxremote.password /usr/local/openjdk-11/conf/management/jmxremote.password
-COPY --from=builder jmxremote.access /usr/local/openjdk-11/conf/management/jmxremote.access
+COPY --from=builder jmxremote.password /opt/java/openjdk/conf/management/jmxremote.password
+COPY --from=builder jmxremote.access /opt/java/openjdk/conf/management/jmxremote.access
 
-RUN chmod 400 /usr/local/openjdk-11/conf/management/jmxremote.password
+RUN chmod 400 /opt/java/openjdk/conf/management/jmxremote.password
 
 ENV JAVA_OPTS -Dcom.sun.management.jmxremote.port=7199 \
       -Dcom.sun.management.jmxremote.authenticate=false \

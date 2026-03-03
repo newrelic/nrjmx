@@ -16,8 +16,6 @@ env:
   PFX_CERTIFICATE_DESCRIPTION: 'New Relic'
   PFX_PASSPHRASE: ${{ secrets.OHAI_PFX_PASSPHRASE }}
   TAG: ${{ github.event.release.tag_name }}
-  DOCKER_HUB_ID: ${{ secrets.OHAI_DOCKER_HUB_ID }}
-  DOCKER_HUB_PASSWORD: ${{ secrets.OHAI_DOCKER_HUB_PASSWORD }}
   SCHEMA_BRANCH: ${{ github.event.release.tag_name }}
   AWS_S3_BUCKET_NAME: "nr-downloads-ohai-staging"
   AWS_S3_LOCK_BUCKET_NAME: "onhost-ci-lock-staging"
@@ -33,8 +31,8 @@ jobs:
       - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
-          username: ${{ env.DOCKER_HUB_ID }}
-          password: ${{ env.DOCKER_HUB_PASSWORD }}
+          username: ${{ secrets.OHAI_DOCKER_HUB_ID }}
+          password: ${{ secrets.OHAI_DOCKER_HUB_PASSWORD }}
 
       - name: Running unit tests
         run: make ci/test
@@ -52,8 +50,8 @@ jobs:
       - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
-          username: ${{ env.DOCKER_HUB_ID }}
-          password: ${{ env.DOCKER_HUB_PASSWORD }}
+          username: ${{ secrets.OHAI_DOCKER_HUB_ID }}
+          password: ${{ secrets.OHAI_DOCKER_HUB_PASSWORD }}
 
       - name: Running unit tests
         run: make ci/go-test
@@ -71,8 +69,8 @@ jobs:
       - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
-          username: ${{ env.DOCKER_HUB_ID }}
-          password: ${{ env.DOCKER_HUB_PASSWORD }}
+          username: ${{ secrets.OHAI_DOCKER_HUB_ID }}
+          password: ${{ secrets.OHAI_DOCKER_HUB_PASSWORD }}
 
       - name: Running unit tests
         run: make ci/go-test-jdk11
@@ -86,8 +84,8 @@ jobs:
       - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
-          username: ${{ env.DOCKER_HUB_ID }}
-          password: ${{ env.DOCKER_HUB_PASSWORD }}
+          username: ${{ secrets.OHAI_DOCKER_HUB_ID }}
+          password: ${{ secrets.OHAI_DOCKER_HUB_PASSWORD }}
       - name: Checking generated code
         run: make ci/check-gen-code
 
@@ -102,8 +100,8 @@ jobs:
       - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
-          username: ${{ env.DOCKER_HUB_ID }}
-          password: ${{ env.DOCKER_HUB_PASSWORD }}
+          username: ${{ secrets.OHAI_DOCKER_HUB_ID }}
+          password: ${{ secrets.OHAI_DOCKER_HUB_PASSWORD }}
 
       - name: Releasing packages
         run: make ci/release
@@ -210,8 +208,8 @@ jobs:
       - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
-          username: ${{ env.DOCKER_HUB_ID }}
-          password: ${{ env.DOCKER_HUB_PASSWORD }}
+          username: ${{ secrets.OHAI_DOCKER_HUB_ID }}
+          password: ${{ secrets.OHAI_DOCKER_HUB_PASSWORD }}
 
       - name: Test regular package installation from staging repo
         uses: newrelic/integrations-pkg-test-action/linux@v1
