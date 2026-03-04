@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### security
+## v2.11.0 - 2026-03-04
+
+### 🛡️ Security notices
 - update org.apache.commons.commons-lang3 to 3.18.0
 
 ## v2.10.2 - 2025-10-08
