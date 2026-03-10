@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-          
+
       - name: Run Trivy vulnerability scanner for Go
         uses: aquasecurity/trivy-action@0.34.2
         with:
@@ -48,3 +48,24 @@ jobs:
         env:
           TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db
           TRIVY_JAVA_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-java-db
+
+  grype:
+    name: Grype security scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Grype vulnerability scanner
+        uses: anchore/scan-action@v7
+        id: grype-inline
+        with:
+          path: "gojmx/"
+          fail-build: true
+          severity-cutoff: high
+          only-fixed: true
+          cache-db: true
+          output-format: table
