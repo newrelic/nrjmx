@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### security
+## v2.12.0 - 2026-03-11
+
+### 🛡️ Security notices
 - Bump go.opentelemetry.io/otel/sdk from 1.32.0 to 1.40.0 in /gojmx
 
 ## v2.11.0 - 2026-03-04
