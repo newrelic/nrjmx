@@ -17,7 +17,7 @@ jobs:
       - uses: actions/checkout@v4
           
       - name: Run Trivy vulnerability scanner for Java
-        uses: aquasecurity/trivy-action@v0.35.0
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           scan-type: 'fs'
           scan-ref: '.'
@@ -37,7 +37,7 @@ jobs:
       - uses: actions/checkout@v4
           
       - name: Run Trivy vulnerability scanner for Go
-        uses: aquasecurity/trivy-action@v0.35.0
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           scan-type: 'fs'
           scan-ref: 'gojmx/'
