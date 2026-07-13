@@ -11,12 +11,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"time"
-	"net"
 
 	"github.com/docker/go-connections/nat"
 	"github.com/testcontainers/testcontainers-go"
@@ -159,7 +159,7 @@ func RunJMXServiceContainerSSL(ctx context.Context) (testcontainers.Container, e
 
 // GetContainerServiceURL will return the url to the test-server running inside the container.
 func GetContainerServiceURL(ctx context.Context, container testcontainers.Container, port nat.Port, endpoint string) (string, error) {
-	mappedPort, err := container.MappedPort(ctx, port)
+	mappedPort, err := container.MappedPort(ctx, string(port))
 	if err != nil {
 		return "", err
 	}
@@ -224,18 +224,18 @@ func addMBeans(ctx context.Context, container testcontainers.Container, body int
 func AddMBeansWithRetry(ctx context.Context, container testcontainers.Container, body map[string]interface{}, maxRetries int) ([]byte, error) {
 	var resp []byte
 	var err error
-	
+
 	for i := 0; i < maxRetries; i++ {
 		resp, err = AddMBeans(ctx, container, body)
 		if err == nil && string(resp) == "ok!\n" {
 			return resp, nil
 		}
-		
+
 		if i < maxRetries-1 {
 			time.Sleep(500 * time.Millisecond)
 		}
 	}
-	
+
 	return resp, fmt.Errorf("failed to add MBeans after %d attempts: %w", maxRetries, err)
 }
 
@@ -243,18 +243,18 @@ func AddMBeansWithRetry(ctx context.Context, container testcontainers.Container,
 func AddMBeansBatchWithRetry(ctx context.Context, container testcontainers.Container, body []map[string]interface{}, maxRetries int) ([]byte, error) {
 	var resp []byte
 	var err error
-	
+
 	for i := 0; i < maxRetries; i++ {
 		resp, err = AddMBeansBatch(ctx, container, body)
 		if err == nil && string(resp) == "ok!\n" {
 			return resp, nil
 		}
-		
+
 		if i < maxRetries-1 {
 			time.Sleep(500 * time.Millisecond)
 		}
 	}
-	
+
 	return resp, fmt.Errorf("failed to add MBeans batch after %d attempts: %w", maxRetries, err)
 }
 
@@ -349,10 +349,12 @@ func GetContainerMappedPort(ctx context.Context, container testcontainers.Contai
 		}
 	}
 
-	port, err = container.MappedPort(ctx, targetPort)
-	if err != nil {
+	mappedPort, mpErr := container.MappedPort(ctx, string(targetPort))
+	if mpErr != nil {
+		err = mpErr
 		return
 	}
+	port = nat.Port(mappedPort.String())
 	return
 }
 
@@ -382,7 +384,7 @@ func NrJMXAsSubprocess(ctx context.Context, host, port string) *exec.Cmd {
 func waitForServiceReady(ctx context.Context, container testcontainers.Container) error {
 	maxRetries := 30
 	retryDelay := 500 * time.Millisecond
-	
+
 	for i := 0; i < maxRetries; i++ {
 		// Try to connect to the test server's HTTP endpoint
 		url, err := GetContainerServiceURL(ctx, container, TestServerPort, "/health")
@@ -399,65 +401,65 @@ func waitForServiceReady(ctx context.Context, container testcontainers.Container
 				}
 			}
 		}
-		
+
 		if i < maxRetries-1 {
 			time.Sleep(retryDelay)
 		}
 	}
-	
+
 	return fmt.Errorf("service failed to become ready after %d attempts", maxRetries)
 }
 
 // waitForJBossReady ensures JBoss is fully initialized and ready to accept JMX connections
 func waitForJBossReady(ctx context.Context, container testcontainers.Container) error {
-	maxRetries := 120  // JBoss can take up to 2 minutes to start
+	maxRetries := 120 // JBoss can take up to 2 minutes to start
 	retryDelay := 1 * time.Second
-	
+
 	host, port, err := GetContainerMappedPort(ctx, container, JbossJMXPort)
 	if err != nil {
 		return fmt.Errorf("failed to get container port: %w", err)
 	}
-	
+
 	// First wait for the port to be actually listening
 	fmt.Printf("[JBoss Wait] Waiting for JBoss to start on %s:%s...\n", host, port.Port())
-	
+
 	for i := 0; i < maxRetries; i++ {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
 		}
-		
+
 		// Check if port is open
 		conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%s", host, port.Port()), 2*time.Second)
 		if err == nil {
 			conn.Close()
 			fmt.Printf("[JBoss Wait] Port %s is open after %d attempts\n", port.Port(), i+1)
-			
+
 			// Port is open, but JBoss management interface might still be initializing
 			// Let's wait a bit more and then try to verify it's actually ready
 			time.Sleep(5 * time.Second)
-			
+
 			// Try to verify JBoss is actually ready by attempting an HTTP request
 			// JBoss management interface also responds to HTTP
 			if err := verifyJBossManagementReady(host, port.Port()); err == nil {
 				fmt.Println("[JBoss Wait] JBoss management interface is ready")
 				return nil
 			}
-			
+
 			// If verification failed, give it more time
 			fmt.Println("[JBoss Wait] Management interface not ready yet, waiting additional 10 seconds...")
 			time.Sleep(10 * time.Second)
 			return nil
 		}
-		
+
 		if i > 0 && i%10 == 0 {
 			fmt.Printf("[JBoss Wait] Still waiting for JBoss... (attempt %d/%d)\n", i, maxRetries)
 		}
-		
+
 		time.Sleep(retryDelay)
 	}
-	
+
 	return fmt.Errorf("JBoss failed to become ready after %d seconds", maxRetries)
 }
 
@@ -468,7 +470,7 @@ func verifyJBossManagementReady(host, port string) error {
 	client := &http.Client{
 		Timeout: 5 * time.Second,
 	}
-	
+
 	// JBoss management interface requires authentication, so we expect 401
 	// but this tells us the service is ready
 	resp, err := client.Get(fmt.Sprintf("http://%s:%s/management", host, port))
@@ -476,11 +478,11 @@ func verifyJBossManagementReady(host, port string) error {
 		return err
 	}
 	defer resp.Body.Close()
-	
+
 	// 401 Unauthorized is expected and means the service is up
 	if resp.StatusCode == 401 || resp.StatusCode == 200 {
 		return nil
 	}
-	
+
 	return fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 }

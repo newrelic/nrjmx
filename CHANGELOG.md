@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### 🛡️ Security notices
+- Bump testcontainers-go from 0.35.0 to 0.43.0 in /gojmx, dropping the deprecated `github.com/docker/docker` module in favour of `github.com/moby/moby` (resolves CVE-2026-34040, CVE-2026-41567, CVE-2026-42306)
+- Bump github.com/apache/thrift from 0.21.0 to 0.23.0 in /gojmx (resolves CVE-2026-41602)
+- Bump golang.org/x/crypto from 0.51.0 to 0.52.0 in /gojmx
+- Bump go.opentelemetry.io/otel/sdk from 1.40.0 to 1.43.0 in /gojmx
+
+### 🚀 Enhancements
+- Upgraded golang version to v1.25.6
+
 ## v2.12.0 - 2026-03-11
 
 ### 🛡️ Security notices
