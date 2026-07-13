@@ -8,13 +8,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 ### 🛡️ Security notices
-- Bump testcontainers-go from 0.35.0 to 0.43.0 in /gojmx, dropping the deprecated `github.com/docker/docker` module in favour of `github.com/moby/moby` (resolves CVE-2026-34040, CVE-2026-41567, CVE-2026-42306)
-- Bump github.com/apache/thrift from 0.21.0 to 0.23.0 in /gojmx (resolves CVE-2026-41602)
-- Bump golang.org/x/crypto from 0.51.0 to 0.52.0 in /gojmx
-- Bump go.opentelemetry.io/otel/sdk from 1.40.0 to 1.43.0 in /gojmx
+- Migrated off the deprecated `github.com/docker/docker` Go module to `github.com/moby/moby` (via testcontainers-go), remediating CVE-2026-34040, CVE-2026-41567 and CVE-2026-42306. Also remediated CVE-2026-41602 (apache/thrift) and CVE-2026-39883 (opentelemetry-go). The affected packages are test-only transitive dependencies of `gojmx` and are not shipped in the library.
 
 ### 🚀 Enhancements
-- Upgraded golang version to v1.25.6
+- Upgraded Go from 1.24.6 to 1.25.6
+
+### ⛓️ Dependencies
+- Upgraded github.com/testcontainers/testcontainers-go from 0.35.0 to 0.43.0
+- Upgraded github.com/apache/thrift from 0.21.0 to 0.23.0
+- Upgraded golang.org/x/crypto from 0.51.0 to 0.52.0
+- Upgraded go.opentelemetry.io/otel/sdk from 1.40.0 to 1.43.0
 
 ## v2.12.0 - 2026-03-11
 
