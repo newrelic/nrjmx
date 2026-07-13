@@ -19,6 +19,8 @@ import (
 	"time"
 
 	"github.com/docker/go-connections/nat"
+	"github.com/moby/moby/api/types/container"
+	"github.com/moby/moby/api/types/network"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 )
@@ -59,6 +61,24 @@ func init() {
 	TruststorePath = filepath.Join(PrjDir, "test-server", "truststore")
 }
 
+// fixedPortBindings pins each given container port to an identical host port.
+// testcontainers-go >= v0.43 no longer accepts the "host:container" form in
+// ExposedPorts, so fixed bindings are applied via a HostConfigModifier. The JMX
+// server advertises a fixed RMI port (jmxremote.rmi.port), so the host port must
+// equal the container port for clients to reach the RMI stub. An empty HostIP
+// binds all interfaces, matching the previous behaviour.
+func fixedPortBindings(ports ...string) ([]string, func(*container.HostConfig)) {
+	exposed := make([]string, 0, len(ports))
+	bindings := network.PortMap{}
+	for _, p := range ports {
+		exposed = append(exposed, p+"/tcp")
+		bindings[network.MustParsePort(p+"/tcp")] = []network.PortBinding{{HostPort: p}}
+	}
+	return exposed, func(hc *container.HostConfig) {
+		hc.PortBindings = bindings
+	}
+}
+
 // RunJMXServiceContainer will start a container running test-server with JMX.
 func RunJMXServiceContainer(ctx context.Context) (testcontainers.Container, error) {
 	var hostnameOpt string
@@ -66,12 +86,11 @@ func RunJMXServiceContainer(ctx context.Context) (testcontainers.Container, erro
 		hostnameOpt = "-Djava.rmi.server.hostname=0.0.0.0"
 	}
 
+	exposedPorts, hostConfig := fixedPortBindings(TestServerPort, TestServerJMXPort)
 	req := testcontainers.ContainerRequest{
-		Image: "test-server:latest",
-		ExposedPorts: []string{
-			fmt.Sprintf("%[1]s:%[1]s", TestServerPort),
-			fmt.Sprintf("%[1]s:%[1]s", TestServerJMXPort),
-		},
+		Image:              "test-server:latest",
+		ExposedPorts:       exposedPorts,
+		HostConfigModifier: hostConfig,
 		Env: map[string]string{
 			"JAVA_OPTS": "-Dcom.sun.management.jmxremote.port=" + TestServerJMXPort + " " +
 				"-Dcom.sun.management.jmxremote.authenticate=false " +
@@ -112,12 +131,11 @@ func RunJMXServiceContainerSSL(ctx context.Context) (testcontainers.Container, e
 		hostnameOpt = "-Djava.rmi.server.hostname=0.0.0.0"
 	}
 
+	exposedPorts, hostConfig := fixedPortBindings(TestServerPort, TestServerJMXPort)
 	req := testcontainers.ContainerRequest{
-		Image: "test-server:latest",
-		ExposedPorts: []string{
-			fmt.Sprintf("%[1]s:%[1]s", TestServerPort),
-			fmt.Sprintf("%[1]s:%[1]s", TestServerJMXPort),
-		},
+		Image:              "test-server:latest",
+		ExposedPorts:       exposedPorts,
+		HostConfigModifier: hostConfig,
 		Env: map[string]string{
 			"JAVA_OPTS": "-Dcom.sun.management.jmxremote.port=" + TestServerJMXPort + " " +
 				"-Dcom.sun.management.jmxremote.authenticate=true " +
@@ -268,12 +286,12 @@ func (g *TestLogConsumer) Accept(l testcontainers.Log) {
 
 // RunJbossStandaloneJMXContainer will start a container running a jboss instace with JMX.
 func RunJbossStandaloneJMXContainer(ctx context.Context) (testcontainers.Container, error) {
+	exposedPorts, hostConfig := fixedPortBindings(JbossJMXPort)
 	req := testcontainers.ContainerRequest{
-		Image: "test_jboss",
-		ExposedPorts: []string{
-			fmt.Sprintf("%[1]s:%[1]s", JbossJMXPort),
-		},
-		WaitingFor: wait.ForListeningPort(JbossJMXPort).WithStartupTimeout(120 * time.Second),
+		Image:              "test_jboss",
+		ExposedPorts:       exposedPorts,
+		HostConfigModifier: hostConfig,
+		WaitingFor:         wait.ForListeningPort(JbossJMXPort).WithStartupTimeout(120 * time.Second),
 	}
 
 	container, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{
