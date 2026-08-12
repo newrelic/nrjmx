@@ -9,10 +9,16 @@ on:
       - '**'
     paths-ignore:
       - README.md
+
+permissions:
+  contents: read
+
 jobs:
   unit-test-linux:
     name: Linux unit tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     env:
       OHAI_DOCKER_HUB_ID: ${{ secrets.OHAI_DOCKER_HUB_ID }}
       OHAI_DOCKER_HUB_PASSWORD: ${{ secrets.OHAI_DOCKER_HUB_PASSWORD }}
@@ -32,6 +38,8 @@ jobs:
   test-go-linux-jdk8:
     name: Linux unit tests for Go on JDK 8
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     env:
       OHAI_DOCKER_HUB_ID: ${{ secrets.OHAI_DOCKER_HUB_ID }}
       OHAI_DOCKER_HUB_PASSWORD: ${{ secrets.OHAI_DOCKER_HUB_PASSWORD }}
@@ -55,6 +63,8 @@ jobs:
   test-go-linux-jdk11:
     name: Linux unit tests for Go on JDK 11
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     env:
       OHAI_DOCKER_HUB_ID: ${{ secrets.OHAI_DOCKER_HUB_ID }}
       OHAI_DOCKER_HUB_PASSWORD: ${{ secrets.OHAI_DOCKER_HUB_PASSWORD }}
@@ -78,6 +88,8 @@ jobs:
   check-gen-code:
     name: Checking generated code
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     env:
       OHAI_DOCKER_HUB_ID: ${{ secrets.OHAI_DOCKER_HUB_ID }}
       OHAI_DOCKER_HUB_PASSWORD: ${{ secrets.OHAI_DOCKER_HUB_PASSWORD }}
@@ -96,6 +108,8 @@ jobs:
   test-build:
     name: Test jar compilation
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     env:
       OHAI_DOCKER_HUB_ID: ${{ secrets.OHAI_DOCKER_HUB_ID }}
       OHAI_DOCKER_HUB_PASSWORD: ${{ secrets.OHAI_DOCKER_HUB_PASSWORD }}

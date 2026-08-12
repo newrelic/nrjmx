@@ -7,6 +7,9 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: read
+
 env:
   GPG_PASSPHRASE: ${{ secrets.OHAI_GPG_PASSPHRASE }}
   GPG_PRIVATE_KEY_BASE64: ${{ secrets.OHAI_GPG_PRIVATE_KEY_BASE64 }}
@@ -121,7 +124,8 @@ jobs:
     needs: [ publishing-regular-to-s3, publishing-fips-to-s3, test-packages ]
     if: ${{ always() && !cancelled() && !failure() && needs.publishing-regular-to-s3.result == 'success' && needs.publishing-fips-to-s3.result == 'success' && needs.test-packages.result == 'success' }}
     runs-on: ubuntu-latest
-    
+    permissions:
+      contents: read
     steps:
       - name: Notify successful release
         uses: archive/github-actions-slack@master
@@ -134,6 +138,8 @@ jobs:
     if: ${{ always() && failure() }}
     needs: [publishing-regular-to-s3, publishing-fips-to-s3, test-packages]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Notify failure via Slack
         uses: archive/github-actions-slack@master
