@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Bump org.apache.thrift:libthrift from 0.21.0 to 0.24.0 in pom.xml and pom-fips.xml (CVE-2026-43871, CVE-2026-43869)
 - Bump junit:junit from 4.12 to 4.13.2 in pom.xml and pom-fips.xml (CVE-2020-15250)
 - Bump org.eclipse.jetty:jetty-server/jetty-io/jetty-webapp from 10.0.10 to 10.0.25 in test-server/pom.xml (CVE-2024-7708, CVE-2024-8184, CVE-2023-26048, CVE-2023-26049).
+- Upgrade Go from 1.25.6 to 1.26.6
 
 ## v2.13.0 - 2026-07-14
 
