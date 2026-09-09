@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### 🛡️ Security notices
+### security
 - Bump github.com/apache/thrift from 0.21.0 to 0.24.0 in /gojmx (CVE-2026-43871, CVE-2026-41602)
 - Bump org.apache.thrift:libthrift from 0.21.0 to 0.24.0 in pom.xml and pom-fips.xml (CVE-2026-43871, CVE-2026-43869)
 - Bump junit:junit from 4.12 to 4.13.2 in pom.xml and pom-fips.xml (CVE-2020-15250)
