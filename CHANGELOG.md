@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## Unreleased
 
 ### security
-- Pin httpcore5/httpcore5-h2 to 5.4.3 to address CVE-2026-54399 and CVE-2026-54428
+- Pin httpcore5 to 5.4.3, httpclient5 to 5.6.4 to address CVE-2026-54399, CVE-2026-54428 and CVE-2026-64607
 
 ## v2.14.0 - 2026-09-09
 
