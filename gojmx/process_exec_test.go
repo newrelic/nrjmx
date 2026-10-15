@@ -23,10 +23,35 @@ func TestSiblingNRJMXExec(t *testing.T) {
 		assert.Equal(t, tool, siblingNRJMXExec(executable))
 	})
 
-	t.Run("follows a symlink to the executable", func(t *testing.T) {
+	t.Run("finds the tool next to the target of a symlink", func(t *testing.T) {
 		realDir, linkDir := resolvedTempDir(t), resolvedTempDir(t)
 		executable := touch(t, realDir, "integration")
 		tool := touch(t, realDir, nrJMXFileName)
+		link := filepath.Join(linkDir, "integration")
+		if err := os.Symlink(executable, link); err != nil {
+			t.Skipf("symlinks not supported: %v", err)
+		}
+
+		assert.Equal(t, tool, siblingNRJMXExec(link))
+	})
+
+	t.Run("finds the tool next to a symlink", func(t *testing.T) {
+		realDir, linkDir := resolvedTempDir(t), resolvedTempDir(t)
+		executable := touch(t, realDir, "integration")
+		tool := touch(t, linkDir, nrJMXFileName)
+		link := filepath.Join(linkDir, "integration")
+		if err := os.Symlink(executable, link); err != nil {
+			t.Skipf("symlinks not supported: %v", err)
+		}
+
+		assert.Equal(t, tool, siblingNRJMXExec(link))
+	})
+
+	t.Run("prefers the tool next to the symlink over the one next to its target", func(t *testing.T) {
+		realDir, linkDir := resolvedTempDir(t), resolvedTempDir(t)
+		executable := touch(t, realDir, "integration")
+		touch(t, realDir, nrJMXFileName)
+		tool := touch(t, linkDir, nrJMXFileName)
 		link := filepath.Join(linkDir, "integration")
 		if err := os.Symlink(executable, link); err != nil {
 			t.Skipf("symlinks not supported: %v", err)

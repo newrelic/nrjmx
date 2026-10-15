@@ -185,17 +185,20 @@ func getNRJMXExec() string {
 	return defaultNRJMXExec
 }
 
-// siblingNRJMXExec returns the path to the nrjmx tool placed in the same directory as the given executable,
-// following symlinks, or an empty string if there is none.
+// siblingNRJMXExec returns the path to the nrjmx tool placed in the same directory as the given executable, or an
+// empty string if there is none. If the executable is a symlink, the directory of the link is checked first and then
+// the one of its target.
 func siblingNRJMXExec(executable string) string {
+	candidates := []string{filepath.Join(filepath.Dir(executable), nrJMXFileName)}
 	if resolved, err := filepath.EvalSymlinks(executable); err == nil {
-		executable = resolved
+		candidates = append(candidates, filepath.Join(filepath.Dir(resolved), nrJMXFileName))
 	}
 
-	candidate := filepath.Join(filepath.Dir(executable), nrJMXFileName)
-	if info, err := os.Stat(candidate); err != nil || info.IsDir() {
-		return ""
+	for _, candidate := range candidates {
+		if info, err := os.Stat(candidate); err == nil && !info.IsDir() {
+			return candidate
+		}
 	}
 
-	return candidate
+	return ""
 }

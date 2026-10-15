@@ -23,7 +23,7 @@ nrjmx library is also available as a [tarball](https://download.newrelic.com/inf
 # Locating nrjmx
 The nrjmx executable is looked up in this order:
 1. The path in the `NR_JMX_TOOL` environment variable. It must point to a single executable, not a command line.
-2. The `nrjmx` file (`nrjmx.bat` on Windows) in the same directory as the running program, following symlinks.
+2. The `nrjmx` file (`nrjmx.bat` on Windows) in the same directory as the running program. If the program is a symlink, the directory of the link is checked first and then the one of its target.
 3. The default location for the OS: `/usr/bin/nrjmx` on Linux, `/usr/local/bin/nrjmx` on macOS and
    `c:\progra~1\newrel~1\nrjmx\nrjmx.bat` on Windows.
 
