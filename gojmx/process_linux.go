@@ -15,6 +15,9 @@ import (
 const (
 	// defaultNRJMXExec default nrjmx tool executable path.
 	defaultNRJMXExec = "/usr/bin/nrjmx"
+
+	// nrJMXFileName is the file name of the nrjmx tool, as looked up next to the running executable.
+	nrJMXFileName = "nrjmx"
 )
 
 // buildExecCommand adds os specifics to the command.

@@ -10,6 +10,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"time"
 
 	"github.com/newrelic/nrjmx/gojmx/internal/nrjmx"
@@ -166,11 +167,38 @@ func (p *process) getOSProcessState() *os.ProcessState {
 	return p.cmd.ProcessState
 }
 
-// getNRJMXExec returns the path to nrjmx tool.
+// getNRJMXExec returns the path to nrjmx tool. It is, in order of precedence:
+//  1. the NR_JMX_TOOL environment variable,
+//  2. the nrjmx tool located in the same directory as the running executable,
+//  3. the default location for the OS.
 func getNRJMXExec() string {
-	nrJMXExec := os.Getenv(nrJMXEnvVar)
-	if nrJMXExec == "" {
-		nrJMXExec = defaultNRJMXExec
+	if nrJMXExec := os.Getenv(nrJMXEnvVar); nrJMXExec != "" {
+		return nrJMXExec
 	}
-	return nrJMXExec
+
+	if executable, err := os.Executable(); err == nil {
+		if nrJMXExec := siblingNRJMXExec(executable); nrJMXExec != "" {
+			return nrJMXExec
+		}
+	}
+
+	return defaultNRJMXExec
+}
+
+// siblingNRJMXExec returns the path to the nrjmx tool placed in the same directory as the given executable, or an
+// empty string if there is none. If the executable is a symlink, the directory of the link is checked first and then
+// the one of its target.
+func siblingNRJMXExec(executable string) string {
+	candidates := []string{filepath.Join(filepath.Dir(executable), nrJMXFileName)}
+	if resolved, err := filepath.EvalSymlinks(executable); err == nil {
+		candidates = append(candidates, filepath.Join(filepath.Dir(resolved), nrJMXFileName))
+	}
+
+	for _, candidate := range candidates {
+		if info, err := os.Stat(candidate); err == nil && !info.IsDir() {
+			return candidate
+		}
+	}
+
+	return ""
 }
