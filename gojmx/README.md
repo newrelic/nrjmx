@@ -20,6 +20,15 @@ in the release assets or on our package manager repositories stored [here](https
 
 nrjmx library is also available as a [tarball](https://download.newrelic.com/infrastructure_agent/binaries/linux/noarch/).
 
+# Locating nrjmx
+The nrjmx executable is looked up in this order:
+1. The path in the `NR_JMX_TOOL` environment variable. It must point to a single executable, not a command line.
+2. The `nrjmx` file (`nrjmx.bat` on Windows) in the same directory as the running program, following symlinks.
+3. The default location for the OS: `/usr/bin/nrjmx` on Linux, `/usr/local/bin/nrjmx` on macOS and
+   `c:\progra~1\newrel~1\nrjmx\nrjmx.bat` on Windows.
+
+The second option lets a program ship together with nrjmx in a non-standard directory without setting any variable.
+
 # Usage
 After nrjmx library was installed on the system, you need a
 JMX service exposed. For this example, we will use the `test-server` available on the root of this repository:
