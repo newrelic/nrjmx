@@ -99,8 +99,8 @@ public class Application {
         StandardIOServer server = new StandardIOServer(
                 new Args(serverTransport)
                         .processor(processor)
-                        .inputTransportFactory(new TFramedTransport.Factory(8192))
-                        .outputTransportFactory(new TFramedTransport.Factory(8192))
+                        .inputTransportFactory(new TFramedTransport.Factory(32768))
+                        .outputTransportFactory(new TFramedTransport.Factory(32768))
                         .protocolFactory(new TCompactProtocol.Factory()));
 
         handler.addServer(server);
