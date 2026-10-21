@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### 🚀 Enhancements
+- gojmx looks for the nrjmx executable next to the running program before falling back to the OS default. `NR_JMX_TOOL` keeps precedence.
+
 ## v2.15.0 - 2026-09-16
 
 ### 🛡️ Security notices

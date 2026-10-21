@@ -14,6 +14,9 @@ import (
 const (
 	// defaultNRJMXExec default nrjmx tool executable path.
 	defaultNRJMXExec = "c:\\progra~1\\newrel~1\\nrjmx\\nrjmx.bat"
+
+	// nrJMXFileName is the file name of the nrjmx tool, as looked up next to the running executable.
+	nrJMXFileName = "nrjmx.bat"
 )
 
 // buildExecCommand adds os specifics to the command.

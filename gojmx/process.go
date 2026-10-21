@@ -7,9 +7,13 @@ package gojmx
 
 import (
 	"context"
+	"errors"
 	"io"
+	"io/fs"
+	"log/slog"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"time"
 
 	"github.com/newrelic/nrjmx/gojmx/internal/nrjmx"
@@ -166,11 +170,58 @@ func (p *process) getOSProcessState() *os.ProcessState {
 	return p.cmd.ProcessState
 }
 
-// getNRJMXExec returns the path to nrjmx tool.
+// getNRJMXExec returns the path to nrjmx tool. It is, in order of precedence:
+//  1. the NR_JMX_TOOL environment variable,
+//  2. the nrjmx tool located in the same directory as the running executable,
+//  3. the default location for the OS.
+//
+// The rule that decided the result is logged at debug level, and unexpected lookup failures at warn level.
 func getNRJMXExec() string {
-	nrJMXExec := os.Getenv(nrJMXEnvVar)
-	if nrJMXExec == "" {
-		nrJMXExec = defaultNRJMXExec
+	if nrJMXExec := os.Getenv(nrJMXEnvVar); nrJMXExec != "" {
+		slog.Debug("using nrjmx from environment variable", "variable", nrJMXEnvVar, "path", nrJMXExec)
+		return nrJMXExec
 	}
-	return nrJMXExec
+
+	executable, err := os.Executable()
+	if err != nil {
+		slog.Warn("cannot locate the running executable, skipping the nrjmx lookup next to it", "error", err)
+	} else if nrJMXExec := siblingNRJMXExec(executable); nrJMXExec != "" {
+		slog.Debug("using nrjmx next to the running executable", "executable", executable, "path", nrJMXExec)
+		return nrJMXExec
+	}
+
+	slog.Debug("using the default nrjmx location", "path", defaultNRJMXExec)
+
+	return defaultNRJMXExec
+}
+
+// siblingNRJMXExec returns the path to the nrjmx tool placed in the same directory as the given executable, or an
+// empty string if there is none. If the executable is a symlink, the directory of the link is checked first and then
+// the one of its target.
+func siblingNRJMXExec(executable string) string {
+	candidates := []string{filepath.Join(filepath.Dir(executable), nrJMXFileName)}
+
+	resolved, err := filepath.EvalSymlinks(executable)
+	if err != nil {
+		slog.Warn("cannot resolve the symlinks of the running executable, checking only its own directory",
+			"executable", executable, "error", err)
+	} else if candidate := filepath.Join(filepath.Dir(resolved), nrJMXFileName); candidate != candidates[0] {
+		candidates = append(candidates, candidate)
+	}
+
+	for _, candidate := range candidates {
+		info, err := os.Stat(candidate)
+		switch {
+		case err == nil && info.IsDir():
+			slog.Debug("ignoring nrjmx candidate: it is a directory", "path", candidate)
+		case err == nil:
+			return candidate
+		case errors.Is(err, fs.ErrNotExist):
+			slog.Debug("no nrjmx at candidate path", "path", candidate)
+		default:
+			slog.Warn("cannot check nrjmx candidate path", "path", candidate, "error", err)
+		}
+	}
+
+	return ""
 }
