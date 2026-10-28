@@ -5,7 +5,7 @@
 
 package org.newrelic.jmx;
 
-import org.testcontainers.shaded.okhttp3.*;
+import okhttp3.*;
 
 public class CatsClient {
 
