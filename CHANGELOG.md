@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### 🛡️ Security notices
+- Bump httpclient5 from 5.6.3 to 5.6.4 in pom.xml to align with pom-fips.xml (CVE-2026-71290)
+
 ## v2.15.0 - 2026-09-16
 
 ### 🛡️ Security notices
