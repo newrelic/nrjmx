@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### 🚀 Enhancements
+- gojmx looks for the nrjmx executable next to the running program before falling back to the OS default. `NR_JMX_TOOL` keeps precedence.
+
 ### 🛡️ Security notices
 - Bump httpclient5 from 5.6.3 to 5.6.4 in pom.xml to align with pom-fips.xml (CVE-2026-71290)
 
