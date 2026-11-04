@@ -7,14 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
-### 🚀 Enhancements
-- gojmx looks for the nrjmx executable next to the running program before falling back to the OS default. `NR_JMX_TOOL` keeps precedence.
+## v2.16.0 - 2026-11-04
+
+### 🐞 Bug fixes
+- Bump org.testcontainers:testcontainers from 1.16.0 to 1.21.4 in pom.xml and pom-fips.xml so tests can talk to recent Docker Engine versions (minimum API version raised)
 
 ### 🛡️ Security notices
 - Bump httpclient5 from 5.6.3 to 5.6.4 in pom.xml to align with pom-fips.xml (CVE-2026-71290)
 
-### 🐞 Bug fixes
-- Bump org.testcontainers:testcontainers from 1.16.0 to 1.21.4 in pom.xml and pom-fips.xml so tests can talk to recent Docker Engine versions (minimum API version raised)
+### 🚀 Enhancements
+- gojmx looks for the nrjmx executable next to the running program before falling back to the OS default. `NR_JMX_TOOL` keeps precedence.
 
 ## v2.15.0 - 2026-09-16
 
