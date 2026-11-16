@@ -1,0 +1,12 @@
+name: Batch automated release creation
+
+on:
+  workflow_dispatch:
+  # Cron disabled for now, enable it when the batch flow goes live (10:00 IST)
+  # schedule:
+  #   - cron: "30 4 * * 3"
+
+jobs:
+  release_management:
+    uses: newrelic/coreint-automation/.github/workflows/reusable_release_automation_batch.yaml@batch-release-automation
+    secrets: inherit
