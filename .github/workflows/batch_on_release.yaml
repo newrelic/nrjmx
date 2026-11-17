@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   release:
-    uses: newrelic/coreint-automation/.github/workflows/reusable_on_release_batch.yaml@batch-release-automation
+    uses: newrelic/coreint-automation/.github/workflows/reusable_on_release_batch.yaml@v4
     with:
       tag: ${{ github.event.release.tag_name }}
     secrets: inherit

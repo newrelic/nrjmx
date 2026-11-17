@@ -6,7 +6,10 @@ on:
   # schedule:
   #   - cron: "30 4 * * 3"
 
+permissions:
+  contents: write
+
 jobs:
   release_management:
-    uses: newrelic/coreint-automation/.github/workflows/reusable_release_automation_batch.yaml@batch-release-automation
+    uses: newrelic/coreint-automation/.github/workflows/reusable_release_automation_batch.yaml@v4
     secrets: inherit
