@@ -13,6 +13,7 @@ permissions:
 
 jobs:
   release:
+    if: ${{ contains(github.event.release.body, 'release-flow=batch') }}
     uses: newrelic/coreint-automation/.github/workflows/reusable_on_release_batch.yaml@v4
     with:
       tag: ${{ github.event.release.tag_name }}
